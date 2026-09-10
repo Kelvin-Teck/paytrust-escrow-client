@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { profileService } from '@/services/api';
@@ -14,8 +14,11 @@ export default function PersonalInformationPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [dob, setDob] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     profileService
@@ -26,6 +29,8 @@ export default function PersonalInformationPage() {
           setLastName(p.lastName || '');
           setPhone(p.phone || '');
           setEmail(p.email || '');
+          setAddress(p.address || '');
+          setDob(p.dob || '');
         }
       })
       .catch(() => {
@@ -34,6 +39,8 @@ export default function PersonalInformationPage() {
           setLastName(user.lastName || '');
           setPhone(user.phone || '');
           setEmail(user.email || '');
+          setAddress((user as any).address || '');
+          setDob((user as any).dob || '');
         }
       });
   }, [user]);
@@ -41,15 +48,27 @@ export default function PersonalInformationPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setStatusMsg(null);
+    setSuccessMsg(null);
+    setErrorMsg(null);
     try {
-      await profileService.updatePersonal({ firstName, lastName, phone });
-      setUser({ ...(user || { id: '1', email }), firstName, lastName, phone });
-      setStatusMsg('Changes saved successfully!');
-      setTimeout(() => setStatusMsg(null), 3000);
+      await profileService.updatePersonal({
+        firstName,
+        lastName,
+        phone,
+        address: address || undefined,
+        dob: dob || undefined,
+      });
+      setUser({
+        ...(user || { id: '1', email }),
+        firstName,
+        lastName,
+        phone,
+        ...({ address, dob } as any),
+      });
+      setSuccessMsg('Personal information updated successfully!');
+      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      setStatusMsg(err.message || 'Saved successfully');
-      setTimeout(() => setStatusMsg(null), 3000);
+      setErrorMsg(err.message || 'Failed to update personal information');
     } finally {
       setIsSaving(false);
     }
@@ -73,6 +92,20 @@ export default function PersonalInformationPage() {
             Update your registered profile identity and international contact information.
           </p>
         </div>
+
+        {successMsg && (
+          <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/30 text-[#32A05F] text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         <form
           onSubmit={handleSave}
@@ -127,12 +160,38 @@ export default function PersonalInformationPage() {
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Residential Address (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 12 Marina Road, Victoria Island, Lagos"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Date of Birth (Optional)
+              </label>
+              <input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={isSaving}
             className="w-full py-3.5 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white text-sm shadow-sm transition-all disabled:opacity-50"
           >
-            {isSaving ? 'Saving Changes...' : statusMsg ? statusMsg : 'Save Changes'}
+            {isSaving ? 'Saving Changes...' : 'Save Changes'}
           </button>
         </form>
       </div>
