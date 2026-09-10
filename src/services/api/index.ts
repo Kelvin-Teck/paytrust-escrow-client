@@ -32,6 +32,7 @@ export const authService = {
     lastName?: string;
     phone: string;
     country?: string;
+    referralCode?: string;
   }) => {
     const res = await apiClient.post("/auth/register", payload);
     return extract(res);

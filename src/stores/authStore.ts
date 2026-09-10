@@ -7,7 +7,9 @@ export interface User {
   lastName?: string;
   name?: string;
   phone?: string;
+  country?: string;
   role?: string;
+  referralCode?: string;
   isEmailVerified?: boolean;
   kycStatus?: string;
   tier?: number;

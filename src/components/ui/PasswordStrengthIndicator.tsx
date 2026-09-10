@@ -77,10 +77,9 @@ interface PasswordStrengthIndicatorProps {
   showWhenEmpty?: boolean;
 }
 
-export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
-  password,
-  showWhenEmpty = false,
-}) => {
+export const PasswordStrengthIndicator: React.FC<
+  PasswordStrengthIndicatorProps
+> = ({ password, showWhenEmpty = false }) => {
   const stats = useMemo(() => checkPasswordCriteria(password), [password]);
 
   if (!password && !showWhenEmpty) {
@@ -158,4 +157,3 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
     </motion.div>
   );
 };
-
