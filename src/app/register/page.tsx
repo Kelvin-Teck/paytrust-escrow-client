@@ -1,29 +1,84 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { Logo } from '@/components/ui/Logo';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Lock,
+  User,
+  Phone,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
+  ShieldCheck,
+  Tag,
+} from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
+import { authService } from "@/services/api";
 
-export default function RegisterEmailPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password || !fullName || !phone) return;
+
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters long.");
+      return;
+    }
+
     setIsLoading(true);
-    router.push(`/register/verify?email=${encodeURIComponent(email)}`);
+    setErrorMessage(null);
+
+    const nameParts = fullName.trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    try {
+      await authService.register({
+        email: email.trim().toLowerCase(),
+        password,
+        firstName,
+        lastName,
+        phone: phone.trim(),
+        country: "Nigeria",
+      });
+
+      // Navigate to verification screen with email pre-populated
+      router.push(`/register/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Registration failed. An account with this email or phone may already exist.";
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between relative overflow-hidden">
       <header className="p-6 sm:p-8 flex items-center justify-between max-w-7xl mx-auto w-full relative z-10">
         <Logo size="md" href="/" />
-        <Link href="/login" className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-[#32A05F] transition-colors">
+        <Link
+          href="/login"
+          className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-[#32A05F] transition-colors"
+        >
           Already have an account? <span className="text-[#32A05F]">Log In</span>
         </Link>
       </header>
@@ -32,30 +87,122 @@ export default function RegisterEmailPage() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-8 rounded-3xl bg-white border border-slate-200 shadow-xl"
+          className="w-full max-w-lg p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl"
         >
           <div className="mb-6">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F]">Step 1 of 3</span>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">Register Account</h1>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4" /> Create Escrow Account
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
+              Join PayTrust
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Enter your email address to get started with milestone-protected escrow.
+              Start trading safely with milestone-protected digital escrow & multi-currency wallets.
             </p>
           </div>
 
+          {errorMessage && (
+            <div className="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Legal Name */}
             <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Full Legal Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Tolulope Lanre Balogun"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Email Address */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Please enter email"
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Phone Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="tel"
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 focus:border-[#32A05F] text-sm"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+234 801 234 5678"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimum 6 characters"
+                  className="w-full pl-10 pr-11 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Referral Code (Optional) */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Referral Code</span>
+                <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              </label>
+              <div className="relative">
+                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. PAY12345"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
                 />
               </div>
             </div>
@@ -63,14 +210,15 @@ export default function RegisterEmailPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 rounded-xl font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-95 disabled:opacity-50 text-sm mt-2"
+              className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-[0.98] disabled:opacity-50 text-sm mt-4"
             >
-              {isLoading ? 'Sending Code...' : 'Continue'} <ArrowRight className="w-4 h-4" />
+              {isLoading ? "Creating Account & Sending OTP..." : "Create Account"}
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-2 justify-center">
-            <CheckCircle2 className="w-4 h-4 text-[#32A05F]" /> Bank-grade encryption & 2FA protection
+          <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-2 justify-center">
+            <CheckCircle2 className="w-4 h-4 text-[#32A05F]" /> 256-bit encryption & escrow security
           </div>
         </motion.div>
       </main>
