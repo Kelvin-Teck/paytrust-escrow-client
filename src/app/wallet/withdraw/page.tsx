@@ -1,37 +1,50 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, CreditCard, Building, ArrowRight, CheckCircle2 } from 'lucide-react';
-import AppShell from '@/components/layout/AppShell';
-import { walletService, profileService } from '@/services/api';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  CreditCard,
+  Building,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { walletService, profileService } from "@/services/api";
+import { toast } from "@/components/ui/Toast";
 
 export default function WalletWithdrawPage() {
   const router = useRouter();
-  const [amount, setAmount] = useState('100000');
+  const [amount, setAmount] = useState("100000");
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [bankAccount, setBankAccount] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    walletService.getBalances().then((res) => {
-      const bal = res?.balance ?? res?.[0]?.balance ?? 0;
-      setAvailableBalance(bal);
-    }).catch(console.error);
+    walletService
+      .getBalances()
+      .then((res) => {
+        const bal = res?.balance ?? res?.[0]?.balance ?? 0;
+        setAvailableBalance(bal);
+      })
+      .catch(console.error);
 
-    profileService.getProfile().then((p) => {
-      if (p?.bankAccount || p?.bankDetails) {
-        setBankAccount(p.bankAccount || p.bankDetails);
-      }
-    }).catch(console.error);
+    profileService
+      .getProfile()
+      .then((p) => {
+        if (p?.bankAccount || p?.bankDetails) {
+          setBankAccount(p.bankAccount || p.bankDetails);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     if (parseFloat(amount) > availableBalance) {
-      alert('Amount exceeds your available NGN balance.');
+      toast.error("Amount exceeds your available NGN balance.");
       return;
     }
     setIsProcessing(true);
@@ -42,11 +55,16 @@ export default function WalletWithdrawPage() {
         amount: parseFloat(amount),
         bankAccountId: bankAccount?.id,
       });
-      alert(`Withdrawal of ₦${parseFloat(amount).toLocaleString()} initiated successfully!`);
-      router.push('/wallet');
+      toast.success(
+        `Withdrawal of ₦${parseFloat(amount).toLocaleString()} initiated successfully!`,
+      );
+      router.push("/wallet");
     } catch (err: any) {
-      console.error('Withdrawal error:', err);
-      setError(err.message || 'Withdrawal failed. Please check bank details.');
+      console.error("Withdrawal error:", err);
+      setError(err.message || "Withdrawal failed. Please check bank details.");
+      toast.error(
+        err.message || "Withdrawal failed. Please check bank details.",
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -67,7 +85,8 @@ export default function WalletWithdrawPage() {
             Withdraw Funds to Bank Account
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Fast payout settlement directly to your verified Nigerian NUBAN account.
+            Fast payout settlement directly to your verified Nigerian NUBAN
+            account.
           </p>
         </div>
 
@@ -77,11 +96,21 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        <form onSubmit={handleWithdraw} className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+        <form
+          onSubmit={handleWithdraw}
+          className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6"
+        >
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-bold uppercase">Available for Payout</span>
-              <div className="text-2xl font-extrabold text-slate-900">₦{Number(availableBalance).toLocaleString('en-NG', { minimumFractionDigits: 2 })}</div>
+              <span className="text-xs text-slate-400 font-bold uppercase">
+                Available for Payout
+              </span>
+              <div className="text-2xl font-extrabold text-slate-900">
+                ₦
+                {Number(availableBalance).toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+                })}
+              </div>
             </div>
             <span className="text-xs font-bold text-[#32A05F] bg-[#EBF7F0] px-3 py-1 rounded-full">
               Instant Payout
@@ -93,7 +122,9 @@ export default function WalletWithdrawPage() {
               Withdrawal Amount (NGN)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                ₦
+              </span>
               <input
                 type="number"
                 value={amount}
@@ -116,8 +147,12 @@ export default function WalletWithdrawPage() {
                     <Building className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 text-sm">{bankAccount.bankName}</p>
-                    <p className="text-xs text-slate-500 font-mono">{bankAccount.accountNumber} • {bankAccount.accountName}</p>
+                    <p className="font-bold text-slate-900 text-sm">
+                      {bankAccount.bankName}
+                    </p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {bankAccount.accountNumber} • {bankAccount.accountName}
+                    </p>
                   </div>
                 </div>
                 <CheckCircle2 className="w-5 h-5 text-[#32A05F]" />
@@ -125,7 +160,10 @@ export default function WalletWithdrawPage() {
             ) : (
               <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
                 <span>No bank payout account configured yet.</span>
-                <Link href="/profile/bank-details" className="font-bold underline">
+                <Link
+                  href="/profile/bank-details"
+                  className="font-bold underline"
+                >
                   Add Bank Details →
                 </Link>
               </div>
@@ -137,7 +175,8 @@ export default function WalletWithdrawPage() {
             disabled={isProcessing}
             className="w-full py-4 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-95 disabled:opacity-50 text-sm"
           >
-            {isProcessing ? 'Processing Transfer...' : 'Confirm Withdrawal'} <ArrowRight className="w-4 h-4" />
+            {isProcessing ? "Processing Transfer..." : "Confirm Withdrawal"}{" "}
+            <ArrowRight className="w-4 h-4" />
           </button>
         </form>
       </div>

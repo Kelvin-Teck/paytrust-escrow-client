@@ -1,24 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Send, ArrowRight, UserCheck } from 'lucide-react';
-import AppShell from '@/components/layout/AppShell';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Send, ArrowRight, UserCheck } from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { toast } from "@/components/ui/Toast";
 
 export default function WalletTransferPage() {
   const router = useRouter();
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('25000');
-  const [note, setNote] = useState('');
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("25000");
+  const [note, setNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleTransfer = (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setTimeout(() => {
-      alert(`Transfer of ₦${parseFloat(amount).toLocaleString()} to ${recipient} successful!`);
-      router.push('/wallet');
+      toast.success(
+        `Transfer of ₦${parseFloat(amount).toLocaleString()} to ${recipient} successful!`,
+      );
+      router.push("/wallet");
     }, 1000);
   };
 
@@ -37,11 +40,15 @@ export default function WalletTransferPage() {
             Instant PayTrust P2P Transfer
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Send money directly to any PayTrust username or email address with 0% fee.
+            Send money directly to any PayTrust username or email address with
+            0% fee.
           </p>
         </div>
 
-        <form onSubmit={handleTransfer} className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+        <form
+          onSubmit={handleTransfer}
+          className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6"
+        >
           <div>
             <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
               Recipient Email or PayTrust Tag
@@ -61,7 +68,9 @@ export default function WalletTransferPage() {
               Transfer Amount (NGN)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                ₦
+              </span>
               <input
                 type="number"
                 value={amount}
@@ -90,7 +99,8 @@ export default function WalletTransferPage() {
             disabled={isProcessing}
             className="w-full py-4 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-95 disabled:opacity-50 text-sm"
           >
-            {isProcessing ? 'Sending Funds...' : 'Send Payment'} <Send className="w-4 h-4" />
+            {isProcessing ? "Sending Funds..." : "Send Payment"}{" "}
+            <Send className="w-4 h-4" />
           </button>
         </form>
       </div>

@@ -103,7 +103,8 @@ export const transactionService = {
           ? payload.items
           : [
               {
-                name: payload.title || payload.description || "Escrow Milestone",
+                name:
+                  payload.title || payload.description || "Escrow Milestone",
                 quantity: 1,
                 price: Number(payload.amount),
               },

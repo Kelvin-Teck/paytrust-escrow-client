@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { walletService, paymentService } from "@/services/api";
+import { toast } from "@/components/ui/Toast";
 
 type CurrencyFilter = "ALL" | "NGN" | "BTC";
 type StatusFilter = "ALL" | "success" | "pending" | "failed";
@@ -919,7 +920,7 @@ function WalletContent() {
                   </button>
                   <button
                     onClick={() => {
-                      alert("Receipt exported to clipboard.");
+                      toast.success("Receipt exported to clipboard.");
                       handleCopy(
                         `PayTrust Receipt:\nReference: ${
                           selectedTx.reference || selectedTx.id

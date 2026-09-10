@@ -1,26 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  AlertTriangle, Shield, Clock, CheckCircle2, ChevronRight,
-  PlusCircle, Search, FileText, ArrowRight, X, RefreshCw
-} from 'lucide-react';
-import AppShell from '@/components/layout/AppShell';
-import { disputeService, transactionService } from '@/services/api';
+  AlertTriangle,
+  Shield,
+  Clock,
+  CheckCircle2,
+  ChevronRight,
+  PlusCircle,
+  Search,
+  FileText,
+  ArrowRight,
+  X,
+  RefreshCw,
+} from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { disputeService, transactionService } from "@/services/api";
+import { toast } from "@/components/ui/Toast";
 
 export default function DisputesHubPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [disputes, setDisputes] = useState<any[]>([]);
   const [activeTransactions, setActiveTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form state for raising a dispute
-  const [selectedTxId, setSelectedTxId] = useState('');
-  const [reason, setReason] = useState('');
-  const [details, setDetails] = useState('');
+  const [selectedTxId, setSelectedTxId] = useState("");
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -32,14 +42,14 @@ export default function DisputesHubPage() {
         transactionService.getTransactions(),
       ]);
 
-      if (dispRes.status === 'fulfilled' && dispRes.value) {
+      if (dispRes.status === "fulfilled" && dispRes.value) {
         const rows = Array.isArray(dispRes.value)
           ? dispRes.value
           : dispRes.value?.rows || dispRes.value?.disputes || [];
         setDisputes(rows);
       }
 
-      if (txRes.status === 'fulfilled' && txRes.value) {
+      if (txRes.status === "fulfilled" && txRes.value) {
         const txList = Array.isArray(txRes.value)
           ? txRes.value
           : txRes.value?.transactions || [];
@@ -47,7 +57,7 @@ export default function DisputesHubPage() {
         setActiveTransactions(txList);
       }
     } catch (err) {
-      console.error('Failed to fetch disputes:', err);
+      console.error("Failed to fetch disputes:", err);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +70,7 @@ export default function DisputesHubPage() {
   const handleRaiseDispute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTxId || !reason) {
-      setErrorMsg('Please select an order and provide a dispute reason.');
+      setErrorMsg("Please select an order and provide a dispute reason.");
       return;
     }
     setIsSubmitting(true);
@@ -73,14 +83,17 @@ export default function DisputesHubPage() {
         details,
       });
       setIsModalOpen(false);
-      setSelectedTxId('');
-      setReason('');
-      setDetails('');
-      alert('Dispute raised successfully! Funds have been frozen in escrow.');
+      setSelectedTxId("");
+      setReason("");
+      setDetails("");
+      toast.success(
+        "Dispute raised successfully! Funds have been frozen in escrow.",
+      );
       fetchDisputes();
     } catch (err: any) {
-      console.error('Raise dispute error:', err);
-      setErrorMsg(err.message || 'Failed to raise dispute');
+      console.error("Raise dispute error:", err);
+      setErrorMsg(err.message || "Failed to raise dispute");
+      toast.error(err.message || "Failed to raise dispute");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,10 +101,10 @@ export default function DisputesHubPage() {
 
   const filteredDisputes = disputes.filter((dsp) => {
     const q = searchTerm.toLowerCase();
-    const title = dsp.transaction?.title || dsp.title || '';
-    const reasonText = dsp.reason || '';
-    const id = dsp.id || '';
-    const txId = dsp.transactionId || dsp.dealId || '';
+    const title = dsp.transaction?.title || dsp.title || "";
+    const reasonText = dsp.reason || "";
+    const id = dsp.id || "";
+    const txId = dsp.transactionId || dsp.dealId || "";
     return (
       title.toLowerCase().includes(q) ||
       reasonText.toLowerCase().includes(q) ||
@@ -119,7 +132,9 @@ export default function DisputesHubPage() {
               disabled={isLoading}
               className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-all disabled:opacity-50"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#32A05F]' : ''}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#32A05F]" : ""}`}
+              />
               Refresh
             </button>
             <button
@@ -139,7 +154,9 @@ export default function DisputesHubPage() {
             </div>
             <h3 className="text-xl font-bold">How Dispute Mediation Works</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              When a dispute is raised, escrow funds remain frozen in custody. Both parties submit delivery evidence, chat with an assigned PayTrust Arbiter, and receive a fair verdict within 48 hours.
+              When a dispute is raised, escrow funds remain frozen in custody.
+              Both parties submit delivery evidence, chat with an assigned
+              PayTrust Arbiter, and receive a fair verdict within 48 hours.
             </p>
           </div>
         </div>
@@ -161,8 +178,11 @@ export default function DisputesHubPage() {
           <div className="grid grid-cols-1 gap-4">
             {filteredDisputes.map((dsp) => {
               const amount = dsp.transaction?.amount ?? dsp.amount ?? 0;
-              const title = dsp.transaction?.title || dsp.title || 'Escrow Agreement Dispute';
-              const status = dsp.status || 'OPEN';
+              const title =
+                dsp.transaction?.title ||
+                dsp.title ||
+                "Escrow Agreement Dispute";
+              const status = dsp.status || "OPEN";
 
               return (
                 <div
@@ -179,35 +199,45 @@ export default function DisputesHubPage() {
                           Order: {dsp.transactionId.slice(0, 8)}
                         </span>
                       )}
-                      {status === 'OPEN' && (
+                      {status === "OPEN" && (
                         <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                           Under Mediation
                         </span>
                       )}
-                      {status === 'resolved_refund' && (
+                      {status === "resolved_refund" && (
                         <span className="text-xs font-bold text-[#32A05F] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full border border-[#32A05F]/20">
                           Resolved & Refunded
                         </span>
                       )}
-                      {status === 'resolved_release' && (
+                      {status === "resolved_release" && (
                         <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                           Resolved & Released
                         </span>
                       )}
                     </div>
 
-                    <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {title}
+                    </h3>
                     <p className="text-xs text-slate-600">
-                      Reason: <span className="font-medium text-slate-800">{dsp.reason}</span>
+                      Reason:{" "}
+                      <span className="font-medium text-slate-800">
+                        {dsp.reason}
+                      </span>
                     </p>
                     <p className="text-xs text-slate-400">
-                      Created: {new Date(dsp.createdAt || Date.now()).toLocaleDateString()}
+                      Created:{" "}
+                      {new Date(
+                        dsp.createdAt || Date.now(),
+                      ).toLocaleDateString()}
                     </p>
                   </div>
 
                   <div className="flex flex-col md:items-end justify-between gap-4">
                     <div className="text-left md:text-right">
-                      <span className="text-xs text-slate-400 font-bold uppercase">Frozen Amount</span>
+                      <span className="text-xs text-slate-400 font-bold uppercase">
+                        Frozen Amount
+                      </span>
                       <div className="text-2xl font-extrabold text-slate-900">
                         ₦{Number(amount).toLocaleString()}
                       </div>
@@ -217,7 +247,8 @@ export default function DisputesHubPage() {
                       href={`/disputes/${dsp.id}`}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold transition-all"
                     >
-                      Enter Mediation Room <ChevronRight className="w-3.5 h-3.5" />
+                      Enter Mediation Room{" "}
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>
@@ -229,9 +260,12 @@ export default function DisputesHubPage() {
             <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto">
               <Shield className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">No Active Disputes</h3>
+            <h3 className="text-base font-bold text-slate-900">
+              No Active Disputes
+            </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              All of your escrow contracts are running smoothly without any open mediation requests.
+              All of your escrow contracts are running smoothly without any open
+              mediation requests.
             </p>
           </div>
         )}
@@ -286,7 +320,9 @@ export default function DisputesHubPage() {
                       <option value="">-- Choose an agreement --</option>
                       {activeTransactions.map((tx) => (
                         <option key={tx.id} value={tx.id}>
-                          {tx.title || 'Escrow Order'} (₦{Number(tx.amount || 0).toLocaleString()}) - {tx.id.slice(0, 8)}
+                          {tx.title || "Escrow Order"} (₦
+                          {Number(tx.amount || 0).toLocaleString()}) -{" "}
+                          {tx.id.slice(0, 8)}
                         </option>
                       ))}
                     </select>
@@ -320,7 +356,9 @@ export default function DisputesHubPage() {
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
-                    ⚠️ <strong>Notice:</strong> Raising a dispute freezes funds in escrow until an arbiter reviews evidence submitted by both parties.
+                    ⚠️ <strong>Notice:</strong> Raising a dispute freezes funds
+                    in escrow until an arbiter reviews evidence submitted by
+                    both parties.
                   </div>
 
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -336,7 +374,9 @@ export default function DisputesHubPage() {
                       disabled={isSubmitting}
                       className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Submitting Dispute...' : 'Submit Dispute'}
+                      {isSubmitting
+                        ? "Submitting Dispute..."
+                        : "Submit Dispute"}
                     </button>
                   </div>
                 </form>

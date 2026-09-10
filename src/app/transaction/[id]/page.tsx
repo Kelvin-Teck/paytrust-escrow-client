@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
+import { toast } from "@/components/ui/Toast";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -47,10 +48,11 @@ export default function TransactionDetailPage() {
     try {
       await transactionService.markAsShipped(id, { courier, trackingNumber });
       setActionMsg("Marked as shipped successfully!");
+      toast.success("Marked as shipped successfully!");
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to update shipping status");
+      toast.error(err.message || "Failed to update shipping status");
     } finally {
       setIsSubmitting(false);
     }
@@ -62,10 +64,11 @@ export default function TransactionDetailPage() {
     try {
       await transactionService.confirmDelivery(id);
       setActionMsg("Delivery confirmed! Funds have been released.");
+      toast.success("Delivery confirmed! Funds have been released.");
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to confirm delivery");
+      toast.error(err.message || "Failed to confirm delivery");
     } finally {
       setIsSubmitting(false);
     }
