@@ -91,8 +91,25 @@ export const transactionService = {
     buyerPhone?: string;
     inspectionPeriod?: number;
     milestones?: Array<{ title: string; amount: number; description?: string }>;
+    items?: Array<{ name: string; quantity: number; price: number }>;
   }) => {
-    const res = await apiClient.post("/transactions/invoice", payload);
+    const formattedPayload = {
+      ...payload,
+      description: payload.description || payload.title,
+      title: payload.title,
+      amount: payload.amount,
+      items:
+        payload.items && payload.items.length > 0
+          ? payload.items
+          : [
+              {
+                name: payload.title || payload.description || "Escrow Milestone",
+                quantity: 1,
+                price: Number(payload.amount),
+              },
+            ],
+    };
+    const res = await apiClient.post("/transactions/invoice", formattedPayload);
     return extract(res);
   },
 

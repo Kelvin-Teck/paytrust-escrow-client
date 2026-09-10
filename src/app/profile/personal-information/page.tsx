@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import AppShell from '@/components/layout/AppShell';
-import { PhoneInput } from '@/components/ui/PhoneInput';
-import { profileService } from '@/services/api';
-import { useAuthStore } from '@/stores/authStore';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import { profileService } from "@/services/api";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function PersonalInformationPage() {
   const { user, setUser } = useAuthStore();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [dob, setDob] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [dob, setDob] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -25,22 +25,22 @@ export default function PersonalInformationPage() {
       .getProfile()
       .then((p) => {
         if (p) {
-          setFirstName(p.firstName || '');
-          setLastName(p.lastName || '');
-          setPhone(p.phone || '');
-          setEmail(p.email || '');
-          setAddress(p.address || '');
-          setDob(p.dob || '');
+          setFirstName(p.firstName || "");
+          setLastName(p.lastName || "");
+          setPhone(p.phone || "");
+          setEmail(p.email || "");
+          setAddress(p.address || "");
+          setDob(p.dob || "");
         }
       })
       .catch(() => {
         if (user) {
-          setFirstName(user.firstName || '');
-          setLastName(user.lastName || '');
-          setPhone(user.phone || '');
-          setEmail(user.email || '');
-          setAddress((user as any).address || '');
-          setDob((user as any).dob || '');
+          setFirstName(user.firstName || "");
+          setLastName(user.lastName || "");
+          setPhone(user.phone || "");
+          setEmail(user.email || "");
+          setAddress((user as any).address || "");
+          setDob((user as any).dob || "");
         }
       });
   }, [user]);
@@ -59,16 +59,16 @@ export default function PersonalInformationPage() {
         dob: dob || undefined,
       });
       setUser({
-        ...(user || { id: '1', email }),
+        ...(user || { id: "1", email }),
         firstName,
         lastName,
         phone,
         ...({ address, dob } as any),
       });
-      setSuccessMsg('Personal information updated successfully!');
+      setSuccessMsg("Personal information updated successfully!");
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to update personal information');
+      setErrorMsg(err.message || "Failed to update personal information");
     } finally {
       setIsSaving(false);
     }
@@ -89,7 +89,8 @@ export default function PersonalInformationPage() {
             Personal Information
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Update your registered profile identity and international contact information.
+            Update your registered profile identity and international contact
+            information.
           </p>
         </div>
 
@@ -191,7 +192,7 @@ export default function PersonalInformationPage() {
             disabled={isSaving}
             className="w-full py-3.5 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white text-sm shadow-sm transition-all disabled:opacity-50"
           >
-            {isSaving ? 'Saving Changes...' : 'Save Changes'}
+            {isSaving ? "Saving Changes..." : "Save Changes"}
           </button>
         </form>
       </div>
