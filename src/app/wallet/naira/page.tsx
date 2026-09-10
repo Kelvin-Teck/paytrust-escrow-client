@@ -1,0 +1,199 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowDownLeft,
+  ShieldCheck,
+  ArrowRight,
+  CreditCard,
+  Building,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { paymentService } from "@/services/api";
+
+const QUICK_AMOUNTS = [5000, 10000, 25000, 50000, 100000, 250000];
+
+export default function FundNairaWalletPage() {
+  const [amount, setAmount] = useState("50000");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const numAmount = parseFloat(amount) || 0;
+
+  const handleFund = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (numAmount < 100) {
+      setError("Minimum deposit amount is ₦100");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const data = await paymentService.initializeFunding({
+        amount: numAmount,
+        currency: "NGN",
+      });
+
+      const redirectUrl = data?.authorizationUrl || data?.authorization_url;
+
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        setError(
+          "Payment gateway did not return a valid checkout URL. Please try again.",
+        );
+      }
+    } catch (err: any) {
+      console.error("Funding initialization error:", err);
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Payment initialization failed. Please try again.";
+      setError(errMsg);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <AppShell>
+      <div className="max-w-2xl mx-auto space-y-8">
+        <Link
+          href="/wallet"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Wallets
+        </Link>
+
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F]">
+            Instant Deposit
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Fund Nigerian Naira Wallet
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Securely deposit funds into your PayTrust escrow balance using
+            Paystack.
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleFund}
+          className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6"
+        >
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Amount to Deposit (NGN)
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">
+                ₦
+              </span>
+              <input
+                type="number"
+                min="100"
+                required
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full pl-10 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold text-2xl focus:bg-white focus:outline-none focus:border-[#32A05F] focus:ring-2 focus:ring-[#32A05F]/20 transition-all"
+              />
+            </div>
+
+            {/* Quick Amount Chips */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+              {QUICK_AMOUNTS.map((val) => (
+                <button
+                  type="button"
+                  key={val}
+                  onClick={() => setAmount(String(val))}
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center ${
+                    numAmount === val
+                      ? "bg-[#EBF7F0] text-[#32A05F] border-[#32A05F]"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  ₦{val.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment Method Badges */}
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Supported Payment Rails
+              </span>
+              <span className="text-[11px] font-bold text-[#32A05F] bg-[#EBF7F0] px-2 py-0.5 rounded-md">
+                Secured by Paystack
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs text-slate-600 font-medium">
+              <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-[#32A05F]" /> Debit
+                Cards (Mastercard, Visa, Verve)
+              </span>
+              <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                <Building className="w-3.5 h-3.5 text-blue-600" /> Direct Bank
+                Transfer
+              </span>
+              <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-600" /> USSD & OPay
+              </span>
+            </div>
+          </div>
+
+          {/* Escrow Guarantee */}
+          <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/20 space-y-1 text-xs text-[#28874E]">
+            <p className="font-bold flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#32A05F]" />
+              Guaranteed Escrow Safety
+            </p>
+            <p className="text-slate-600 font-medium">
+              Deposited funds are securely held in your insured escrow account
+              and instantly available for locking into transactions.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isProcessing || numAmount < 100}
+            className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] active:scale-[0.98] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all disabled:opacity-50 text-base"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Redirecting to Paystack Checkout...</span>
+              </>
+            ) : (
+              <>
+                <span>
+                  Proceed to Deposit ₦
+                  {numAmount > 0 ? numAmount.toLocaleString() : "0"}
+                </span>
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+    </AppShell>
+  );
+}
