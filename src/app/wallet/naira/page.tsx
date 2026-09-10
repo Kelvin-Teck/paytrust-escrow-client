@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import {
@@ -30,6 +30,42 @@ interface SuccessDetails {
   date: string;
 }
 
+/**
+ * Dynamically loads the Paystack Inline JavaScript SDK if not already in DOM.
+ */
+function ensurePaystackLoaded(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") {
+      resolve(false);
+      return;
+    }
+    if ((window as any).PaystackPop && typeof (window as any).PaystackPop.setup === "function") {
+      resolve(true);
+      return;
+    }
+
+    const existing = document.getElementById("paystack-inline-script");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true));
+      existing.addEventListener("error", () => resolve(false));
+      // In case it already loaded
+      setTimeout(() => {
+        if ((window as any).PaystackPop) resolve(true);
+        else resolve(false);
+      }, 1500);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "paystack-inline-script";
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export default function FundNairaWalletPage() {
   const { user } = useAuthStore();
   const [amount, setAmount] = useState("50000");
@@ -38,6 +74,11 @@ export default function FundNairaWalletPage() {
   const [error, setError] = useState<string | null>(null);
   const [successDetails, setSuccessDetails] = useState<SuccessDetails | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Preload Paystack SDK on component mount
+  useEffect(() => {
+    ensurePaystackLoaded().catch(() => {});
+  }, []);
 
   const numAmount = parseFloat(amount) || 0;
 
@@ -52,10 +93,9 @@ export default function FundNairaWalletPage() {
   const handlePaymentSuccess = async (reference: string, fundedAmount: number) => {
     setIsVerifying(true);
     try {
-      // Finalize and verify payment record on backend
       await paymentService.verifyPayment(reference);
     } catch (err) {
-      console.warn("Verification check note:", err);
+      console.warn("Verify check notice:", err);
     } finally {
       setIsVerifying(false);
       setIsProcessing(false);
@@ -84,70 +124,81 @@ export default function FundNairaWalletPage() {
     setError(null);
 
     try {
+      // 1. Initialize funding on backend
       const data = await paymentService.initializeFunding({
         amount: numAmount,
         currency: "NGN",
       });
+
+      console.log("[Paystack Init Response]:", data);
 
       const publicKey =
         data?.publicKey ||
         process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ||
         "pk_test_4494148fefeef36d2c15999becc7ec7d1ebe3975";
 
-      // ─── 1. Attempt Paystack Inline Modal ───
-      if (typeof window !== "undefined" && (window as any).PaystackPop) {
-        const PaystackPop = (window as any).PaystackPop;
+      // 2. Ensure Paystack inline script is ready
+      const scriptReady = await ensurePaystackLoaded();
 
-        // Modern Paystack Popup via accessCode
-        if (data?.accessCode && typeof PaystackPop === "function") {
-          try {
-            const popup = new PaystackPop();
-            popup.resumeTransaction(data.accessCode, {
-              onSuccess: async (tx: any) => {
-                const ref = tx?.reference || data.reference;
-                await handlePaymentSuccess(ref, numAmount);
-              },
-              onCancel: () => {
-                setIsProcessing(false);
-              },
-            });
-            return;
-          } catch (resumeErr) {
-            console.warn("resumeTransaction fallback:", resumeErr);
+      // Get user email safely
+      let userEmail = user?.email;
+      if (!userEmail && typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("paytrust_user");
+          if (stored) {
+            userEmail = JSON.parse(stored)?.email;
           }
+        } catch {}
+      }
+      if (!userEmail) userEmail = "customer@paytrust.ng";
+
+      // 3. Open Paystack Popup Modal
+      if (
+        scriptReady &&
+        typeof window !== "undefined" &&
+        (window as any).PaystackPop &&
+        typeof (window as any).PaystackPop.setup === "function"
+      ) {
+        const paystackOptions: any = {
+          key: publicKey,
+          email: userEmail,
+          amount: Math.round(numAmount * 100),
+          currency: "NGN",
+          ref: data?.reference,
+          channels: ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
+          callback: async (response: any) => {
+            console.log("[Paystack Success Callback]:", response);
+            const ref = response?.reference || data?.reference;
+            await handlePaymentSuccess(ref, numAmount);
+          },
+          onClose: () => {
+            console.log("[Paystack Modal Closed]");
+            setIsProcessing(false);
+          },
+        };
+
+        if (data?.accessCode) {
+          paystackOptions.access_code = data.accessCode;
         }
 
-        // Standard Paystack Setup Popup
-        if (typeof PaystackPop.setup === "function") {
-          const handler = PaystackPop.setup({
-            key: publicKey,
-            email: user?.email || "customer@paytrust.ng",
-            amount: Math.round(numAmount * 100),
-            currency: "NGN",
-            ref: data?.reference,
-            callback: async (response: any) => {
-              const ref = response?.reference || data?.reference;
-              await handlePaymentSuccess(ref, numAmount);
-            },
-            onClose: () => {
-              setIsProcessing(false);
-            },
-          });
+        const handler = (window as any).PaystackPop.setup(paystackOptions);
+        if (handler && typeof handler.openIframe === "function") {
           handler.openIframe();
           return;
         }
       }
 
-      // ─── 2. Graceful Fallback to Redirect if script blocked ───
+      // 4. Fallback to redirect URL if modal is blocked or unavailable
       const redirectUrl = data?.authorizationUrl || data?.authorization_url;
       if (redirectUrl) {
+        console.log("[Paystack Fallback Redirect]:", redirectUrl);
         window.location.href = redirectUrl;
-      } else {
-        setError("Unable to open Paystack payment modal. Please try again.");
-        setIsProcessing(false);
+        return;
       }
+
+      throw new Error("Unable to open Paystack payment modal. Please try again.");
     } catch (err: any) {
-      console.error("Funding initialization error:", err);
+      console.error("[Paystack Funding Error]:", err);
       const errMsg =
         err.response?.data?.message ||
         err.message ||
@@ -159,8 +210,9 @@ export default function FundNairaWalletPage() {
 
   return (
     <AppShell>
-      {/* Paystack Inline JavaScript SDK */}
+      {/* Paystack Inline Script Tag */}
       <Script
+        id="paystack-inline-script"
         src="https://js.paystack.co/v1/inline.js"
         strategy="afterInteractive"
       />
@@ -175,7 +227,7 @@ export default function FundNairaWalletPage() {
 
         {/* ─── SUCCESS MODAL / RECEIPT ─── */}
         {successDetails ? (
-          <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 text-center">
+          <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
             <div className="w-20 h-20 rounded-full bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto border-4 border-[#32A05F]/20 shadow-inner">
               <CheckCircle2 className="w-10 h-10" />
             </div>
@@ -184,7 +236,7 @@ export default function FundNairaWalletPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F] bg-[#EBF7F0] px-3 py-1 rounded-full">
                 Deposit Confirmed
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 pt-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 pt-2 tabular-nums">
                 ₦{successDetails.amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
               </h2>
               <p className="text-sm text-slate-500">
@@ -195,14 +247,14 @@ export default function FundNairaWalletPage() {
             {/* Receipt Summary Details */}
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 text-left space-y-3 text-xs">
               <div className="flex items-center justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-500 font-medium">Payment Gateway</span>
-                <span className="font-bold text-slate-800 flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Payment Channel</span>
+                <span className="font-bold text-slate-800 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#32A05F]"></span> Paystack Inline
                 </span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-slate-200/60">
                 <span className="text-slate-500 font-medium">Transaction Date</span>
-                <span className="font-bold text-slate-800">{successDetails.date}</span>
+                <span className="font-bold text-slate-800 tabular-nums">{successDetails.date}</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="text-slate-500 font-medium">Reference Code</span>
@@ -284,7 +336,7 @@ export default function FundNairaWalletPage() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-10 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold text-2xl focus:bg-white focus:outline-none focus:border-[#32A05F] focus:ring-2 focus:ring-[#32A05F]/20 transition-all"
+                    className="w-full pl-10 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold text-2xl focus:bg-white focus:outline-none focus:border-[#32A05F] focus:ring-2 focus:ring-[#32A05F]/20 transition-all tabular-nums"
                   />
                 </div>
 
@@ -295,7 +347,7 @@ export default function FundNairaWalletPage() {
                       type="button"
                       key={val}
                       onClick={() => setAmount(String(val))}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center ${
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center tabular-nums ${
                         numAmount === val
                           ? "bg-[#EBF7F0] text-[#32A05F] border-[#32A05F]"
                           : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
@@ -355,7 +407,7 @@ export default function FundNairaWalletPage() {
                   </>
                 ) : (
                   <>
-                    <span>
+                    <span className="tabular-nums">
                       Pay ₦{numAmount > 0 ? numAmount.toLocaleString() : "0"} with Paystack
                     </span>
                     <ArrowRight className="w-5 h-5" />
