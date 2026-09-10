@@ -39,7 +39,10 @@ function ensurePaystackLoaded(): Promise<boolean> {
       resolve(false);
       return;
     }
-    if ((window as any).PaystackPop && typeof (window as any).PaystackPop.setup === "function") {
+    if (
+      (window as any).PaystackPop &&
+      typeof (window as any).PaystackPop.setup === "function"
+    ) {
       resolve(true);
       return;
     }
@@ -72,7 +75,9 @@ export default function FundNairaWalletPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successDetails, setSuccessDetails] = useState<SuccessDetails | null>(null);
+  const [successDetails, setSuccessDetails] = useState<SuccessDetails | null>(
+    null,
+  );
   const [copied, setCopied] = useState(false);
 
   // Preload Paystack SDK on component mount
@@ -90,7 +95,10 @@ export default function FundNairaWalletPage() {
     }
   };
 
-  const handlePaymentSuccess = async (reference: string, fundedAmount: number) => {
+  const handlePaymentSuccess = async (
+    reference: string,
+    fundedAmount: number,
+  ) => {
     setIsVerifying(true);
     try {
       await paymentService.verifyPayment(reference);
@@ -165,15 +173,19 @@ export default function FundNairaWalletPage() {
           amount: Math.round(numAmount * 100),
           currency: "NGN",
           ref: data?.reference,
-          channels: ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
-          callback: async (response: any) => {
+          channels: [
+            "card",
+            "bank",
+            "ussd",
+            "qr",
+            "mobile_money",
+            "bank_transfer",
+          ],
           callback: function (response: any) {
             console.log("[Paystack Success Callback]:", response);
             const ref = response?.reference || data?.reference;
-            await handlePaymentSuccess(ref, numAmount);
             handlePaymentSuccess(ref, numAmount);
           },
-          onClose: () => {
           onClose: function () {
             console.log("[Paystack Modal Closed]");
             setIsProcessing(false);
@@ -199,7 +211,9 @@ export default function FundNairaWalletPage() {
         return;
       }
 
-      throw new Error("Unable to open Paystack payment modal. Please try again.");
+      throw new Error(
+        "Unable to open Paystack payment modal. Please try again.",
+      );
     } catch (err: any) {
       console.error("[Paystack Funding Error]:", err);
       const errMsg =
@@ -240,27 +254,40 @@ export default function FundNairaWalletPage() {
                 Deposit Confirmed
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 pt-2 tabular-nums">
-                ₦{successDetails.amount.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                ₦
+                {successDetails.amount.toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+                })}
               </h2>
               <p className="text-sm text-slate-500">
-                Your Naira wallet has been successfully funded and is available for escrow transactions.
+                Your Naira wallet has been successfully funded and is available
+                for escrow transactions.
               </p>
             </div>
 
             {/* Receipt Summary Details */}
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 text-left space-y-3 text-xs">
               <div className="flex items-center justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-500 font-medium">Payment Channel</span>
+                <span className="text-slate-500 font-medium">
+                  Payment Channel
+                </span>
                 <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#32A05F]"></span> Paystack Inline
+                  <span className="w-2 h-2 rounded-full bg-[#32A05F]"></span>{" "}
+                  Paystack Inline
                 </span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-slate-200/60">
-                <span className="text-slate-500 font-medium">Transaction Date</span>
-                <span className="font-bold text-slate-800 tabular-nums">{successDetails.date}</span>
+                <span className="text-slate-500 font-medium">
+                  Transaction Date
+                </span>
+                <span className="font-bold text-slate-800 tabular-nums">
+                  {successDetails.date}
+                </span>
               </div>
               <div className="flex items-center justify-between py-1">
-                <span className="text-slate-500 font-medium">Reference Code</span>
+                <span className="text-slate-500 font-medium">
+                  Reference Code
+                </span>
                 <button
                   type="button"
                   onClick={handleCopyRef}
@@ -309,7 +336,8 @@ export default function FundNairaWalletPage() {
                 Fund Nigerian Naira Wallet
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                Deposit funds directly into your PayTrust escrow balance using Paystack's secure modal.
+                Deposit funds directly into your PayTrust escrow balance using
+                Paystack's secure modal.
               </p>
             </div>
 
@@ -374,10 +402,12 @@ export default function FundNairaWalletPage() {
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-slate-600 font-medium">
                   <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-[#32A05F]" /> Debit Cards (Mastercard, Visa, Verve)
+                    <CreditCard className="w-3.5 h-3.5 text-[#32A05F]" /> Debit
+                    Cards (Mastercard, Visa, Verve)
                   </span>
                   <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
-                    <Building className="w-3.5 h-3.5 text-blue-600" /> Direct Bank Transfer
+                    <Building className="w-3.5 h-3.5 text-blue-600" /> Direct
+                    Bank Transfer
                   </span>
                   <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-amber-600" /> USSD & OPay
@@ -392,7 +422,9 @@ export default function FundNairaWalletPage() {
                   Guaranteed Escrow Safety
                 </p>
                 <p className="text-slate-600 font-medium">
-                  Deposited funds are securely held in your insured escrow balance and instantly available for creating or funding contracts.
+                  Deposited funds are securely held in your insured escrow
+                  balance and instantly available for creating or funding
+                  contracts.
                 </p>
               </div>
 
@@ -405,13 +437,16 @@ export default function FundNairaWalletPage() {
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>
-                      {isVerifying ? "Verifying Deposit Confirmation..." : "Opening Secure Payment Modal..."}
+                      {isVerifying
+                        ? "Verifying Deposit Confirmation..."
+                        : "Opening Secure Payment Modal..."}
                     </span>
                   </>
                 ) : (
                   <>
                     <span className="tabular-nums">
-                      Pay ₦{numAmount > 0 ? numAmount.toLocaleString() : "0"} with Paystack
+                      Pay ₦{numAmount > 0 ? numAmount.toLocaleString() : "0"}{" "}
+                      with Paystack
                     </span>
                     <ArrowRight className="w-5 h-5" />
                   </>
