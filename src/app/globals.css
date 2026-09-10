@@ -147,3 +147,35 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
+/* Shimmer Loading Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 0%,
+    #f8fafc 50%,
+    #e2e8f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shimmer-dark {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #334155 50%,
+    #1e293b 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

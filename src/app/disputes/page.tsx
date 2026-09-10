@@ -19,6 +19,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { disputeService, transactionService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
+import { DisputeCardSkeleton } from "@/components/ui/Skeleton";
 
 export default function DisputesHubPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -173,7 +174,9 @@ export default function DisputesHubPage() {
         </div>
 
         {/* Disputes List */}
-        {filteredDisputes.length > 0 ? (
+        {isLoading ? (
+          <DisputeCardSkeleton count={3} />
+        ) : filteredDisputes.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {filteredDisputes.map((dsp) => {
               const amount = dsp.transaction?.amount ?? dsp.amount ?? 0;

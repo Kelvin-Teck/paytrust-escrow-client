@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { notificationService } from '@/services/api';
+import { NotificationSkeleton } from '@/components/ui/Skeleton';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -173,7 +174,9 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications Stream */}
-        {notifications.length > 0 ? (
+        {isLoading ? (
+          <NotificationSkeleton count={4} />
+        ) : notifications.length > 0 ? (
           <div className="space-y-3">
             {notifications.map((n) => {
               const link = getActionLink(n);

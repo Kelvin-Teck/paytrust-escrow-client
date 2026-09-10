@@ -17,6 +17,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { profileService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 interface BankItem {
   id?: number | string;
@@ -256,12 +257,7 @@ export default function BankDetailsPage() {
         )}
 
         {isLoading ? (
-          <div className="p-12 rounded-3xl bg-white border border-slate-200 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-[#32A05F]" />
-            <p className="text-xs font-medium">
-              Loading bank account details...
-            </p>
-          </div>
+          <FormSkeleton fields={4} />
         ) : (
           <form
             onSubmit={handleSave}

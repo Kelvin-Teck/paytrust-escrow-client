@@ -11,6 +11,7 @@ import {
 import AppShell from '@/components/layout/AppShell';
 import { disputeService } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
+import { DisputeDetailSkeleton } from '@/components/ui/Skeleton';
 
 export default function DisputeMediationRoomPage() {
   const params = useParams();
@@ -86,7 +87,9 @@ export default function DisputeMediationRoomPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Disputes
         </Link>
 
-        {dispute ? (
+        {isLoading ? (
+          <DisputeDetailSkeleton />
+        ) : dispute ? (
           <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
               <div>
@@ -167,7 +170,23 @@ export default function DisputeMediationRoomPage() {
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center text-slate-400">Loading dispute mediation room...</div>
+          <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Dispute Case Not Found
+            </h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              This dispute could not be found or has been closed.
+            </p>
+            <Link
+              href="/disputes"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" /> Return to Disputes
+            </Link>
+          </div>
         )}
       </div>
     </AppShell>

@@ -7,6 +7,7 @@ import AppShell from "@/components/layout/AppShell";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { profileService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 export default function PersonalInformationPage() {
   const { user, setUser } = useAuthStore();
@@ -16,11 +17,13 @@ export default function PersonalInformationPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [dob, setDob] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoading(true);
     profileService
       .getProfile()
       .then((p) => {
@@ -42,6 +45,9 @@ export default function PersonalInformationPage() {
           setAddress((user as any).address || "");
           setDob((user as any).dob || "");
         }
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, [user]);
 
@@ -108,93 +114,101 @@ export default function PersonalInformationPage() {
           </div>
         )}
 
-        <form
-          onSubmit={handleSave}
-          className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-                First Name
-              </label>
-              <input
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-                Last Name
-              </label>
-              <input
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              disabled
-              value={email}
-              className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-sm cursor-not-allowed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-              Phone Number
-            </label>
-            <PhoneInput
-              value={phone}
-              onChange={(fullE164) => setPhone(fullE164)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-                Residential Address (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 12 Marina Road, Victoria Island, Lagos"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
-                Date of Birth (Optional)
-              </label>
-              <input
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="w-full py-3.5 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white text-sm shadow-sm transition-all disabled:opacity-50"
+        {isLoading ? (
+          <FormSkeleton fields={5} />
+        ) : (
+          <form
+            onSubmit={handleSave}
+            className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5"
           >
-            {isSaving ? "Saving Changes..." : "Save Changes"}
-          </button>
-        </form>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                disabled
+                value={email}
+                className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-sm cursor-not-allowed"
+              />
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Email address cannot be changed for security purposes.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Phone Number
+              </label>
+              <PhoneInput
+                value={phone}
+                onChange={(val) => setPhone(val)}
+                className="w-full"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                  Residential Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 14 Marina Street, Lagos"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="w-full py-3.5 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white text-sm shadow-sm transition-all disabled:opacity-50"
+            >
+              {isSaving ? "Saving Changes..." : "Save Changes"}
+            </button>
+          </form>
+        )}
       </div>
     </AppShell>
   );

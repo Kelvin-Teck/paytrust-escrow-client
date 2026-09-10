@@ -21,6 +21,7 @@ import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
+import { DealDetailSkeleton } from "@/components/ui/Skeleton";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -120,7 +121,9 @@ export default function TransactionDetailPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Deals
         </Link>
 
-        {transaction ? (
+        {isLoading ? (
+          <DealDetailSkeleton />
+        ) : transaction ? (
           <div className="space-y-6">
             {/* Header Box */}
             <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -425,8 +428,22 @@ export default function TransactionDetailPage() {
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center text-slate-400">
-            Loading escrow agreement details...
+          <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Escrow Agreement Not Found
+            </h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto">
+              The contract details could not be retrieved. It may have been archived or you do not have permission to view it.
+            </p>
+            <Link
+              href="/transaction"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" /> Return to Deals List
+            </Link>
           </div>
         )}
       </div>

@@ -19,6 +19,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
+import { DealCardSkeleton } from "@/components/ui/Skeleton";
 
 export default function EscrowTransactionPage() {
   const currentUser = useAuthStore((s) => s.user);
@@ -113,7 +114,9 @@ export default function EscrowTransactionPage() {
           </div>
         </div>
 
-        {filteredTransactions.length > 0 ? (
+        {isLoading ? (
+          <DealCardSkeleton count={3} />
+        ) : filteredTransactions.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {filteredTransactions.map((deal) => {
               const isCurrentUserBuyer =

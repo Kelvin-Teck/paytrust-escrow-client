@@ -27,10 +27,12 @@ import { profileService } from "@/services/api";
 import { getTierInfo } from "@/lib/utils";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { getCountryByCode } from "@/data/countries";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function ProfileHubPage() {
   const { user, setUser } = useAuthStore();
   const [profileData, setProfileData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [originUrl, setOriginUrl] = useState("");
@@ -40,6 +42,7 @@ export default function ProfileHubPage() {
       setOriginUrl(window.location.origin);
     }
 
+    setIsLoading(true);
     profileService
       .getProfile()
       .then((data) => {
@@ -48,7 +51,8 @@ export default function ProfileHubPage() {
           setUser(data);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
   }, [setUser]);
 
   const formatNameFromEmail = (email?: string) => {
@@ -165,53 +169,70 @@ export default function ProfileHubPage() {
         {/* User Profile & Referral Card */}
         <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
           {/* Main Profile Info Header */}
-          <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 border-b border-slate-100">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-50 text-[#32A05F] flex items-center justify-center font-bold text-2xl border border-[#32A05F]/20 shadow-xs shrink-0">
-              {userInitials}
+          {isLoading && !profileData && !user ? (
+            <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 border-b border-slate-100">
+              <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Skeleton className="h-7 w-48 rounded-lg" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+                <div className="flex gap-4">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              </div>
             </div>
-
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
-                  {displayName}
-                </h2>
-
-                {(() => {
-                  const tier = getTierInfo(
-                    profileData?.kycStatus || user?.kycStatus,
-                  );
-                  return (
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${tier.badgeBg} ${tier.badgeTextClass} ${tier.badgeBorder}`}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {tier.tierName}
-                    </span>
-                  );
-                })()}
+          ) : (
+            <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 border-b border-slate-100">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-50 text-[#32A05F] flex items-center justify-center font-bold text-2xl border border-[#32A05F]/20 shadow-xs shrink-0">
+                {userInitials}
               </div>
 
-              {/* Contact and Location Metadata */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{profileData?.email || user?.email || "user@paytrust.io"}</span>
-                </span>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+                    {displayName}
+                  </h2>
 
-                {(profileData?.phone || user?.phone) && (
+                  {(() => {
+                    const tier = getTierInfo(
+                      profileData?.kycStatus || user?.kycStatus,
+                    );
+                    return (
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${tier.badgeBg} ${tier.badgeTextClass} ${tier.badgeBorder}`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {tier.tierName}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {/* Contact and Location Metadata */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>{profileData?.phone || user?.phone}</span>
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{profileData?.email || user?.email || "user@paytrust.io"}</span>
                   </span>
-                )}
 
-                <span className="flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{userCountry}</span>
-                </span>
+                  {(profileData?.phone || user?.phone) && (
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{profileData?.phone || user?.phone}</span>
+                    </span>
+                  )}
+
+                  <span className="flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{userCountry}</span>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Referral & Invite Rewards Section */}
           <div className="p-6 sm:p-8 bg-slate-50/60 space-y-5">

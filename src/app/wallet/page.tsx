@@ -30,6 +30,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { walletService, paymentService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
+import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton";
 
 type CurrencyFilter = "ALL" | "NGN" | "BTC";
 type StatusFilter = "ALL" | "success" | "pending" | "failed";
@@ -296,93 +297,100 @@ function WalletContent() {
       </div>
 
       {/* Currency Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Naira Card */}
-        <div className="p-8 rounded-3xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[260px]">
-          <div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#32A05F]/20 text-[#32A05F] flex items-center justify-center font-bold text-lg border border-[#32A05F]/30">
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardSkeleton isDark={true} className="min-h-[260px]" />
+          <CardSkeleton isDark={true} className="min-h-[260px]" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Naira Card */}
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[260px]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#32A05F]/20 text-[#32A05F] flex items-center justify-center font-bold text-lg border border-[#32A05F]/30">
+                    ₦
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Nigerian Naira Wallet</h3>
+                    <span className="text-xs text-[#32A05F] font-semibold">
+                      Instant Paystack & Transfer
+                    </span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-[#32A05F]/20 text-[#32A05F] text-xs font-bold border border-[#32A05F]/30">
+                  Active
+                </span>
+              </div>
+
+              <div className="mt-8">
+                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                  Available Balance
+                </span>
+                <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">
                   ₦
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">Nigerian Naira Wallet</h3>
-                  <span className="text-xs text-[#32A05F] font-semibold">
-                    Instant Paystack & Transfer
-                  </span>
+                  {Number(walletBalance).toLocaleString("en-NG", {
+                    minimumFractionDigits: 2,
+                  })}
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full bg-[#32A05F]/20 text-[#32A05F] text-xs font-bold border border-[#32A05F]/30">
-                Active
-              </span>
             </div>
 
-            <div className="mt-8">
-              <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
-                Available Balance
-              </span>
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">
-                ₦
-                {Number(walletBalance).toLocaleString("en-NG", {
-                  minimumFractionDigits: 2,
-                })}
-              </div>
+            <div className="flex items-center justify-between pt-6 border-t border-slate-800 mt-6">
+              <Link
+                href="/wallet/naira"
+                className="text-sm font-bold text-[#32A05F] hover:underline flex items-center gap-1"
+              >
+                Top up & Fund Wallet <ChevronRight className="w-4 h-4" />
+              </Link>
+              <span className="text-xs text-slate-400">Default Currency</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-6 border-t border-slate-800 mt-6">
-            <Link
-              href="/wallet/naira"
-              className="text-sm font-bold text-[#32A05F] hover:underline flex items-center gap-1"
-            >
-              Top up & Fund Wallet <ChevronRight className="w-4 h-4" />
-            </Link>
-            <span className="text-xs text-slate-400">Default Currency</span>
+          {/* Bitcoin Card */}
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[260px]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg border border-orange-500/30">
+                    ₿
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Bitcoin Vault</h3>
+                    <span className="text-xs text-orange-400 font-semibold">
+                      On-chain SegWit
+                    </span>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30">
+                  Active
+                </span>
+              </div>
+
+              <div className="mt-8">
+                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                  Available Balance
+                </span>
+                <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">
+                  0.00000000{" "}
+                  <span className="text-lg text-slate-400 font-normal">BTC</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-6 border-t border-slate-800 mt-6">
+              <Link
+                href="/wallet/bitcoin"
+                className="text-sm font-bold text-orange-400 hover:underline flex items-center gap-1"
+              >
+                Open Bitcoin Vault <ChevronRight className="w-4 h-4" />
+              </Link>
+              <span className="text-xs text-slate-400">Multi-sig Protected</span>
+            </div>
           </div>
         </div>
-
-        {/* Bitcoin Card */}
-        <div className="p-8 rounded-3xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[260px]">
-          <div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-lg border border-orange-500/30">
-                  ₿
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">Bitcoin Vault</h3>
-                  <span className="text-xs text-orange-400 font-semibold">
-                    On-chain SegWit
-                  </span>
-                </div>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30">
-                Active
-              </span>
-            </div>
-
-            <div className="mt-8">
-              <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
-                Available Balance
-              </span>
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">
-                0.00000000{" "}
-                <span className="text-lg text-slate-400 font-normal">BTC</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-6 border-t border-slate-800 mt-6">
-            <Link
-              href="/wallet/bitcoin"
-              className="text-sm font-bold text-orange-400 hover:underline flex items-center gap-1"
-            >
-              Open Bitcoin Vault <ChevronRight className="w-4 h-4" />
-            </Link>
-            <span className="text-xs text-slate-400">Multi-sig Protected</span>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* ========================================================= */}
       {/* WALLET ACTIVITY SECTION WITH ENHANCED FILTERING & SORTING */}
@@ -620,12 +628,7 @@ function WalletContent() {
 
         {/* Transaction Ledger Table / List */}
         {isLoading && history.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center text-slate-400">
-            <RefreshCw className="w-8 h-8 animate-spin mb-3 text-[#32A05F]" />
-            <span className="text-sm font-semibold">
-              Loading ledger records...
-            </span>
-          </div>
+          <TableSkeleton rows={5} cols={5} />
         ) : filteredTransactions.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">

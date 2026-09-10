@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuthStore } from "@/stores/authStore";
+import { CardSkeleton, TableSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import {
   dashboardService,
   walletService,
@@ -125,98 +126,106 @@ export default function DashboardPage() {
         </div>
 
         {/* Balance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Main Available Balance */}
-          <div className="p-6 rounded-3xl bg-[#0F172A] text-white shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Available Balance (NGN)
-              </span>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="text-slate-400 hover:text-white transition-colors"
-                title={showBalance ? "Hide Balance" : "Show Balance"}
-              >
-                {showBalance ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-            <div className="text-3xl font-extrabold tracking-tight mb-4">
-              {showBalance
-                ? `₦${Number(walletBalance).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`
-                : "••••••••••"}
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
-              <span className="flex items-center gap-1 text-[#32A05F] font-bold">
-                <TrendingUp className="w-3.5 h-3.5" /> Instant Paystack &
-                Transfer
-              </span>
-              <Link
-                href="/wallet"
-                className="hover:text-[#32A05F] transition-colors font-semibold"
-              >
-                Manage Wallet →
-              </Link>
-            </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <CardSkeleton isDark={true} />
+            <CardSkeleton />
+            <CardSkeleton />
           </div>
-
-          {/* Locked in Escrow */}
-          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Active Escrow Deals
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                <Clock className="w-4 h-4" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Main Available Balance */}
+            <div className="p-6 rounded-3xl bg-[#0F172A] text-white shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Available Balance (NGN)
+                </span>
+                <button
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="text-slate-400 hover:text-white transition-colors"
+                  title={showBalance ? "Hide Balance" : "Show Balance"}
+                >
+                  {showBalance ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight mb-4">
+                {showBalance
+                  ? `₦${Number(walletBalance).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`
+                  : "••••••••••"}
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-800">
+                <span className="flex items-center gap-1 text-[#32A05F] font-bold">
+                  <TrendingUp className="w-3.5 h-3.5" /> Instant Paystack &
+                  Transfer
+                </span>
+                <Link
+                  href="/wallet"
+                  className="hover:text-[#32A05F] transition-colors font-semibold"
+                >
+                  Manage Wallet →
+                </Link>
               </div>
             </div>
-            <div className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">
-              {dashboardData?.stats?.activeEscrows ?? 0}{" "}
-              <span className="text-base text-slate-400 font-normal">
-                Active
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-              <span>
-                {dashboardData?.stats?.pendingEscrows ?? 0} pending milestone
-                actions
-              </span>
-              <Link
-                href="/transaction"
-                className="text-[#32A05F] font-bold hover:underline"
-              >
-                View Deals →
-              </Link>
-            </div>
-          </div>
 
-          {/* Bitcoin Vault */}
-          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Bitcoin Escrow Vault
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
-                <Wallet className="w-4 h-4" />
+            {/* Locked in Escrow */}
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Active Escrow Deals
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                  <Clock className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">
+                {dashboardData?.stats?.activeEscrows ?? 0}{" "}
+                <span className="text-base text-slate-400 font-normal">
+                  Active
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                <span>
+                  {dashboardData?.stats?.pendingEscrows ?? 0} pending milestone
+                  actions
+                </span>
+                <Link
+                  href="/transaction"
+                  className="text-[#32A05F] font-bold hover:underline"
+                >
+                  View Deals →
+                </Link>
               </div>
             </div>
-            <div className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">
-              {showBalance ? "0.0000 BTC" : "••••••••••"}
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-              <span>Native SegWit Multi-sig</span>
-              <Link
-                href="/wallet/bitcoin"
-                className="text-orange-600 font-bold hover:underline"
-              >
-                BTC Details →
-              </Link>
+
+            {/* Bitcoin Vault */}
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Bitcoin Escrow Vault
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+                  <Wallet className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">
+                {showBalance ? "0.0000 BTC" : "••••••••••"}
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                <span>Native SegWit Multi-sig</span>
+                <Link
+                  href="/wallet/bitcoin"
+                  className="text-orange-600 font-bold hover:underline"
+                >
+                  BTC Details →
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Transactions Section */}
         <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
@@ -244,7 +253,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {transactions.length > 0 ? (
+          {isLoading ? (
+            <TableSkeleton rows={4} cols={5} />
+          ) : transactions.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
@@ -257,44 +268,6 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {transactions.map((tx: any) => (
-                    <tr
-                      key={tx.id}
-                      className="hover:bg-slate-50 transition-colors group"
-                    >
-                      <td className="py-4 pr-4">
-                        <div className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors">
-                          {tx.title || "Escrow Agreement"}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-0.5 font-mono">
-                          {tx.id?.slice(0, 8)} •{" "}
-                          {new Date(
-                            tx.createdAt || Date.now(),
-                          ).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="py-4 pr-4 text-slate-600 font-medium">
-                        {tx.buyerEmail || tx.sellerEmail || "Counterparty"}
-                      </td>
-                      <td className="py-4 pr-4 font-bold text-slate-900">
-                        ₦{Number(tx.amount || 0).toLocaleString()}
-                      </td>
-                      <td className="py-4 pr-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
-                          {tx.status?.replace("_", " ").toLowerCase() ||
-                            "Active"}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        <Link
-                          href={`/transaction/${tx.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-[#32A05F] hover:underline"
-                        >
-                          Details <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
                   {transactions.map((tx: any) => {
                     const isBuyer =
                       user?.id === tx.buyerId ||
