@@ -1,20 +1,36 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// ─── Production-Grade Typography Stack ───
+// 1. Primary: Plus Jakarta Sans (Friendly, Modern Fintech Geometric Sans)
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// 2. Fallback: Inter (Neo-Grotesque Screen-Optimized UI Sans)
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+// 3. Monospace: JetBrains Mono (Engineered for Data Grids, Numbers & Audit Logs)
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Paytrust",
-  description: "Paytrust is a secure escrow and wallet service for businesses and individuals. Pay, save, send, and receive money with ease.",
+  title: "PayTrust | Secure Multi-Currency Digital Escrow",
+  description:
+    "PayTrust is a secure escrow and wallet service for businesses and individuals. Pay, save, send, and receive money with ease.",
 };
 
 export default function RootLayout({
@@ -25,9 +41,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );
 }
