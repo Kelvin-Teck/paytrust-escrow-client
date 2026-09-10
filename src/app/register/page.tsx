@@ -8,7 +8,6 @@ import {
   Mail,
   Lock,
   User,
-  Phone,
   ArrowRight,
   Eye,
   EyeOff,
@@ -18,6 +17,8 @@ import {
   Tag,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import { DEFAULT_COUNTRY, Country } from "@/data/countries";
 import { authService } from "@/services/api";
 
 export default function RegisterPage() {
@@ -25,6 +26,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +35,10 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName || !phone) return;
+    if (!email || !password || !fullName || !phone) {
+      setErrorMessage("Please fill in all required fields including a valid phone number.");
+      return;
+    }
 
     if (password.length < 6) {
       setErrorMessage("Password must be at least 6 characters long.");
@@ -54,10 +59,9 @@ export default function RegisterPage() {
         firstName,
         lastName,
         phone: phone.trim(),
-        country: "Nigeria",
+        country: country.name,
       });
 
-      // Navigate to verification screen with email pre-populated
       router.push(`/register/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
     } catch (err: any) {
       console.error("Registration error:", err);
@@ -91,13 +95,13 @@ export default function RegisterPage() {
         >
           <div className="mb-6">
             <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" /> Create Escrow Account
+              <ShieldCheck className="w-4 h-4" /> Global Escrow Platform
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
               Join PayTrust
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Start trading safely with milestone-protected digital escrow & multi-currency wallets.
+              Start trading safely with milestone-protected digital escrow & multi-currency wallets worldwide.
             </p>
           </div>
 
@@ -145,22 +149,26 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Phone Number */}
+            {/* International Phone Number */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+234 801 234 5678"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
-                />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Phone Number
+                </label>
+                <span className="text-slate-400 text-xs font-medium">
+                  {country.flag} {country.name}
+                </span>
               </div>
+              <PhoneInput
+                required
+                value={phone}
+                defaultCountryCode="NG"
+                onChange={(fullE164, selectedCountry) => {
+                  setPhone(fullE164);
+                  setCountry(selectedCountry);
+                }}
+                onCountryChange={(selectedCountry) => setCountry(selectedCountry)}
+              />
             </div>
 
             {/* Password */}
@@ -218,7 +226,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-2 justify-center">
-            <CheckCircle2 className="w-4 h-4 text-[#32A05F]" /> 256-bit encryption & escrow security
+            <CheckCircle2 className="w-4 h-4 text-[#32A05F]" /> 256-bit encryption & global escrow security
           </div>
         </motion.div>
       </main>

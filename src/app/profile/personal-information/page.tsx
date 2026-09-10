@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, User, Mail, Phone, AlertCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { profileService } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -17,21 +18,24 @@ export default function PersonalInformationPage() {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    profileService.getProfile().then((p) => {
-      if (p) {
-        setFirstName(p.firstName || '');
-        setLastName(p.lastName || '');
-        setPhone(p.phone || '');
-        setEmail(p.email || '');
-      }
-    }).catch(() => {
-      if (user) {
-        setFirstName(user.firstName || '');
-        setLastName(user.lastName || '');
-        setPhone(user.phone || '');
-        setEmail(user.email || '');
-      }
-    });
+    profileService
+      .getProfile()
+      .then((p) => {
+        if (p) {
+          setFirstName(p.firstName || '');
+          setLastName(p.lastName || '');
+          setPhone(p.phone || '');
+          setEmail(p.email || '');
+        }
+      })
+      .catch(() => {
+        if (user) {
+          setFirstName(user.firstName || '');
+          setLastName(user.lastName || '');
+          setPhone(user.phone || '');
+          setEmail(user.email || '');
+        }
+      });
   }, [user]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -66,14 +70,19 @@ export default function PersonalInformationPage() {
             Personal Information
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Update your registered profile identity and contact information.
+            Update your registered profile identity and international contact information.
           </p>
         </div>
 
-        <form onSubmit={handleSave} className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+        <form
+          onSubmit={handleSave}
+          className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">First Name</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                First Name
+              </label>
               <input
                 type="text"
                 required
@@ -83,7 +92,9 @@ export default function PersonalInformationPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Last Name</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Last Name
+              </label>
               <input
                 type="text"
                 required
@@ -95,7 +106,9 @@ export default function PersonalInformationPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Email Address</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+              Email Address
+            </label>
             <input
               type="email"
               disabled
@@ -105,13 +118,12 @@ export default function PersonalInformationPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Phone Number</label>
-            <input
-              type="tel"
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+              Phone Number
+            </label>
+            <PhoneInput
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+234..."
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+              onChange={(fullE164) => setPhone(fullE164)}
             />
           </div>
 

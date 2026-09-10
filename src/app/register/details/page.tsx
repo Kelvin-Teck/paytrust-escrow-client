@@ -4,8 +4,10 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, User, Phone, Lock, AlertCircle } from 'lucide-react';
+import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { DEFAULT_COUNTRY, Country } from '@/data/countries';
 import { authService } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -17,12 +19,18 @@ function DetailsForm() {
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneNumber) {
+      setErrorMessage('Please provide a valid phone number.');
+      return;
+    }
+
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -37,7 +45,7 @@ function DetailsForm() {
         firstName,
         lastName,
         phone: phoneNumber,
-        country: 'Nigeria',
+        country: country.name,
       });
       if (data?.token) {
         setAuth(data.user || { id: '1', email, firstName, lastName }, data.token);
@@ -45,7 +53,6 @@ function DetailsForm() {
       router.push('/register/success');
     } catch (err: any) {
       console.error('Registration error:', err);
-      // If registration succeeds or fallback needed:
       setErrorMessage(err.message || 'Registration failed. Please check your details.');
     } finally {
       setIsLoading(false);
@@ -86,26 +93,30 @@ function DetailsForm() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. Tolulope Lanre Balogun"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 focus:border-[#32A05F] text-sm"
+              className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-            Phone Number
-          </label>
-          <div className="relative">
-            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="tel"
-              required
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+234 801 234 5678"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 focus:border-[#32A05F] text-sm"
-            />
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+              Phone Number
+            </label>
+            <span className="text-slate-400 text-xs font-medium">
+              {country.flag} {country.name}
+            </span>
           </div>
+          <PhoneInput
+            required
+            value={phoneNumber}
+            defaultCountryCode="NG"
+            onChange={(fullE164, selectedCountry) => {
+              setPhoneNumber(fullE164);
+              setCountry(selectedCountry);
+            }}
+            onCountryChange={(selectedCountry) => setCountry(selectedCountry)}
+          />
         </div>
 
         <div>
@@ -117,10 +128,11 @@ function DetailsForm() {
             <input
               type="password"
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 focus:border-[#32A05F] text-sm"
+              className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
             />
           </div>
         </div>
