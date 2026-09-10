@@ -4,11 +4,20 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
+import { ArrowRight, User, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { CountryFlag } from '@/components/ui/CountryFlag';
-import { DEFAULT_COUNTRY, Country, detectUserCountrySync, detectUserCountryAsync } from '@/data/countries';
+import {
+  PasswordStrengthIndicator,
+  checkPasswordCriteria,
+} from '@/components/ui/PasswordStrengthIndicator';
+import {
+  DEFAULT_COUNTRY,
+  Country,
+  detectUserCountrySync,
+  detectUserCountryAsync,
+} from '@/data/countries';
 import { authService } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -22,6 +31,7 @@ function DetailsForm() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [country, setCountry] = useState<Country>(() => detectUserCountrySync());
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -37,6 +47,14 @@ function DetailsForm() {
     e.preventDefault();
     if (!phoneNumber) {
       setErrorMessage('Please provide a valid phone number.');
+      return;
+    }
+
+    const passwordStats = checkPasswordCriteria(password);
+    if (!passwordStats.isValid) {
+      setErrorMessage(
+        'Please provide a secure password (at least 8 characters with uppercase, lowercase, and numbers).'
+      );
       return;
     }
 
@@ -135,15 +153,25 @@ function DetailsForm() {
           <div className="relative">
             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              className="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+              placeholder="Create a secure password"
+              className="w-full pl-10 pr-11 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+
+          {/* Real-time Password Strength Indicator */}
+          <PasswordStrengthIndicator password={password} />
         </div>
 
         <button

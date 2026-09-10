@@ -19,7 +19,16 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { CountryFlag } from "@/components/ui/CountryFlag";
-import { DEFAULT_COUNTRY, Country, detectUserCountrySync, detectUserCountryAsync } from "@/data/countries";
+import {
+  PasswordStrengthIndicator,
+  checkPasswordCriteria,
+} from "@/components/ui/PasswordStrengthIndicator";
+import {
+  DEFAULT_COUNTRY,
+  Country,
+  detectUserCountrySync,
+  detectUserCountryAsync,
+} from "@/data/countries";
 import { authService } from "@/services/api";
 
 export default function RegisterPage() {
@@ -49,8 +58,11 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters long.");
+    const passwordStats = checkPasswordCriteria(password);
+    if (!passwordStats.isValid) {
+      setErrorMessage(
+        "Please provide a secure password (at least 8 characters with uppercase, lowercase, and numbers)."
+      );
       return;
     }
 
@@ -180,7 +192,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Password */}
+            {/* Password with Real-time Strength & Criteria */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Password
@@ -190,20 +202,23 @@ export default function RegisterPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  minLength={6}
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Create a secure password"
                   className="w-full pl-10 pr-11 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {/* Real-time Password Strength Indicator */}
+              <PasswordStrengthIndicator password={password} />
             </div>
 
             {/* Referral Code (Optional) */}
