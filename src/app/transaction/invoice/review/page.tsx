@@ -65,6 +65,24 @@ export default function InvoiceReviewPage() {
             </div>
           </div>
 
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Payout Settlement Summary</h4>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Gross Invoice Total:</span>
+                <span className="font-semibold text-slate-900">₦500,000</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>PayTrust Platform Fee (2.5%):</span>
+                <span className="font-semibold text-rose-600">-₦12,500</span>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold">
+                <span className="text-slate-900">Net Seller Payout:</span>
+                <span className="text-[#32A05F]">₦487,500</span>
+              </div>
+            </div>
+          </div>
+
           <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/30 flex items-center justify-between">
             <div className="text-xs text-slate-800 font-medium">
               Shareable Escrow Link: <span className="font-mono font-bold text-[#32A05F]">https://paytrust.io/invoice/INV-2026-9824</span>

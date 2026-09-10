@@ -102,6 +102,47 @@ export default function TransactionDetailPage() {
               </div>
             )}
 
+            {/* Settlement & Fee Breakdown Card */}
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-[#32A05F]" />
+                  <h3 className="font-bold text-slate-900 text-sm">Escrow Monetization & Payout Breakdown</h3>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#EBF7F0] text-[#32A05F]">
+                  {transaction.feePercentage ? `${transaction.feePercentage}% Platform Fee` : '2.5% Platform Fee'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 space-y-1">
+                  <span className="text-slate-500 font-medium">Gross Escrow Value</span>
+                  <p className="text-base font-bold text-slate-900">
+                    ₦{Number(transaction.totalAmount || transaction.amount || 0).toLocaleString()}
+                  </p>
+                  <span className="text-[10px] text-slate-400">Total locked in escrow</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 space-y-1">
+                  <span className="text-rose-700 font-medium">Platform Fee ({transaction.feePercentage || 2.5}%)</span>
+                  <p className="text-base font-bold text-rose-600">
+                    -₦{Number(transaction.platformFee || ((Number(transaction.totalAmount || transaction.amount || 0) * (Number(transaction.feePercentage) || 2.5)) / 100)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <span className="text-[10px] text-rose-500">PayTrust service protection</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/20 space-y-1">
+                  <span className="text-[#15803d] font-medium">Net Seller Payout</span>
+                  <p className="text-base font-bold text-[#15803d]">
+                    ₦{Number(transaction.netAmount || (Number(transaction.totalAmount || transaction.amount || 0) - (Number(transaction.platformFee) || ((Number(transaction.totalAmount || transaction.amount || 0) * (Number(transaction.feePercentage) || 2.5)) / 100)))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <span className="text-[10px] text-[#166534]">
+                    {transaction.status === 'COMPLETED' ? '✓ Credited to wallet' : 'Credited upon release'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Actions Panel */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Shipping Box */}
@@ -118,7 +159,7 @@ export default function TransactionDetailPage() {
 
                 {transaction.status === 'SHIPPED' ? (
                   <div className="p-4 rounded-xl bg-slate-50 text-xs space-y-1">
-                    <p className="font-semibold text-slate-700">Courier: {transaction.courier || 'GIG Logistics'}</p>
+                    <p className="font-semibold text-slate-700">Courier: {transaction.shippingCarrier || transaction.courier || 'GIG Logistics'}</p>
                     <p className="font-mono text-slate-500">Tracking: {transaction.trackingNumber || 'GIG-98214'}</p>
                   </div>
                 ) : (
@@ -163,16 +204,16 @@ export default function TransactionDetailPage() {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                    Once confirmed, locked funds will be immediately released to the seller's wallet balance.
+                    Once confirmed, ₦{Number(transaction.netAmount || (Number(transaction.totalAmount || transaction.amount || 0) * 0.975)).toLocaleString()} will be released to the seller after deducting the 2.5% platform fee.
                   </p>
                 </div>
 
                 <button
                   onClick={handleConfirmDelivery}
-                  disabled={isSubmitting || transaction.status === 'DELIVERED'}
+                  disabled={isSubmitting || transaction.status === 'COMPLETED' || transaction.status === 'DELIVERED'}
                   className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
                 >
-                  {transaction.status === 'DELIVERED' ? 'Delivery Confirmed & Released' : 'Confirm Delivery & Release Funds'}
+                  {transaction.status === 'COMPLETED' || transaction.status === 'DELIVERED' ? '✓ Delivery Confirmed & Settled' : 'Confirm Delivery & Release Funds'}
                 </button>
               </div>
             </div>

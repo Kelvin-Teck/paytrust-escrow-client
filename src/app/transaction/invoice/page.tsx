@@ -138,6 +138,36 @@ export default function CreateInvoicePage() {
             />
           </div>
 
+          {/* Dynamic Platform Fee & Net Payout Breakdown */}
+          {parseFloat(amount) > 0 && (
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+                <span>Fee & Payout Breakdown</span>
+                <span className="text-[#32A05F] bg-[#EBF7F0] px-2 py-0.5 rounded-full font-semibold">2.5% Platform Fee</span>
+              </div>
+              
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Gross Escrow Value:</span>
+                  <span className="font-semibold text-slate-900">₦{parseFloat(amount).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>PayTrust Service Fee (2.5%):</span>
+                  <span className="font-semibold text-rose-600">-₦{((parseFloat(amount) * 2.5) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold">
+                  <span className="text-slate-900">Estimated Net Payout:</span>
+                  <span className="text-[#32A05F]">₦{(parseFloat(amount) - (parseFloat(amount) * 2.5) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 pt-1 text-[11px] text-slate-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#32A05F] shrink-0" />
+                <span>The platform fee is only deducted from your proceeds upon successful release of funds.</span>
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
