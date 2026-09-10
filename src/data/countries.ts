@@ -133,6 +133,128 @@ export const COUNTRIES: Country[] = [
 
 export const DEFAULT_COUNTRY = COUNTRIES[0]; // Nigeria
 
+const TIMEZONE_COUNTRY_MAP: Record<string, string> = {
+  // Africa
+  "Africa/Lagos": "NG",
+  "Africa/Accra": "GH",
+  "Africa/Nairobi": "KE",
+  "Africa/Johannesburg": "ZA",
+  "Africa/Cairo": "EG",
+  "Africa/Kigali": "RW",
+  "Africa/Kampala": "UG",
+  "Africa/Dar_es_Salaam": "TZ",
+  "Africa/Douala": "CM",
+  "Africa/Abidjan": "CI",
+  "Africa/Dakar": "SN",
+  "Africa/Casablanca": "MA",
+  "Africa/Algiers": "DZ",
+  "Africa/Tunis": "TN",
+  "Africa/Addis_Ababa": "ET",
+  "Africa/Luanda": "AO",
+  "Africa/Lusaka": "ZM",
+  "Africa/Harare": "ZW",
+  "Africa/Monrovia": "LR",
+  "Africa/Freetown": "SL",
+  "Africa/Banjul": "GM",
+  "Africa/Niamey": "NE",
+  "Africa/Bamako": "ML",
+  "Africa/Ouagadougou": "BF",
+  "Africa/Lome": "TG",
+  "Africa/Cotonou": "BJ",
+  "Africa/Kinshasa": "CD",
+  "Africa/Lubumbashi": "CD",
+  "Africa/Brazzaville": "CG",
+  "Africa/Gaborone": "BW",
+  "Africa/Windhoek": "NA",
+  "Africa/Maputo": "MZ",
+  "Africa/Bujumbura": "BI",
+
+  // North America
+  "America/New_York": "US",
+  "America/Chicago": "US",
+  "America/Denver": "US",
+  "America/Los_Angeles": "US",
+  "America/Phoenix": "US",
+  "America/Anchorage": "US",
+  "America/Honolulu": "US",
+  "America/Detroit": "US",
+  "America/Indiana/Indianapolis": "US",
+  "America/Toronto": "CA",
+  "America/Vancouver": "CA",
+  "America/Montreal": "CA",
+  "America/Edmonton": "CA",
+  "America/Winnipeg": "CA",
+  "America/Halifax": "CA",
+  "America/St_Johns": "CA",
+  "America/Mexico_City": "MX",
+  "America/Cancun": "MX",
+
+  // Europe
+  "Europe/London": "GB",
+  "Europe/Belfast": "GB",
+  "Europe/Dublin": "IE",
+  "Europe/Paris": "FR",
+  "Europe/Berlin": "DE",
+  "Europe/Rome": "IT",
+  "Europe/Madrid": "ES",
+  "Europe/Amsterdam": "NL",
+  "Europe/Brussels": "BE",
+  "Europe/Vienna": "AT",
+  "Europe/Zurich": "CH",
+  "Europe/Stockholm": "SE",
+  "Europe/Oslo": "NO",
+  "Europe/Copenhagen": "DK",
+  "Europe/Helsinki": "FI",
+  "Europe/Warsaw": "PL",
+  "Europe/Prague": "CZ",
+  "Europe/Budapest": "HU",
+  "Europe/Bucharest": "RO",
+  "Europe/Athens": "GR",
+  "Europe/Lisbon": "PT",
+  "Europe/Kyiv": "UA",
+  "Europe/Istanbul": "TR",
+
+  // Middle East & Asia
+  "Asia/Dubai": "AE",
+  "Asia/Riyadh": "SA",
+  "Asia/Qatar": "QA",
+  "Asia/Bahrain": "BH",
+  "Asia/Kuwait": "KW",
+  "Asia/Muscat": "OM",
+  "Asia/Beirut": "LB",
+  "Asia/Amman": "JO",
+  "Asia/Jerusalem": "IL",
+  "Asia/Kolkata": "IN",
+  "Asia/Calcutta": "IN",
+  "Asia/Karachi": "PK",
+  "Asia/Dhaka": "BD",
+  "Asia/Colombo": "LK",
+  "Asia/Kathmandu": "NP",
+  "Asia/Singapore": "SG",
+  "Asia/Kuala_Lumpur": "MY",
+  "Asia/Jakarta": "ID",
+  "Asia/Bangkok": "TH",
+  "Asia/Manila": "PH",
+  "Asia/Ho_Chi_Minh": "VN",
+  "Asia/Tokyo": "JP",
+  "Asia/Seoul": "KR",
+  "Asia/Hong_Kong": "HK",
+  "Asia/Shanghai": "CN",
+
+  // Oceania & South America
+  "Australia/Sydney": "AU",
+  "Australia/Melbourne": "AU",
+  "Australia/Brisbane": "AU",
+  "Australia/Perth": "AU",
+  "Australia/Adelaide": "AU",
+  "Pacific/Auckland": "NZ",
+  "America/Sao_Paulo": "BR",
+  "America/Buenos_Aires": "AR",
+  "America/Bogota": "CO",
+  "America/Lima": "PE",
+  "America/Santiago": "CL",
+};
+
 /**
  * Lookup a country by its 2-letter ISO code (case-insensitive)
  */
@@ -169,3 +291,62 @@ export function findCountryFromPhone(input: string): { country: Country; nationa
   return null;
 }
 
+/**
+ * Synchronously detect user's country from timezone or browser locale
+ */
+export function detectUserCountrySync(): Country {
+  if (typeof window === "undefined") return DEFAULT_COUNTRY;
+
+  try {
+    // 1. Check browser timezone
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz && TIMEZONE_COUNTRY_MAP[tz]) {
+      return getCountryByCode(TIMEZONE_COUNTRY_MAP[tz]);
+    }
+
+    // 2. Check navigator language region code (e.g. "en-US" -> "US", "en-GB" -> "GB", "en-NG" -> "NG")
+    const languages = navigator.languages || [navigator.language];
+    for (const lang of languages) {
+      if (lang && lang.includes("-")) {
+        const region = lang.split("-")[1].toUpperCase();
+        if (region.length === 2) {
+          const match = COUNTRIES.find((c) => c.code === region);
+          if (match) return match;
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  return DEFAULT_COUNTRY;
+}
+
+/**
+ * Asynchronously detect user's country with network GeoIP fallback
+ */
+export async function detectUserCountryAsync(): Promise<Country> {
+  const syncMatch = detectUserCountrySync();
+  if (typeof window === "undefined") return syncMatch;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+    const res = await fetch("https://api.country.is/", {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.country) {
+        return getCountryByCode(data.country);
+      }
+    }
+  } catch (e) {
+    // Fallback to sync match
+  }
+
+  return syncMatch;
+}

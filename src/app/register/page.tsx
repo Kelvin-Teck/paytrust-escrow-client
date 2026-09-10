@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PhoneInput } from "@/components/ui/PhoneInput";
-import { DEFAULT_COUNTRY, Country } from "@/data/countries";
+import { CountryFlag } from "@/components/ui/CountryFlag";
+import { DEFAULT_COUNTRY, Country, detectUserCountrySync, detectUserCountryAsync } from "@/data/countries";
 import { authService } from "@/services/api";
 
 export default function RegisterPage() {
@@ -26,12 +27,20 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const [country, setCountry] = useState<Country>(() => detectUserCountrySync());
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    detectUserCountryAsync().then((detected) => {
+      if (detected) {
+        setCountry((prev) => (prev.code === DEFAULT_COUNTRY.code ? detected : prev));
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,14 +164,14 @@ export default function RegisterPage() {
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Phone Number
                 </label>
-                <span className="text-slate-400 text-xs font-medium">
-                  {country.flag} {country.name}
-                </span>
+                <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
+                  <CountryFlag code={country.code} name={country.name} size="sm" />
+                  <span>{country.name}</span>
+                </div>
               </div>
               <PhoneInput
                 required
                 value={phone}
-                defaultCountryCode="NG"
                 onChange={(fullE164, selectedCountry) => {
                   setPhone(fullE164);
                   setCountry(selectedCountry);
@@ -218,7 +227,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-[0.98] disabled:opacity-50 text-sm mt-4"
+              className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-[0.98] disabled:opacity-50 text-sm mt-4 cursor-pointer"
             >
               {isLoading ? "Creating Account & Sending OTP..." : "Create Account"}
               <ArrowRight className="w-4 h-4" />

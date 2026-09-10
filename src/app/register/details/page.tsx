@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { PhoneInput } from '@/components/ui/PhoneInput';
-import { DEFAULT_COUNTRY, Country } from '@/data/countries';
+import { CountryFlag } from '@/components/ui/CountryFlag';
+import { DEFAULT_COUNTRY, Country, detectUserCountrySync, detectUserCountryAsync } from '@/data/countries';
 import { authService } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -19,10 +20,18 @@ function DetailsForm() {
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const [country, setCountry] = useState<Country>(() => detectUserCountrySync());
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    detectUserCountryAsync().then((detected) => {
+      if (detected) {
+        setCountry((prev) => (prev.code === DEFAULT_COUNTRY.code ? detected : prev));
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,14 +112,14 @@ function DetailsForm() {
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
               Phone Number
             </label>
-            <span className="text-slate-400 text-xs font-medium">
-              {country.flag} {country.name}
-            </span>
+            <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
+              <CountryFlag code={country.code} name={country.name} size="sm" />
+              <span>{country.name}</span>
+            </div>
           </div>
           <PhoneInput
             required
             value={phoneNumber}
-            defaultCountryCode="NG"
             onChange={(fullE164, selectedCountry) => {
               setPhoneNumber(fullE164);
               setCountry(selectedCountry);
@@ -140,7 +149,7 @@ function DetailsForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3.5 rounded-xl font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-95 disabled:opacity-50 text-sm mt-2"
+          className="w-full py-3.5 rounded-xl font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-95 disabled:opacity-50 text-sm mt-2 cursor-pointer"
         >
           {isLoading ? 'Creating Account...' : 'Complete Registration'} <ArrowRight className="w-4 h-4" />
         </button>

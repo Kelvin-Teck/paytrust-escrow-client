@@ -7,8 +7,11 @@ import {
   DEFAULT_COUNTRY,
   getCountryByCode,
   findCountryFromPhone,
+  detectUserCountrySync,
+  detectUserCountryAsync,
 } from "@/data/countries";
-import { ChevronDown, Search, Check, Phone } from "lucide-react";
+import { ChevronDown, Search, Check } from "lucide-react";
+import { CountryFlag } from "./CountryFlag";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PhoneInputProps {
@@ -22,11 +25,12 @@ interface PhoneInputProps {
   className?: string;
   id?: string;
   name?: string;
+  autoDetectCountry?: boolean;
 }
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
   value = "",
-  defaultCountryCode = "NG",
+  defaultCountryCode,
   onChange,
   onCountryChange,
   placeholder,
@@ -35,17 +39,38 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   className = "",
   id,
   name,
+  autoDetectCountry = true,
 }) => {
-  const [selectedCountry, setSelectedCountry] = useState<Country>(() =>
-    getCountryByCode(defaultCountryCode)
-  );
+  const [selectedCountry, setSelectedCountry] = useState<Country>(() => {
+    if (defaultCountryCode) return getCountryByCode(defaultCountryCode);
+    if (autoDetectCountry) return detectUserCountrySync();
+    return DEFAULT_COUNTRY;
+  });
+
   const [nationalNumber, setNationalNumber] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [hasUserSelected, setHasUserSelected] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
+
+  // Background auto-detect user's country on mount
+  useEffect(() => {
+    if (autoDetectCountry && !defaultCountryCode && !value && !hasUserSelected) {
+      const syncCountry = detectUserCountrySync();
+      setSelectedCountry(syncCountry);
+      if (onCountryChange) onCountryChange(syncCountry);
+
+      detectUserCountryAsync().then((asyncCountry) => {
+        if (!hasUserSelected && asyncCountry.code !== syncCountry.code) {
+          setSelectedCountry(asyncCountry);
+          if (onCountryChange) onCountryChange(asyncCountry);
+        }
+      });
+    }
+  }, [autoDetectCountry, defaultCountryCode]);
 
   // Sync incoming value prop
   useEffect(() => {
@@ -79,7 +104,6 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     }
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      // Auto-focus search input when opening
       setTimeout(() => searchInputRef.current?.focus(), 50);
     }
     return () => {
@@ -101,6 +125,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 
   const handleSelectCountry = (country: Country) => {
     setSelectedCountry(country);
+    setHasUserSelected(true);
     setIsOpen(false);
     setSearchQuery("");
     if (onCountryChange) onCountryChange(country);
@@ -110,7 +135,6 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     const fullE164 = cleanNum ? `${country.dialCode}${cleanNum}` : "";
     onChange(fullE164, country, nationalNumber);
 
-    // Return focus to phone input
     phoneInputRef.current?.focus();
   };
 
@@ -122,6 +146,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       const detected = findCountryFromPhone(rawVal);
       if (detected) {
         setSelectedCountry(detected.country);
+        setHasUserSelected(true);
         setNationalNumber(detected.nationalNumber);
         if (onCountryChange) onCountryChange(detected.country);
 
@@ -140,21 +165,19 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      <div className="relative flex items-center rounded-2xl bg-slate-50 border border-slate-200 focus-within:bg-white focus-within:border-[#32A05F] focus-within:ring-2 focus-within:ring-[#32A05F]/20 transition-all">
-        {/* Country Selector Trigger */}
+      <div className="relative flex items-center rounded-2xl bg-slate-50 border border-slate-200 focus-within:bg-white focus-within:border-[#32A05F] focus-within:ring-2 focus-within:ring-[#32A05F]/20 transition-all shadow-xs">
+        {/* Country Selector Trigger with Graphic Flag */}
         <button
           type="button"
           disabled={disabled}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 px-3.5 py-3.5 border-r border-slate-200 hover:bg-slate-100/80 active:bg-slate-200/60 rounded-l-2xl text-slate-800 font-semibold text-xs sm:text-sm shrink-0 transition-colors focus:outline-none"
+          className="flex items-center gap-2 pl-3.5 pr-2.5 py-3.5 border-r border-slate-200 hover:bg-slate-100/80 active:bg-slate-200/60 rounded-l-2xl text-slate-800 font-semibold text-xs sm:text-sm shrink-0 transition-colors focus:outline-none select-none cursor-pointer"
           title={`${selectedCountry.name} (${selectedCountry.dialCode})`}
           aria-label="Select Country"
           aria-expanded={isOpen}
         >
-          <span className="text-lg leading-none" role="img" aria-label={selectedCountry.name}>
-            {selectedCountry.flag}
-          </span>
-          <span className="font-mono text-xs font-bold text-slate-700">
+          <CountryFlag code={selectedCountry.code} name={selectedCountry.name} size="md" />
+          <span className="font-mono text-xs font-bold text-slate-700 tracking-tight">
             {selectedCountry.dialCode}
           </span>
           <ChevronDown
@@ -164,9 +187,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           />
         </button>
 
-        {/* National Number Input */}
+        {/* National Number Input (No overlapping icons) */}
         <div className="relative flex-1 flex items-center">
-          <Phone className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none sm:hidden" />
           <input
             ref={phoneInputRef}
             id={id}
@@ -177,7 +199,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             value={nationalNumber}
             onChange={handleNumberChange}
             placeholder={placeholder || selectedCountry.placeholder}
-            className="w-full pl-3 pr-4 py-3.5 bg-transparent text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none disabled:opacity-50"
+            className="w-full px-4 py-3.5 bg-transparent text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none disabled:opacity-50"
           />
         </div>
       </div>
@@ -186,14 +208,14 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 top-full mt-2 w-full max-w-sm sm:w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden flex flex-col max-h-80"
+            className="absolute left-0 top-full mt-2 w-full max-w-sm sm:w-84 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden flex flex-col max-h-80"
           >
             {/* Search Input */}
-            <div className="p-3 border-b border-slate-100 bg-slate-50/70">
+            <div className="p-2.5 border-b border-slate-100 bg-slate-50/80">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
@@ -201,7 +223,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search country or code..."
+                  placeholder="Search country or dial code..."
                   className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/30 focus:border-[#32A05F]"
                 />
               </div>
@@ -221,12 +243,12 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                       key={`${c.code}-${c.dialCode}`}
                       type="button"
                       onClick={() => handleSelectCountry(c)}
-                      className={`w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors text-xs ${
+                      className={`w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors text-xs cursor-pointer ${
                         isSelected ? "bg-[#32A05F]/10 text-[#28874E] font-bold" : "text-slate-700"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <span className="text-base shrink-0">{c.flag}</span>
+                        <CountryFlag code={c.code} name={c.name} size="sm" />
                         <span className="truncate font-medium">{c.name}</span>
                         <span className="text-slate-400 font-mono text-[11px]">
                           ({c.code})
@@ -249,4 +271,3 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     </div>
   );
 };
-
