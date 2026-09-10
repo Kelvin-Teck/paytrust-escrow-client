@@ -52,6 +52,7 @@ export default function TransactionDetailPage() {
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
+      alert(err.message || "Failed to update shipping status");
       toast.error(err.message || "Failed to update shipping status");
     } finally {
       setIsSubmitting(false);
@@ -68,6 +69,7 @@ export default function TransactionDetailPage() {
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
+      alert(err.message || "Failed to confirm delivery");
       toast.error(err.message || "Failed to confirm delivery");
     } finally {
       setIsSubmitting(false);

@@ -40,8 +40,7 @@ export default function WalletTransferPage() {
             Instant PayTrust P2P Transfer
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Send money directly to any PayTrust username or email address with
-            0% fee.
+            Send money directly to any PayTrust username or email address with 0% fee.
           </p>
         </div>
 

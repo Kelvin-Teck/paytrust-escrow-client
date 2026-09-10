@@ -53,7 +53,6 @@ export default function DisputesHubPage() {
         const txList = Array.isArray(txRes.value)
           ? txRes.value
           : txRes.value?.transactions || [];
-        // Only transactions eligible for dispute: SECURED or DELIVERED or IN_PROGRESS
         setActiveTransactions(txList);
       }
     } catch (err) {

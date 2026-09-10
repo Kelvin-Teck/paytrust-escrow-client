@@ -61,9 +61,10 @@ export const toast = {
 };
 
 export function ToastContainer() {
-  const [currentToasts, setCurrentToasts] = useState<ToastItem[]>([]);
+  const [currentToasts, setCurrentToasts] = useState<ToastItem[]>(() => [...toasts]);
 
   useEffect(() => {
+    setCurrentToasts([...toasts]);
     const listener = (updated: ToastItem[]) => setCurrentToasts(updated);
     listeners.push(listener);
     return () => {
@@ -72,7 +73,10 @@ export function ToastContainer() {
   }, []);
 
   return (
-    <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+    <div
+      id="paytrust-toast-container"
+      className="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"
+    >
       <AnimatePresence>
         {currentToasts.map((t) => (
           <motion.div

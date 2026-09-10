@@ -920,6 +920,7 @@ function WalletContent() {
                   </button>
                   <button
                     onClick={() => {
+                      alert("Receipt exported to clipboard.");
                       toast.success("Receipt exported to clipboard.");
                       handleCopy(
                         `PayTrust Receipt:\nReference: ${

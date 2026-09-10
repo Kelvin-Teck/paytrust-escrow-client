@@ -38,6 +38,7 @@ export default function CreateInvoicePage() {
         buyerEmail,
         inspectionPeriod: Number(inspectionPeriod),
       });
+      alert("Escrow invoice created successfully! Counterparty notified.");
       toast.success(
         "Escrow invoice created successfully!",
         "Counterparty has been notified to review and fund the contract.",
@@ -45,6 +46,7 @@ export default function CreateInvoicePage() {
       router.push("/transaction");
     } catch (err: any) {
       console.error("Create invoice error:", err);
+      setError(err.message || "Failed to create invoice");
       const msg = err.message || "Failed to create invoice";
       setError(msg);
       toast.error(msg);

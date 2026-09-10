@@ -24,7 +24,6 @@ import { Logo } from "@/components/ui/Logo";
 import { useAuthStore } from "@/stores/authStore";
 import { profileService, notificationService } from "@/services/api";
 import { getTierInfo } from "@/lib/utils";
-import { ToastContainer } from "@/components/ui/Toast";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -466,7 +465,6 @@ export function AppShell({
           <span>Profile</span>
         </Link>
       </nav>
-      <ToastContainer />
     </div>
   );
 }
