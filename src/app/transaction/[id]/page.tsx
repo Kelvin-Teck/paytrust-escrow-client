@@ -14,15 +14,19 @@ import {
   Package,
   User,
   Calendar,
+  Send,
+  Building,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
+import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
 
 export default function TransactionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const currentUser = useAuthStore((s) => s.user);
 
   const [transaction, setTransaction] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +56,6 @@ export default function TransactionDetailPage() {
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to update shipping status");
       toast.error(err.message || "Failed to update shipping status");
     } finally {
       setIsSubmitting(false);
@@ -69,12 +72,43 @@ export default function TransactionDetailPage() {
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to confirm delivery");
       toast.error(err.message || "Failed to confirm delivery");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isBuyer =
+    currentUser?.id === transaction?.buyerId ||
+    (currentUser?.email &&
+      transaction?.buyer?.email &&
+      currentUser.email.toLowerCase() ===
+        transaction.buyer.email.toLowerCase());
+
+  const isSeller =
+    currentUser?.id === transaction?.sellerId ||
+    (currentUser?.email &&
+      transaction?.seller?.email &&
+      currentUser.email.toLowerCase() ===
+        transaction.seller.email.toLowerCase());
+
+  const buyerName =
+    transaction?.buyer?.name ||
+    (transaction?.buyer?.firstName
+      ? `${transaction.buyer.firstName} ${transaction.buyer.lastName || ""}`.trim()
+      : null) ||
+    transaction?.buyer?.email ||
+    transaction?.buyerEmail ||
+    "Buyer";
+
+  const sellerName =
+    transaction?.seller?.name ||
+    (transaction?.seller?.firstName
+      ? `${transaction.seller.firstName} ${transaction.seller.lastName || ""}`.trim()
+      : null) ||
+    transaction?.seller?.email ||
+    transaction?.sellerEmail ||
+    "Seller";
 
   return (
     <AppShell>
@@ -99,13 +133,23 @@ export default function TransactionDetailPage() {
                     {transaction.status?.replace("_", " ").toLowerCase() ||
                       "Active"}
                   </span>
+                  {isBuyer && (
+                    <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                      You are the Buyer
+                    </span>
+                  )}
+                  {isSeller && (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      You are the Seller
+                    </span>
+                  )}
                 </div>
                 <h1 className="text-2xl font-bold text-slate-900">
-                  {transaction.title || "Escrow Agreement"}
+                  {transaction.title || transaction.description || "Escrow Agreement"}
                 </h1>
                 <p className="text-xs text-slate-500">
                   {transaction.description ||
-                    "Secured milestone-based agreement"}
+                    "Secured milestone-based escrow contract"}
                 </p>
               </div>
 
@@ -114,7 +158,56 @@ export default function TransactionDetailPage() {
                   Locked Escrow Total
                 </span>
                 <div className="text-3xl font-extrabold text-[#32A05F]">
-                  ₦{Number(transaction.amount || 0).toLocaleString()}
+                  ₦{Number(transaction.totalAmount || transaction.amount || 0).toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Parties Involved Card */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Seller Card */}
+              <div className={`p-5 rounded-2xl border ${isSeller ? "bg-emerald-50/40 border-emerald-200" : "bg-white border-slate-200"} shadow-xs space-y-2`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                    Seller (Provider)
+                  </span>
+                  {isSeller && (
+                    <span className="text-[10px] font-bold bg-[#32A05F] text-white px-2 py-0.5 rounded-full">
+                      You
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                    {sellerName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{sellerName}</p>
+                    <p className="text-xs text-slate-500 font-mono">{transaction.seller?.email || transaction.sellerEmail || "Registered Seller"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buyer Card */}
+              <div className={`p-5 rounded-2xl border ${isBuyer ? "bg-blue-50/40 border-blue-200" : "bg-white border-slate-200"} shadow-xs space-y-2`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                    Buyer (Client)
+                  </span>
+                  {isBuyer && (
+                    <span className="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                      You
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                    {buyerName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{buyerName}</p>
+                    <p className="text-xs text-slate-500 font-mono">{transaction.buyer?.email || transaction.buyerEmail || "Registered Buyer"}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -227,28 +320,28 @@ export default function TransactionDetailPage() {
                       Fulfillment & Tracking
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Provide courier dispatch details
+                      Courier dispatch details
                     </p>
                   </div>
                 </div>
 
-                {transaction.status === "SHIPPED" ? (
+                {transaction.status === "SHIPPED" || transaction.status === "DELIVERED" || transaction.status === "COMPLETED" ? (
                   <div className="p-4 rounded-xl bg-slate-50 text-xs space-y-1">
                     <p className="font-semibold text-slate-700">
                       Courier:{" "}
                       {transaction.shippingCarrier ||
                         transaction.courier ||
-                        "GIG Logistics"}
+                        "Standard Dispatch"}
                     </p>
                     <p className="font-mono text-slate-500">
-                      Tracking: {transaction.trackingNumber || "GIG-98214"}
+                      Tracking: {transaction.trackingNumber || "Dispatched / On Transit"}
                     </p>
                   </div>
-                ) : (
+                ) : isSeller ? (
                   <form onSubmit={handleMarkShipped} className="space-y-3">
                     <input
                       type="text"
-                      placeholder="Courier Name (e.g. DHL, GIG)"
+                      placeholder="Courier Name (e.g. DHL, GIG, In-house)"
                       value={courier}
                       onChange={(e) => setCourier(e.target.value)}
                       required
@@ -256,7 +349,7 @@ export default function TransactionDetailPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Tracking / Waybill Number"
+                      placeholder="Tracking / Waybill / Link Number"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
                       required
@@ -270,6 +363,10 @@ export default function TransactionDetailPage() {
                       {isSubmitting ? "Updating..." : "Mark as Dispatched"}
                     </button>
                   </form>
+                ) : (
+                  <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-500">
+                    Awaiting seller to dispatch and provide tracking information.
+                  </div>
                 )}
               </div>
 
@@ -297,25 +394,33 @@ export default function TransactionDetailPage() {
                           transaction.totalAmount || transaction.amount || 0,
                         ) * 0.975,
                     ).toLocaleString()}{" "}
-                    will be released to the seller after deducting the 2.5%
+                    will be released to the seller after deducting the {transaction.feePercentage || 2.5}%
                     platform fee.
                   </p>
                 </div>
 
-                <button
-                  onClick={handleConfirmDelivery}
-                  disabled={
-                    isSubmitting ||
-                    transaction.status === "COMPLETED" ||
+                {isBuyer ? (
+                  <button
+                    onClick={handleConfirmDelivery}
+                    disabled={
+                      isSubmitting ||
+                      transaction.status === "COMPLETED" ||
+                      transaction.status === "DELIVERED"
+                    }
+                    className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
+                  >
+                    {transaction.status === "COMPLETED" ||
                     transaction.status === "DELIVERED"
-                  }
-                  className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
-                >
-                  {transaction.status === "COMPLETED" ||
-                  transaction.status === "DELIVERED"
-                    ? "✓ Delivery Confirmed & Settled"
-                    : "Confirm Delivery & Release Funds"}
-                </button>
+                      ? "✓ Delivery Confirmed & Settled"
+                      : "Confirm Delivery & Release Funds"}
+                  </button>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-500 text-center font-medium">
+                    {transaction.status === "COMPLETED" || transaction.status === "DELIVERED"
+                      ? "✓ Delivery Confirmed & Funds Released"
+                      : "Awaiting buyer's confirmation of delivery to release funds."}
+                  </div>
+                )}
               </div>
             </div>
           </div>

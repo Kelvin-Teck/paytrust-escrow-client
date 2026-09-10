@@ -295,6 +295,83 @@ export default function DashboardPage() {
                       </td>
                     </tr>
                   ))}
+                  {transactions.map((tx: any) => {
+                    const isBuyer =
+                      user?.id === tx.buyerId ||
+                      (user?.email &&
+                        tx.buyer?.email &&
+                        user.email.toLowerCase() ===
+                          tx.buyer.email.toLowerCase());
+
+                    const counterpartyLabel = isBuyer
+                      ? tx.seller?.name ||
+                        (tx.seller?.firstName
+                          ? `${tx.seller.firstName} ${tx.seller.lastName || ""}`.trim()
+                          : null) ||
+                        tx.seller?.email ||
+                        tx.sellerEmail ||
+                        "Seller"
+                      : tx.buyer?.name ||
+                        (tx.buyer?.firstName
+                          ? `${tx.buyer.firstName} ${tx.buyer.lastName || ""}`.trim()
+                          : null) ||
+                        tx.buyer?.email ||
+                        tx.buyerEmail ||
+                        "Buyer";
+
+                    return (
+                      <tr
+                        key={tx.id}
+                        className="hover:bg-slate-50 transition-colors group"
+                      >
+                        <td className="py-4 pr-4">
+                          <div className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors">
+                            {tx.title || tx.description || "Escrow Agreement"}
+                          </div>
+                          <div className="text-xs text-slate-400 mt-0.5 font-mono">
+                            {tx.id?.slice(0, 8)} •{" "}
+                            {new Date(
+                              tx.createdAt || Date.now(),
+                            ).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="py-4 pr-4 text-slate-600 font-medium">
+                          <div className="text-xs font-semibold text-slate-800">
+                            {counterpartyLabel}
+                          </div>
+                          <span
+                            className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-0.5 ${
+                              isBuyer
+                                ? "bg-blue-50 text-blue-700"
+                                : "bg-emerald-50 text-emerald-700"
+                            }`}
+                          >
+                            {isBuyer ? "Buying from" : "Selling to"}
+                          </span>
+                        </td>
+                        <td className="py-4 pr-4 font-bold text-slate-900">
+                          ₦
+                          {Number(
+                            tx.totalAmount || tx.amount || 0,
+                          ).toLocaleString()}
+                        </td>
+                        <td className="py-4 pr-4">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
+                            {tx.status?.replace("_", " ").toLowerCase() ||
+                              "Active"}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <Link
+                            href={`/transaction/${tx.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-[#32A05F] hover:underline"
+                          >
+                            Details <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
