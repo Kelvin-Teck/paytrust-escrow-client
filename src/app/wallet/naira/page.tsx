@@ -167,11 +167,14 @@ export default function FundNairaWalletPage() {
           ref: data?.reference,
           channels: ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
           callback: async (response: any) => {
+          callback: function (response: any) {
             console.log("[Paystack Success Callback]:", response);
             const ref = response?.reference || data?.reference;
             await handlePaymentSuccess(ref, numAmount);
+            handlePaymentSuccess(ref, numAmount);
           },
           onClose: () => {
+          onClose: function () {
             console.log("[Paystack Modal Closed]");
             setIsProcessing(false);
           },
