@@ -18,6 +18,7 @@ import { transactionService, walletService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
 import { DealDetailSkeleton } from "@/components/ui/Skeleton";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -33,6 +34,7 @@ export default function TransactionDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const loadData = async () => {
     if (!id) return;
@@ -105,14 +107,8 @@ export default function TransactionDetailPage() {
   };
 
   const handleConfirmDelivery = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to confirm delivery? This will release the escrow funds to the seller immediately.",
-      )
-    ) {
-      return;
-    }
     setIsSubmitting(true);
+    setShowConfirmModal(false);
     try {
       await transactionService.confirmDelivery(id);
       setActionMsg("Delivery confirmed! Funds have been released.");
@@ -624,7 +620,7 @@ export default function TransactionDetailPage() {
                       </div>
                     ) : isShipped ? (
                       <button
-                        onClick={handleConfirmDelivery}
+                        onClick={() => setShowConfirmModal(true)}
                         disabled={isSubmitting}
                         className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
@@ -675,6 +671,18 @@ export default function TransactionDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title="Confirm Delivery & Release Funds"
+        message="Are you sure you want to confirm delivery? This will immediately release the locked escrow funds to the seller. This action cannot be undone."
+        confirmLabel="Yes, Release Funds"
+        cancelLabel="Not Yet"
+        variant="success"
+        isLoading={isSubmitting}
+        onConfirm={handleConfirmDelivery}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </AppShell>
   );
 }

@@ -38,7 +38,6 @@ export default function CreateInvoicePage() {
         buyerEmail,
         inspectionPeriod: Number(inspectionPeriod),
       });
-      alert("Escrow invoice created successfully! Counterparty notified.");
       toast.success(
         "Escrow invoice created successfully!",
         "Counterparty has been notified to review and fund the contract.",
