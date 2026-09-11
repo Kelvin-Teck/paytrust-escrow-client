@@ -374,7 +374,9 @@ function WalletContent() {
                 </span>
                 <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">
                   0.00000000{" "}
-                  <span className="text-lg text-slate-400 font-normal">BTC</span>
+                  <span className="text-lg text-slate-400 font-normal">
+                    BTC
+                  </span>
                 </div>
               </div>
             </div>
@@ -386,7 +388,9 @@ function WalletContent() {
               >
                 Open Bitcoin Vault <ChevronRight className="w-4 h-4" />
               </Link>
-              <span className="text-xs text-slate-400">Multi-sig Protected</span>
+              <span className="text-xs text-slate-400">
+                Multi-sig Protected
+              </span>
             </div>
           </div>
         </div>

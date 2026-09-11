@@ -1,21 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bell, CheckCircle2, AlertCircle, ShieldCheck,
-  Check, ArrowRight, Clock, Trash2, RefreshCw,
-  Receipt, Wallet, AlertTriangle, ExternalLink
-} from 'lucide-react';
-import AppShell from '@/components/layout/AppShell';
-import { notificationService } from '@/services/api';
-import { NotificationSkeleton } from '@/components/ui/Skeleton';
+  Bell,
+  CheckCircle2,
+  AlertCircle,
+  ShieldCheck,
+  Check,
+  ArrowRight,
+  Clock,
+  Trash2,
+  RefreshCw,
+  Receipt,
+  Wallet,
+  AlertTriangle,
+  ExternalLink,
+} from "lucide-react";
+import AppShell from "@/components/layout/AppShell";
+import { notificationService } from "@/services/api";
+import { NotificationSkeleton } from "@/components/ui/Skeleton";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
+  const [filterTab, setFilterTab] = useState<"all" | "unread">("all");
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   const fetchNotifs = async (unreadOnly = false) => {
@@ -25,14 +35,14 @@ export default function NotificationsPage() {
       const list = Array.isArray(data) ? data : data?.notifications || [];
       setNotifications(list);
     } catch (err) {
-      console.error('Failed to load notifications:', err);
+      console.error("Failed to load notifications:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotifs(filterTab === 'unread');
+    fetchNotifs(filterTab === "unread");
   }, [filterTab]);
 
   const handleMarkRead = async (id: string, e?: React.MouseEvent) => {
@@ -40,10 +50,10 @@ export default function NotificationsPage() {
     try {
       await notificationService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+      console.error("Failed to mark notification as read:", err);
     }
   };
 
@@ -51,10 +61,10 @@ export default function NotificationsPage() {
     try {
       await notificationService.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setActionSuccessMsg('All notifications marked as read');
+      setActionSuccessMsg("All notifications marked as read");
       setTimeout(() => setActionSuccessMsg(null), 3000);
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      console.error("Failed to mark all as read:", err);
     }
   };
 
@@ -64,21 +74,21 @@ export default function NotificationsPage() {
       await notificationService.deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
-      console.error('Failed to delete notification:', err);
+      console.error("Failed to delete notification:", err);
     }
   };
 
   const getNotificationIcon = (type?: string) => {
     switch (type) {
-      case 'dispute':
+      case "dispute":
         return <AlertTriangle className="w-4 h-4 text-amber-600" />;
-      case 'kyc':
+      case "kyc":
         return <ShieldCheck className="w-4 h-4 text-[#32A05F]" />;
-      case 'transaction':
-      case 'escrow':
+      case "transaction":
+      case "escrow":
         return <Receipt className="w-4 h-4 text-blue-600" />;
-      case 'wallet':
-      case 'payment':
+      case "wallet":
+      case "payment":
         return <Wallet className="w-4 h-4 text-emerald-600" />;
       default:
         return <Bell className="w-4 h-4 text-slate-600" />;
@@ -86,17 +96,17 @@ export default function NotificationsPage() {
   };
 
   const getActionLink = (n: any) => {
-    if (n.type === 'dispute' && n.referenceId) {
+    if (n.type === "dispute" && n.referenceId) {
       return `/disputes/${n.referenceId}`;
     }
-    if ((n.type === 'transaction' || n.type === 'escrow') && n.referenceId) {
+    if ((n.type === "transaction" || n.type === "escrow") && n.referenceId) {
       return `/transaction/${n.referenceId}`;
     }
-    if (n.type === 'kyc') {
-      return '/profile/identity-verification';
+    if (n.type === "kyc") {
+      return "/profile/identity-verification";
     }
-    if (n.type === 'wallet') {
-      return '/wallet';
+    if (n.type === "wallet") {
+      return "/wallet";
     }
     return null;
   };
@@ -112,17 +122,20 @@ export default function NotificationsPage() {
               Notifications & Activity Feed
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Real-time audit updates for escrows, wallet deposits, KYC, and dispute mediation.
+              Real-time audit updates for escrows, wallet deposits, KYC, and
+              dispute mediation.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchNotifs(filterTab === 'unread')}
+              onClick={() => fetchNotifs(filterTab === "unread")}
               disabled={isLoading}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-xs disabled:opacity-50"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#32A05F]' : ''}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-[#32A05F]" : ""}`}
+              />
               Refresh
             </button>
 
@@ -131,7 +144,8 @@ export default function NotificationsPage() {
                 onClick={handleMarkAllRead}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs"
               >
-                <Check className="w-3.5 h-3.5 text-[#32A05F]" /> Mark All as Read
+                <Check className="w-3.5 h-3.5 text-[#32A05F]" /> Mark All as
+                Read
               </button>
             )}
           </div>
@@ -147,21 +161,21 @@ export default function NotificationsPage() {
         {/* Tab Filters */}
         <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
           <button
-            onClick={() => setFilterTab('all')}
+            onClick={() => setFilterTab("all")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              filterTab === 'all'
-                ? 'bg-[#32A05F] text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+              filterTab === "all"
+                ? "bg-[#32A05F] text-white shadow-xs"
+                : "text-slate-600 hover:bg-slate-100"
             }`}
           >
             All Activity
           </button>
           <button
-            onClick={() => setFilterTab('unread')}
+            onClick={() => setFilterTab("unread")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              filterTab === 'unread'
-                ? 'bg-[#32A05F] text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+              filterTab === "unread"
+                ? "bg-[#32A05F] text-white shadow-xs"
+                : "text-slate-600 hover:bg-slate-100"
             }`}
           >
             <span>Unread</span>
@@ -187,8 +201,8 @@ export default function NotificationsPage() {
                   onClick={() => !n.isRead && handleMarkRead(n.id)}
                   className={`p-5 rounded-2xl border transition-all flex items-start gap-4 group relative ${
                     n.isRead
-                      ? 'bg-white border-slate-200 shadow-xs opacity-85 hover:opacity-100'
-                      : 'bg-[#EBF7F0]/40 border-[#32A05F]/30 shadow-sm'
+                      ? "bg-white border-slate-200 shadow-xs opacity-85 hover:opacity-100"
+                      : "bg-[#EBF7F0]/40 border-[#32A05F]/30 shadow-sm"
                   }`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
@@ -198,17 +212,29 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0 pr-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm text-slate-900">{n.title || 'System Notification'}</h4>
+                        <h4 className="font-bold text-sm text-slate-900">
+                          {n.title || "System Notification"}
+                        </h4>
                         {!n.isRead && (
                           <span className="w-2 h-2 rounded-full bg-[#32A05F] ring-2 ring-white" />
                         )}
                       </div>
                       <span className="text-[11px] text-slate-400 font-mono">
-                        {new Date(n.createdAt || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(n.createdAt || Date.now()).toLocaleDateString(
+                          [],
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{n.message || n.body}</p>
+                    <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                      {n.message || n.body}
+                    </p>
 
                     {link && (
                       <Link
@@ -250,12 +276,14 @@ export default function NotificationsPage() {
               <Bell className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              {filterTab === 'unread' ? 'No Unread Notifications' : 'No Notifications Yet'}
+              {filterTab === "unread"
+                ? "No Unread Notifications"
+                : "No Notifications Yet"}
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              {filterTab === 'unread'
-                ? 'You have viewed all of your recent updates and alerts.'
-                : 'When you create escrow orders, receive payments, or file disputes, updates will appear here.'}
+              {filterTab === "unread"
+                ? "You have viewed all of your recent updates and alerts."
+                : "When you create escrow orders, receive payments, or file disputes, updates will appear here."}
             </p>
           </div>
         )}

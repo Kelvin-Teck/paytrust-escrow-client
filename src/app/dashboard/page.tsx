@@ -18,7 +18,11 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuthStore } from "@/stores/authStore";
-import { CardSkeleton, TableSkeleton, Skeleton } from "@/components/ui/Skeleton";
+import {
+  CardSkeleton,
+  TableSkeleton,
+  Skeleton,
+} from "@/components/ui/Skeleton";
 import {
   dashboardService,
   walletService,

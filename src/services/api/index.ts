@@ -121,11 +121,23 @@ export const transactionService = {
 
   markAsShipped: async (
     transactionId: string,
-    shippingData: { courier: string; trackingNumber: string },
+    shippingData: {
+      courier?: string;
+      shippingCarrier?: string;
+      trackingNumber: string;
+      proofUrls?: string[];
+    },
   ) => {
+    const payload = {
+      shippingCarrier:
+        shippingData.shippingCarrier || shippingData.courier || "",
+      courier: shippingData.courier || shippingData.shippingCarrier || "",
+      trackingNumber: shippingData.trackingNumber,
+      proofUrls: shippingData.proofUrls,
+    };
     const res = await apiClient.put(
       `/transactions/${transactionId}/ship`,
-      shippingData,
+      payload,
     );
     return extract(res);
   },

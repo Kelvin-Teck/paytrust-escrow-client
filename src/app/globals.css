@@ -49,36 +49,40 @@
    * 2. Inter (Neo-Grotesque Screen UI Sans)
    * 3. Geist / System Native UI
    */
-  --font-sans: var(--font-plus-jakarta), var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'Geist Mono', 'Fira Code', 'Roboto Mono', monospace;
+  --font-sans:
+    var(--font-plus-jakarta), var(--font-inter), "Inter", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:
+    var(--font-jetbrains-mono), "JetBrains Mono", "Geist Mono", "Fira Code",
+    "Roboto Mono", monospace;
 
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #32A05F;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #EBF7F0;
-  --accent-foreground: #32A05F;
-  --destructive: #EF4444;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #32A05F;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #32a05f;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #ebf7f0;
+  --accent-foreground: #32a05f;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #32a05f;
   --radius: 0.75rem;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #32A05F;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EBF7F0;
-  --sidebar-accent-foreground: #32A05F;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #32A05F;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #32a05f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebf7f0;
+  --sidebar-accent-foreground: #32a05f;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #32a05f;
 }
 
 @layer base {
@@ -94,7 +98,12 @@
     font-family: var(--font-sans);
     line-height: 1.5;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     line-height: 1.2;
     letter-spacing: -0.02em;
     font-weight: 700;
@@ -113,23 +122,25 @@
 
 /* PayTrust Custom Utilities */
 .bg-paytrust {
-  background-color: #32A05F;
+  background-color: #32a05f;
 }
 .bg-paytrust-hover {
-  background-color: #28874E;
+  background-color: #28874e;
 }
 .text-paytrust {
-  color: #32A05F;
+  color: #32a05f;
 }
 .border-paytrust {
-  border-color: #32A05F;
+  border-color: #32a05f;
 }
 .bg-paytrust-light {
-  background-color: #EBF7F0;
+  background-color: #ebf7f0;
 }
 
 .paytrust-glow {
-  box-shadow: 0 10px 25px -5px rgba(50, 160, 95, 0.25), 0 8px 10px -6px rgba(50, 160, 95, 0.15);
+  box-shadow:
+    0 10px 25px -5px rgba(50, 160, 95, 0.25),
+    0 8px 10px -6px rgba(50, 160, 95, 0.15);
 }
 
 /* Custom scrollbar */
@@ -141,11 +152,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #94a3b8;
 }
 
 /* Shimmer Loading Animations */
@@ -159,23 +170,13 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    #e2e8f0 0%,
-    #f8fafc 50%,
-    #e2e8f0 100%
-  );
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-shimmer-dark {
-  background: linear-gradient(
-    90deg,
-    #1e293b 0%,
-    #334155 50%,
-    #1e293b 100%
-  );
+  background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

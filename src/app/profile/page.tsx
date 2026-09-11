@@ -162,7 +162,8 @@ export default function ProfileHubPage() {
             Account & Security Settings
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage your personal profile, referral rewards, bank payout details, and security.
+            Manage your personal profile, referral rewards, bank payout details,
+            and security.
           </p>
         </div>
 
@@ -215,7 +216,9 @@ export default function ProfileHubPage() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-medium">
                   <span className="flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{profileData?.email || user?.email || "user@paytrust.io"}</span>
+                    <span className="truncate">
+                      {profileData?.email || user?.email || "user@paytrust.io"}
+                    </span>
                   </span>
 
                   {(profileData?.phone || user?.phone) && (
@@ -249,21 +252,23 @@ export default function ProfileHubPage() {
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Invite partners and clients to trade with escrow protection and earn fee rebates.
+                    Invite partners and clients to trade with escrow protection
+                    and earn fee rebates.
                   </p>
                 </div>
               </div>
 
-              {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors shadow-xs shrink-0 cursor-pointer self-start sm:self-auto"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Share</span>
-                </button>
-              )}
+              {typeof navigator !== "undefined" &&
+                typeof navigator.share === "function" && (
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors shadow-xs shrink-0 cursor-pointer self-start sm:self-auto"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Share</span>
+                  </button>
+                )}
             </div>
 
             {/* Referral Code & Link Interactive Grid */}
@@ -304,7 +309,8 @@ export default function ProfileHubPage() {
               {/* Referral Link Box */}
               <div className="sm:col-span-8 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-2">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#32A05F]" /> Shareable Invite Link
+                  <Sparkles className="w-3 h-3 text-[#32A05F]" /> Shareable
+                  Invite Link
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-600 font-mono text-xs truncate select-all">
