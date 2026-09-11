@@ -10,12 +10,7 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  DollarSign,
-  Package,
-  User,
-  Calendar,
-  Send,
-  Building,
+  Wallet,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
@@ -62,7 +57,10 @@ export default function TransactionDetailPage() {
         trackingNumber: trackingNumber.trim(),
       });
       setActionMsg("Marked as shipped successfully!");
-      toast.success("Marked as shipped successfully!");
+      toast.success(
+        "Order marked as dispatched!",
+        "The buyer has been notified with tracking details.",
+      );
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
@@ -77,7 +75,8 @@ export default function TransactionDetailPage() {
     try {
       await transactionService.payInvoice(id);
       toast.success(
-        "Payment secured in escrow! The seller has been notified to dispatch the order.",
+        "Payment secured in escrow!",
+        "The seller has been notified to package and dispatch the order.",
       );
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
@@ -92,12 +91,21 @@ export default function TransactionDetailPage() {
   };
 
   const handleConfirmDelivery = async () => {
-    if (!confirm("Confirm delivery and release funds to seller?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to confirm delivery? This will release the escrow funds to the seller immediately.",
+      )
+    ) {
+      return;
+    }
     setIsSubmitting(true);
     try {
       await transactionService.confirmDelivery(id);
       setActionMsg("Delivery confirmed! Funds have been released.");
-      toast.success("Delivery confirmed! Funds have been released.");
+      toast.success(
+        "Delivery confirmed!",
+        "Escrow funds have been successfully released to the seller.",
+      );
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
@@ -112,14 +120,33 @@ export default function TransactionDetailPage() {
     (currentUser?.email &&
       transaction?.buyer?.email &&
       currentUser.email.toLowerCase() ===
-        transaction.buyer.email.toLowerCase());
+        transaction.buyer.email.toLowerCase()) ||
+    (currentUser?.email &&
+      transaction?.buyerEmail &&
+      currentUser.email.toLowerCase() ===
+        transaction.buyerEmail.toLowerCase());
 
   const isSeller =
     currentUser?.id === transaction?.sellerId ||
     (currentUser?.email &&
       transaction?.seller?.email &&
       currentUser.email.toLowerCase() ===
-        transaction.seller.email.toLowerCase());
+        transaction.seller.email.toLowerCase()) ||
+    (currentUser?.email &&
+      transaction?.sellerEmail &&
+      currentUser.email.toLowerCase() ===
+        transaction.sellerEmail.toLowerCase());
+
+  const rawStatus = (transaction?.status || "").toUpperCase();
+  const isAwaitingPayment =
+    rawStatus === "AWAITING_PAYMENT" ||
+    rawStatus === "PENDING" ||
+    rawStatus === "DRAFT";
+  const isSecured = rawStatus === "SECURED";
+  const isShipped = rawStatus === "SHIPPED";
+  const isDelivered = rawStatus === "DELIVERED";
+  const isCompleted = rawStatus === "COMPLETED";
+  const isDisputed = rawStatus === "DISPUTED";
 
   const buyerName =
     transaction?.buyer?.name ||
@@ -139,6 +166,58 @@ export default function TransactionDetailPage() {
     transaction?.sellerEmail ||
     "Seller";
 
+  const totalAmount = Number(
+    transaction?.totalAmount || transaction?.amount || 0,
+  );
+  const feePercentage = Number(transaction?.feePercentage) || 2.5;
+  const platformFee =
+    Number(transaction?.platformFee) || (totalAmount * feePercentage) / 100;
+  const netAmount =
+    Number(transaction?.netAmount) || totalAmount - platformFee;
+
+  const getStatusBadge = () => {
+    if (isAwaitingPayment) {
+      return (
+        <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+          Awaiting Escrow Payment
+        </span>
+      );
+    }
+    if (isSecured) {
+      return (
+        <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+          Secured in Escrow
+        </span>
+      );
+    }
+    if (isShipped) {
+      return (
+        <span className="text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+          Dispatched / In Transit
+        </span>
+      );
+    }
+    if (isDelivered || isCompleted) {
+      return (
+        <span className="text-xs font-semibold text-[#32A05F] bg-[#EBF7F0] border border-[#32A05F]/20 px-2.5 py-0.5 rounded-full">
+          Completed & Settled
+        </span>
+      );
+    }
+    if (isDisputed) {
+      return (
+        <span className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
+          Under Dispute
+        </span>
+      );
+    }
+    return (
+      <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full capitalize">
+        {transaction?.status?.replace("_", " ").toLowerCase() || "Active"}
+      </span>
+    );
+  };
+
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -156,14 +235,11 @@ export default function TransactionDetailPage() {
             {/* Header Box */}
             <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center flex-wrap gap-2.5">
                   <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700">
                     {transaction.id?.slice(0, 8)}
                   </span>
-                  <span className="text-xs font-semibold text-[#32A05F] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full capitalize">
-                    {transaction.status?.replace("_", " ").toLowerCase() ||
-                      "Active"}
-                  </span>
+                  {getStatusBadge()}
                   {isBuyer && (
                     <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                       You are the Buyer
@@ -187,14 +263,11 @@ export default function TransactionDetailPage() {
               </div>
 
               <div className="text-left md:text-right">
-                <span className="text-xs text-slate-400 font-bold uppercase">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                   Locked Escrow Total
                 </span>
                 <div className="text-3xl font-extrabold text-[#32A05F]">
-                  ₦
-                  {Number(
-                    transaction.totalAmount || transaction.amount || 0,
-                  ).toLocaleString()}
+                  ₦{totalAmount.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -281,9 +354,7 @@ export default function TransactionDetailPage() {
                   </h3>
                 </div>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#EBF7F0] text-[#32A05F]">
-                  {transaction.feePercentage
-                    ? `${transaction.feePercentage}% Platform Fee`
-                    : "2.5% Platform Fee"}
+                  {feePercentage}% Platform Fee
                 </span>
               </div>
 
@@ -293,10 +364,7 @@ export default function TransactionDetailPage() {
                     Gross Escrow Value
                   </span>
                   <p className="text-base font-bold text-slate-900">
-                    ₦
-                    {Number(
-                      transaction.totalAmount || transaction.amount || 0,
-                    ).toLocaleString()}
+                    ₦{totalAmount.toLocaleString()}
                   </p>
                   <span className="text-[10px] text-slate-400">
                     Total locked in escrow
@@ -305,24 +373,17 @@ export default function TransactionDetailPage() {
 
                 <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 space-y-1">
                   <span className="text-rose-700 font-medium">
-                    Platform Fee ({transaction.feePercentage || 2.5}%)
+                    Platform Fee ({feePercentage}%)
                   </span>
                   <p className="text-base font-bold text-rose-600">
                     -₦
-                    {Number(
-                      transaction.platformFee ||
-                        (Number(
-                          transaction.totalAmount || transaction.amount || 0,
-                        ) *
-                          (Number(transaction.feePercentage) || 2.5)) /
-                          100,
-                    ).toLocaleString(undefined, {
+                    {platformFee.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </p>
                   <span className="text-[10px] text-rose-500">
-                    PayTrust service protection
+                    PayTrust protection service
                   </span>
                 </div>
 
@@ -332,28 +393,15 @@ export default function TransactionDetailPage() {
                   </span>
                   <p className="text-base font-bold text-[#15803d]">
                     ₦
-                    {Number(
-                      transaction.netAmount ||
-                        Number(
-                          transaction.totalAmount || transaction.amount || 0,
-                        ) -
-                          (Number(transaction.platformFee) ||
-                            (Number(
-                              transaction.totalAmount ||
-                                transaction.amount ||
-                                0,
-                            ) *
-                              (Number(transaction.feePercentage) || 2.5)) /
-                              100),
-                    ).toLocaleString(undefined, {
+                    {netAmount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </p>
                   <span className="text-[10px] text-[#166534]">
-                    {transaction.status === "COMPLETED"
+                    {isDelivered || isCompleted
                       ? "✓ Credited to wallet"
-                      : "Credited upon release"}
+                      : "Credited upon delivery release"}
                   </span>
                 </div>
               </div>
@@ -361,105 +409,146 @@ export default function TransactionDetailPage() {
 
             {/* Actions Panel */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Shipping Box */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Truck className="w-5 h-5" />
+              {/* Shipping & Fulfillment Box */}
+              <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Truck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm">
+                        Fulfillment & Tracking
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Courier dispatch details
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">
-                      Fulfillment & Tracking
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Courier dispatch details
-                    </p>
+
+                  <div className="mt-4">
+                    {/* Case 1: Awaiting Payment */}
+                    {isAwaitingPayment ? (
+                      isBuyer ? (
+                        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-3">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>Escrow Payment Required</span>
+                          </div>
+                          <p className="text-amber-700 leading-relaxed">
+                            Fund <span className="font-bold">₦{totalAmount.toLocaleString()}</span> to lock payment safely in escrow. Once funded, the seller will be notified to package and dispatch your order.
+                          </p>
+                          <button
+                            onClick={handlePayInvoice}
+                            disabled={isPaying}
+                            className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white font-bold text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            {isPaying
+                              ? "Securing Payment in Escrow..."
+                              : `Fund & Secure ₦${totalAmount.toLocaleString()}`}
+                          </button>
+                          <div className="text-center pt-1">
+                            <Link
+                              href="/wallet"
+                              className="text-[11px] text-amber-800 hover:text-amber-950 font-semibold underline inline-flex items-center gap-1"
+                            >
+                              <Wallet className="w-3 h-3" /> Top up your wallet balance
+                            </Link>
+                          </div>
+                        </div>
+                      ) : isSeller ? (
+                        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-2">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>Awaiting Buyer Escrow Payment</span>
+                          </div>
+                          <p className="text-amber-700 leading-relaxed">
+                            Funds must be secured in escrow before dispatching. Once{" "}
+                            <span className="font-bold">{buyerName}</span> locks the payment in escrow, you will be prompted here to enter courier tracking details.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-500">
+                          Awaiting buyer to lock escrow payment.
+                        </div>
+                      )
+                    ) : isSecured ? (
+                      /* Case 2: Secured in Escrow (Ready to dispatch) */
+                      isSeller ? (
+                        <form onSubmit={handleMarkShipped} className="space-y-3">
+                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
+                            <span className="font-bold">Payment Secured in Escrow!</span> Please dispatch the items and submit tracking details below.
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Courier Name (e.g. DHL, GIG Logistics, In-house)"
+                            value={courier}
+                            onChange={(e) => setCourier(e.target.value)}
+                            required
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Tracking / Waybill / Link Number"
+                            value={trackingNumber}
+                            onChange={(e) => setTrackingNumber(e.target.value)}
+                            required
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50"
+                          >
+                            {isSubmitting ? "Updating Shipping..." : "Mark as Dispatched"}
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-800 space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span>Payment Secured in Escrow</span>
+                          </div>
+                          <p className="text-blue-700 leading-relaxed">
+                            Your payment of ₦{totalAmount.toLocaleString()} is safely held in escrow. The seller has been notified to package and dispatch your order.
+                          </p>
+                        </div>
+                      )
+                    ) : isShipped || isDelivered || isCompleted ? (
+                      /* Case 3: Shipped, Delivered, or Completed */
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">Carrier / Courier:</span>
+                          <span className="font-bold text-slate-800">
+                            {transaction.shippingCarrier || transaction.courier || "Standard Dispatch"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">Tracking Number:</span>
+                          <span className="font-mono font-bold text-slate-800">
+                            {transaction.trackingNumber || "Dispatched / On Transit"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                          <span className="text-slate-500 font-medium">Dispatch Status:</span>
+                          <span className="font-semibold text-blue-600">
+                            {isDelivered || isCompleted ? "Delivered" : "In Transit"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : isDisputed ? (
+                      <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
+                        <p className="font-bold">Under Dispute</p>
+                        <p>This transaction is currently undergoing dispute mediation.</p>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-500">
+                        Awaiting seller fulfillment.
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {transaction.status === "SHIPPED" ||
-                transaction.status === "DELIVERED" ||
-                transaction.status === "COMPLETED" ? (
-                  <div className="p-4 rounded-xl bg-slate-50 text-xs space-y-1">
-                    <p className="font-semibold text-slate-700">
-                      Courier:{" "}
-                      {transaction.shippingCarrier ||
-                        transaction.courier ||
-                        "Standard Dispatch"}
-                    </p>
-                    <p className="font-mono text-slate-500">
-                      Tracking:{" "}
-                      {transaction.trackingNumber || "Dispatched / On Transit"}
-                    </p>
-                  </div>
-                ) : transaction.status === "PENDING" ? (
-                  isBuyer ? (
-                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-2.5">
-                      <div className="flex items-center gap-1.5 font-bold">
-                        <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Escrow Payment Required</span>
-                      </div>
-                      <p className="text-amber-700 leading-relaxed">
-                        Fund ₦
-                        {Number(
-                          transaction.totalAmount || transaction.amount || 0,
-                        ).toLocaleString()}{" "}
-                        to lock payments in escrow. The seller will be notified to dispatch immediately.
-                      </p>
-                      <button
-                        onClick={handlePayInvoice}
-                        disabled={isPaying}
-                        className="w-full py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white font-bold text-xs shadow-sm transition-all disabled:opacity-50"
-                      >
-                        {isPaying
-                          ? "Securing Payment..."
-                          : `Fund & Secure ₦${Number(transaction.totalAmount || transaction.amount || 0).toLocaleString()}`}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1.5">
-                      <div className="flex items-center gap-1.5 font-bold">
-                        <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Awaiting Buyer Escrow Payment</span>
-                      </div>
-                      <p className="text-amber-700 leading-relaxed">
-                        Funds must be secured in escrow before dispatching. Once{" "}
-                        <span className="font-bold">{buyerName}</span> funds this agreement, you can enter courier tracking details here.
-                      </p>
-                    </div>
-                  )
-                ) : isSeller ? (
-                  <form onSubmit={handleMarkShipped} className="space-y-3">
-                    <input
-                      type="text"
-                      placeholder="Courier Name (e.g. DHL, GIG, In-house)"
-                      value={courier}
-                      onChange={(e) => setCourier(e.target.value)}
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Tracking / Waybill / Link Number"
-                      value={trackingNumber}
-                      onChange={(e) => setTrackingNumber(e.target.value)}
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50"
-                    >
-                      {isSubmitting ? "Updating..." : "Mark as Dispatched"}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-500">
-                    Awaiting seller to dispatch and provide tracking
-                    information.
-                  </div>
-                )}
               </div>
 
               {/* Delivery Release Box */}
@@ -479,41 +568,49 @@ export default function TransactionDetailPage() {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                    Once confirmed, ₦
-                    {Number(
-                      transaction.netAmount ||
-                        Number(
-                          transaction.totalAmount || transaction.amount || 0,
-                        ) * 0.975,
-                    ).toLocaleString()}{" "}
-                    will be released to the seller after deducting the{" "}
-                    {transaction.feePercentage || 2.5}% platform fee.
+                    Once confirmed, <span className="font-bold text-slate-800">₦{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> will be released to the seller after deducting the {feePercentage}% platform fee.
                   </p>
                 </div>
 
-                {isBuyer ? (
-                  <button
-                    onClick={handleConfirmDelivery}
-                    disabled={
-                      isSubmitting ||
-                      transaction.status === "COMPLETED" ||
-                      transaction.status === "DELIVERED"
-                    }
-                    className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
-                  >
-                    {transaction.status === "COMPLETED" ||
-                    transaction.status === "DELIVERED"
-                      ? "✓ Delivery Confirmed & Settled"
-                      : "Confirm Delivery & Release Funds"}
-                  </button>
-                ) : (
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-500 text-center font-medium">
-                    {transaction.status === "COMPLETED" ||
-                    transaction.status === "DELIVERED"
-                      ? "✓ Delivery Confirmed & Funds Released"
-                      : "Awaiting buyer's confirmation of delivery to release funds."}
-                  </div>
-                )}
+                <div className="pt-4">
+                  {isBuyer ? (
+                    isAwaitingPayment ? (
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-500 font-medium">
+                        Lock escrow funds first to initiate fulfillment
+                      </div>
+                    ) : isSecured ? (
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-500 font-medium">
+                        Awaiting seller to dispatch package
+                      </div>
+                    ) : isShipped ? (
+                      <button
+                        onClick={handleConfirmDelivery}
+                        disabled={isSubmitting}
+                        className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {isSubmitting ? "Releasing Funds..." : "Confirm Delivery & Release Funds"}
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-full py-3 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold transition-all cursor-not-allowed"
+                      >
+                        ✓ Delivery Confirmed & Settled
+                      </button>
+                    )
+                  ) : (
+                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-500 text-center font-medium">
+                      {isDelivered || isCompleted
+                        ? "✓ Delivery Confirmed & Funds Released"
+                        : isShipped
+                        ? "Awaiting buyer inspection & delivery confirmation to release funds."
+                        : isSecured
+                        ? "Funds locked in escrow. Dispatch package to begin transit."
+                        : "Awaiting buyer escrow deposit."}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

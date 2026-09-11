@@ -2,19 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ShieldCheck,
   PlusCircle,
-  FileText,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
   ChevronRight,
   Search,
-  Filter,
-  ArrowRight,
-  User,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
@@ -56,7 +48,16 @@ export default function EscrowTransactionPage() {
       (t.seller?.firstName || "").toLowerCase().includes(q);
 
     if (filterStatus === "ALL") return matchesSearch;
-    return matchesSearch && t.status === filterStatus;
+    const tStatus = (t.status || "").toUpperCase();
+    if (filterStatus === "AWAITING_PAYMENT") {
+      return (
+        matchesSearch &&
+        (tStatus === "AWAITING_PAYMENT" ||
+          tStatus === "PENDING" ||
+          tStatus === "DRAFT")
+      );
+    }
+    return matchesSearch && tStatus === filterStatus.toUpperCase();
   });
 
   return (
@@ -95,22 +96,31 @@ export default function EscrowTransactionPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            {["ALL", "SECURED", "SHIPPED", "DELIVERED", "COMPLETED"].map(
-              (status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterStatus === status
-                      ? "bg-[#32A05F] text-white shadow-xs"
-                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {status === "ALL" ? "All Deals" : status.replace("_", " ")}
-                </button>
-              ),
-            )}
+          <div className="flex items-center gap-2 self-start sm:self-auto overflow-x-auto pb-1 sm:pb-0 max-w-full">
+            {[
+              "ALL",
+              "AWAITING_PAYMENT",
+              "SECURED",
+              "SHIPPED",
+              "DELIVERED",
+              "COMPLETED",
+            ].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  filterStatus === status
+                    ? "bg-[#32A05F] text-white shadow-xs"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {status === "ALL"
+                  ? "All Deals"
+                  : status === "AWAITING_PAYMENT"
+                  ? "Awaiting Payment"
+                  : status.replace("_", " ")}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -124,14 +134,22 @@ export default function EscrowTransactionPage() {
                 (currentUser?.email &&
                   deal.buyer?.email &&
                   currentUser.email.toLowerCase() ===
-                    deal.buyer.email.toLowerCase());
+                    deal.buyer.email.toLowerCase()) ||
+                (currentUser?.email &&
+                  deal.buyerEmail &&
+                  currentUser.email.toLowerCase() ===
+                    deal.buyerEmail.toLowerCase());
 
               const isCurrentUserSeller =
                 currentUser?.id === deal.sellerId ||
                 (currentUser?.email &&
                   deal.seller?.email &&
                   currentUser.email.toLowerCase() ===
-                    deal.seller.email.toLowerCase());
+                    deal.seller.email.toLowerCase()) ||
+                (currentUser?.email &&
+                  deal.sellerEmail &&
+                  currentUser.email.toLowerCase() ===
+                    deal.sellerEmail.toLowerCase());
 
               const buyerLabel =
                 deal.buyer?.name ||
