@@ -114,8 +114,13 @@ export const transactionService = {
     return extract(res);
   },
 
-  payInvoice: async (transactionId: string) => {
-    const res = await apiClient.post(`/transactions/${transactionId}/pay`);
+  payInvoice: async (
+    transactionId: string,
+    walletType: "naira" | "btc" = "naira",
+  ) => {
+    const res = await apiClient.post(`/transactions/${transactionId}/pay`, {
+      walletType,
+    });
     return extract(res);
   },
 

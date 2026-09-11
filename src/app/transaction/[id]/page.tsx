@@ -11,9 +11,10 @@ import {
   Clock,
   AlertTriangle,
   Wallet,
+  ArrowUpRight,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
-import { transactionService } from "@/services/api";
+import { transactionService, walletService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
 import { DealDetailSkeleton } from "@/components/ui/Skeleton";
@@ -25,6 +26,7 @@ export default function TransactionDetailPage() {
   const currentUser = useAuthStore((s) => s.user);
 
   const [transaction, setTransaction] = useState<any>(null);
+  const [wallet, setWallet] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [courier, setCourier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
@@ -32,15 +34,28 @@ export default function TransactionDetailPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!id) return;
-    transactionService
-      .getTransactionById(id)
-      .then((res) => {
-        setTransaction(res);
-      })
-      .catch((err) => console.error("Failed to load transaction:", err))
-      .finally(() => setIsLoading(false));
+    try {
+      const [txRes, walletRes] = await Promise.allSettled([
+        transactionService.getTransactionById(id),
+        walletService.getBalances(),
+      ]);
+      if (txRes.status === "fulfilled") {
+        setTransaction(txRes.value);
+      }
+      if (walletRes.status === "fulfilled") {
+        setWallet(walletRes.value);
+      }
+    } catch (err) {
+      console.error("Failed to load deal details:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, [id]);
 
   const handleMarkShipped = async (e: React.FormEvent) => {
@@ -73,13 +88,12 @@ export default function TransactionDetailPage() {
   const handlePayInvoice = async () => {
     setIsPaying(true);
     try {
-      await transactionService.payInvoice(id);
+      await transactionService.payInvoice(id, "naira");
       toast.success(
         "Payment secured in escrow!",
         "The seller has been notified to package and dispatch the order.",
       );
-      const updated = await transactionService.getTransactionById(id);
-      setTransaction(updated);
+      await loadData();
     } catch (err: any) {
       toast.error(
         err.message ||
@@ -174,6 +188,10 @@ export default function TransactionDetailPage() {
     Number(transaction?.platformFee) || (totalAmount * feePercentage) / 100;
   const netAmount =
     Number(transaction?.netAmount) || totalAmount - platformFee;
+
+  const nairaBalance = Number(wallet?.balance || 0);
+  const hasSufficientBalance = nairaBalance >= totalAmount;
+  const balanceShortfall = Math.max(0, totalAmount - nairaBalance);
 
   const getStatusBadge = () => {
     if (isAwaitingPayment) {
@@ -431,13 +449,35 @@ export default function TransactionDetailPage() {
                     {isAwaitingPayment ? (
                       isBuyer ? (
                         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-3">
-                          <div className="flex items-center gap-1.5 font-bold">
-                            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                            <span>Escrow Payment Required</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 font-bold">
+                              <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                              <span>Escrow Payment Required</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] font-semibold bg-amber-100/80 px-2 py-0.5 rounded-lg text-amber-900">
+                              <Wallet className="w-3 h-3 text-amber-700" />
+                              <span>Wallet: ₦{nairaBalance.toLocaleString()}</span>
+                            </div>
                           </div>
+
                           <p className="text-amber-700 leading-relaxed">
                             Fund <span className="font-bold">₦{totalAmount.toLocaleString()}</span> to lock payment safely in escrow. Once funded, the seller will be notified to package and dispatch your order.
                           </p>
+
+                          {!hasSufficientBalance && (
+                            <div className="p-3 rounded-xl bg-amber-100/90 border border-amber-300 text-[11px] text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <span>
+                                Shortfall: <strong className="text-amber-900">₦{balanceShortfall.toLocaleString()}</strong> needed.
+                              </span>
+                              <Link
+                                href="/wallet"
+                                className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-amber-800 hover:bg-amber-900 text-white font-bold text-[10px] shrink-0 transition-all shadow-xs"
+                              >
+                                Top Up Wallet <ArrowUpRight className="w-3 h-3" />
+                              </Link>
+                            </div>
+                          )}
+
                           <button
                             onClick={handlePayInvoice}
                             disabled={isPaying}
@@ -453,7 +493,7 @@ export default function TransactionDetailPage() {
                               href="/wallet"
                               className="text-[11px] text-amber-800 hover:text-amber-950 font-semibold underline inline-flex items-center gap-1"
                             >
-                              <Wallet className="w-3 h-3" /> Top up your wallet balance
+                              <Wallet className="w-3 h-3" /> Go to Wallets & Deposit
                             </Link>
                           </div>
                         </div>
