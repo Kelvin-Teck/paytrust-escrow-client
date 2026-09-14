@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { SecuritySection } from "@/components/landing/SecuritySection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 
 export default function HomePage() {
   return (
@@ -42,6 +43,12 @@ export default function HomePage() {
               className="hover:text-[#32A05F] transition-colors"
             >
               Security
+            </a>
+            <a
+              href="#testimonials"
+              className="hover:text-[#32A05F] transition-colors"
+            >
+              Reviews
             </a>
           </nav>
 
@@ -235,6 +242,9 @@ export default function HomePage() {
       {/* ─── Security Segment (Institutional Protection) ─── */}
       <SecuritySection />
 
+      {/* ─── Testimonials & Reviews Segment ─── */}
+      <TestimonialsSection />
+
       {/* ─── Footer Signature ─── */}
       <footer className="border-t border-slate-200 py-8 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
@@ -244,9 +254,7 @@ export default function HomePage() {
               © {new Date().getFullYear()} PayTrust Inc. All rights reserved.
             </span>
           </div>
-          <p className="text-slate-400">
-            Next-Gen Escrow Protection Platform
-          </p>
+          <p className="text-slate-400">Next-Gen Escrow Protection Platform</p>
         </div>
       </footer>
     </div>

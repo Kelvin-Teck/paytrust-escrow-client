@@ -38,7 +38,8 @@ const securityPillars: SecurityPillar[] = [
     icon: Lock,
     emoji: "🔒",
     title: "Secure Escrow",
-    tagline: "Your money stays protected until the agreed transaction conditions are met.",
+    tagline:
+      "Your money stays protected until the agreed transaction conditions are met.",
     description:
       "Funds are not immediately transferred to the seller. PayTrust holds the transaction safely under predefined release conditions.",
     badge: "Protected Holding Vault",
@@ -270,7 +271,9 @@ export function SecuritySection() {
                   <p className="text-xs text-slate-400">Pre-Funded Escrow</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
-                  <p className="text-lg font-extrabold text-[#32A05F]">256-Bit</p>
+                  <p className="text-lg font-extrabold text-[#32A05F]">
+                    256-Bit
+                  </p>
                   <p className="text-xs text-slate-400">TLS Encryption</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
