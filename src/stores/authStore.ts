@@ -15,6 +15,7 @@ export interface User {
   tier?: number;
   accountType?: "individual" | "business";
   kybStatus?: "unverified" | "in_review" | "verified" | "rejected";
+  kybTier?: 1 | 2 | 3;
   companyName?: string;
   rcNumber?: string;
   tin?: string;
@@ -22,6 +23,10 @@ export interface User {
   businessType?: string;
   cacCertificateUrl?: string;
   proofOfBusinessAddressUrl?: string;
+  scumlNumber?: string;
+  scumlCertificateUrl?: string;
+  financialsUrl?: string;
+  uboDetails?: string;
 }
 
 interface AuthState {

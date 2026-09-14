@@ -21,13 +21,13 @@ import {
   Tag,
   Globe,
   Building2,
+  Zap,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuthStore } from "@/stores/authStore";
 import { profileService } from "@/services/api";
 import { getTierInfo, getKybInfo } from "@/lib/utils";
 import { CountryFlag } from "@/components/ui/CountryFlag";
-import { getCountryByCode } from "@/data/countries";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function ProfileHubPage() {
@@ -154,16 +154,19 @@ export default function ProfileHubPage() {
   };
 
   const userCountry = profileData?.country || user?.country || "Nigeria";
+  const isBusiness = (profileData?.accountType || user?.accountType) === "business";
+  const kyb = getKybInfo(profileData?.kybStatus || user?.kybStatus, profileData?.kybTier || user?.kybTier);
+  const kyc = getTierInfo(profileData?.kycStatus || user?.kycStatus);
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 pb-12">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Account & Security Settings
+            Account & Compliance Hub
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage your personal profile, corporate verification, referral rewards, and security.
+            Manage your personal identity, corporate verification limits, and security settings.
           </p>
         </div>
 
@@ -197,36 +200,25 @@ export default function ProfileHubPage() {
                     {displayName}
                   </h2>
 
-                  {(() => {
-                    const isBusiness = (profileData?.accountType || user?.accountType) === "business";
-                    if (isBusiness) {
-                      const kyb = getKybInfo(profileData?.kybStatus || user?.kybStatus);
-                      return (
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${kyb.badgeBg} ${kyb.badgeTextClass} ${kyb.badgeBorder}`}
-                        >
-                          <Building2 className="w-3.5 h-3.5" />
-                          {kyb.title}
-                        </span>
-                      );
-                    }
-
-                    const tier = getTierInfo(
-                      profileData?.kycStatus || user?.kycStatus,
-                    );
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${tier.badgeBg} ${tier.badgeTextClass} ${tier.badgeBorder}`}
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {tier.tierName}
-                      </span>
-                    );
-                  })()}
+                  {isBusiness ? (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${kyb.badgeBg} ${kyb.badgeTextClass} ${kyb.badgeBorder}`}
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      {kyb.title}
+                    </span>
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${kyc.badgeBg} ${kyc.badgeTextClass} ${kyc.badgeBorder}`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {kyc.tierName}
+                    </span>
+                  )}
                 </div>
 
                 {/* Corporate Company Name and RC info if business */}
-                {(profileData?.companyName || user?.companyName) && (
+                {isBusiness && (profileData?.companyName || user?.companyName) && (
                   <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
                     <Building2 className="w-3.5 h-3.5" />
                     <span>{profileData?.companyName || user?.companyName}</span>
@@ -263,6 +255,57 @@ export default function ProfileHubPage() {
             </div>
           )}
 
+          {/* ─── VISUAL TIER CAPACITY & LIMIT CARD ─── */}
+          <div className="p-6 sm:p-8 bg-slate-900 text-white border-b border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  {isBusiness ? "Corporate Escrow Limits" : "Personal Escrow Limits"}
+                </span>
+              </div>
+              <Link
+                href="/profile/identity-verification"
+                className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+              >
+                <span>View All Tiers & Upgrade</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                <span className="text-[11px] text-slate-400 font-medium block">Current Tier</span>
+                <span className="text-base font-bold text-white mt-1 block">
+                  {isBusiness ? kyb.title : kyc.tierName}
+                </span>
+                <span className="text-[10px] text-emerald-400 font-semibold block mt-0.5">
+                  {isBusiness ? kyb.badgeText : kyc.badgeText}
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                <span className="text-[11px] text-slate-400 font-medium block">Single Deal Limit</span>
+                <span className="text-base font-bold text-white mt-1 block">
+                  {isBusiness ? kyb.singleLimitLabel : kyc.singleLimitLabel}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  Per individual transaction
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                <span className="text-[11px] text-slate-400 font-medium block">Monthly Capacity</span>
+                <span className="text-base font-bold text-white mt-1 block">
+                  {isBusiness ? kyb.monthlyLimitLabel : "Unlimited"}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  Rolling 30-day volume
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Referral & Invite Rewards Section */}
           <div className="p-6 sm:p-8 bg-slate-50/60 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -278,8 +321,7 @@ export default function ProfileHubPage() {
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Invite partners and clients to trade with escrow protection
-                    and earn fee rebates.
+                    Invite partners and clients to trade with escrow protection and earn fee rebates.
                   </p>
                 </div>
               </div>
@@ -299,7 +341,6 @@ export default function ProfileHubPage() {
 
             {/* Referral Code & Link Interactive Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-1">
-              {/* Referral Code Box */}
               <div className="sm:col-span-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-2">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                   <Tag className="w-3 h-3 text-[#32A05F]" /> Referral Code
@@ -332,11 +373,9 @@ export default function ProfileHubPage() {
                 </div>
               </div>
 
-              {/* Referral Link Box */}
               <div className="sm:col-span-8 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-2">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#32A05F]" /> Shareable
-                  Invite Link
+                  <Sparkles className="w-3 h-3 text-[#32A05F]" /> Shareable Invite Link
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-600 font-mono text-xs truncate select-all">
@@ -424,7 +463,7 @@ export default function ProfileHubPage() {
                   Identity & KYB Compliance
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Government ID & CAC document audit
+                  Tier roadmap, CAC & SCUML audits
                 </p>
               </div>
             </div>

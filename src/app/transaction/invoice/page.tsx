@@ -13,11 +13,13 @@ import {
   User,
   Percent,
   Layers,
+  AlertTriangle,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/stores/authStore";
+import { getKybInfo, getTierInfo } from "@/lib/utils";
 
 interface MilestoneItem {
   id: string;
@@ -30,8 +32,12 @@ export default function CreateInvoicePage() {
   const router = useRouter();
   const { user } = useAuthStore();
 
+  const isBusiness = user?.accountType === "business";
+  const kyb = getKybInfo(user?.kybStatus, user?.kybTier);
+  const kyc = getTierInfo(user?.kycStatus);
+
   const [dealType, setDealType] = useState<"p2p" | "b2b_milestone">(
-    user?.accountType === "business" ? "b2b_milestone" : "p2p"
+    isBusiness ? "b2b_milestone" : "p2p"
   );
 
   const [title, setTitle] = useState("");
@@ -45,7 +51,7 @@ export default function CreateInvoicePage() {
   // B2B specific fields
   const [poNumber, setPoNumber] = useState("");
   const [applyTax, setApplyTax] = useState(true);
-  const [taxRate, setTaxRate] = useState(7.5); // Default 7.5% Nigerian VAT
+  const [taxRate, setTaxRate] = useState(7.5);
   const [contractUrl, setContractUrl] = useState("");
   const [termsAndConditions, setTermsAndConditions] = useState("");
 
@@ -105,10 +111,23 @@ export default function CreateInvoicePage() {
   const platformFee = (grossInvoiceTotal * 2.5) / 100;
   const netSellerPayout = grossInvoiceTotal - platformFee;
 
+  // Active limit check
+  const activeLimit = isBusiness ? kyb.singleLimit : kyc.singleLimit;
+  const isExceedingLimit = grossInvoiceTotal > activeLimit;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (grossInvoiceTotal <= 0) {
       setError("Please specify a valid transaction value greater than 0.");
+      return;
+    }
+
+    if (isExceedingLimit) {
+      setError(
+        `The transaction value of ₦${grossInvoiceTotal.toLocaleString()} exceeds your ${
+          isBusiness ? kyb.title : kyc.tierName
+        } limit of ₦${activeLimit.toLocaleString()}. Please upgrade your tier in Profile → Compliance to proceed.`
+      );
       return;
     }
 
@@ -215,6 +234,29 @@ export default function CreateInvoicePage() {
           </button>
         </div>
 
+        {/* Limit Warning Alert */}
+        {isExceedingLimit && (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start justify-between gap-3 shadow-sm">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">
+                  Amount Exceeds Your Current {isBusiness ? kyb.title : kyc.tierName} Limit (₦{activeLimit.toLocaleString()})
+                </span>
+                <span className="text-amber-700 mt-0.5 block">
+                  To create escrow agreements of this volume, upgrade your tier in Profile → Compliance.
+                </span>
+              </div>
+            </div>
+            <Link
+              href="/profile/identity-verification"
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 transition-colors"
+            >
+              Upgrade Tier
+            </Link>
+          </div>
+        )}
+
         {error && (
           <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
             <span>{error}</span>
@@ -276,8 +318,9 @@ export default function CreateInvoicePage() {
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Total Escrow Value (NGN) *
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>Total Escrow Value (NGN) *</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">Limit: ₦{activeLimit.toLocaleString()}</span>
                 </label>
                 <input
                   type="number"
@@ -543,7 +586,7 @@ export default function CreateInvoicePage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isExceedingLimit}
             className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-[0.98] disabled:opacity-50 text-sm cursor-pointer"
           >
             {isSubmitting
