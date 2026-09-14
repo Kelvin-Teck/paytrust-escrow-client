@@ -13,6 +13,15 @@ export interface User {
   isEmailVerified?: boolean;
   kycStatus?: string;
   tier?: number;
+  accountType?: "individual" | "business";
+  kybStatus?: "unverified" | "in_review" | "verified" | "rejected";
+  companyName?: string;
+  rcNumber?: string;
+  tin?: string;
+  businessAddress?: string;
+  businessType?: string;
+  cacCertificateUrl?: string;
+  proofOfBusinessAddressUrl?: string;
 }
 
 interface AuthState {

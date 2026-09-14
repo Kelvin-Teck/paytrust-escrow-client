@@ -98,3 +98,74 @@ export function getTierInfo(kycStatus?: string): TierInfo {
   };
 }
 
+export interface KybInfo {
+  status: "unverified" | "in_review" | "verified" | "rejected";
+  title: string;
+  badgeText: string;
+  statusColor: string;
+  badgeBg: string;
+  badgeTextClass: string;
+  badgeBorder: string;
+  description: string;
+  isVerified: boolean;
+}
+
+export function getKybInfo(kybStatus?: string): KybInfo {
+  const status = (kybStatus || "").toLowerCase();
+
+  if (status === "verified" || status === "approved") {
+    return {
+      status: "verified",
+      title: "Corporate Verified",
+      badgeText: "KYB Verified",
+      statusColor: "text-[#32A05F]",
+      badgeBg: "bg-[#EBF7F0]",
+      badgeTextClass: "text-[#1E6B3E]",
+      badgeBorder: "border-[#32A05F]/30",
+      description: "CAC & Corporate identity verified • Corporate milestone contracts enabled.",
+      isVerified: true,
+    };
+  }
+
+  if (status === "in_review" || status === "under_review" || status === "pending") {
+    return {
+      status: "in_review",
+      title: "KYB In Review",
+      badgeText: "Under Review",
+      statusColor: "text-amber-500",
+      badgeBg: "bg-amber-50",
+      badgeTextClass: "text-amber-800",
+      badgeBorder: "border-amber-300",
+      description: "Your CAC certificate & business documents are currently being audited.",
+      isVerified: false,
+    };
+  }
+
+  if (status === "rejected" || status === "failed") {
+    return {
+      status: "rejected",
+      title: "KYB Declined",
+      badgeText: "Action Needed",
+      statusColor: "text-rose-500",
+      badgeBg: "bg-rose-50",
+      badgeTextClass: "text-rose-700",
+      badgeBorder: "border-rose-300",
+      description: "Business documents could not be verified. Please re-upload CAC registration documents.",
+      isVerified: false,
+    };
+  }
+
+  return {
+    status: "unverified",
+    title: "KYB Unverified",
+    badgeText: "KYB Pending",
+    statusColor: "text-slate-400",
+    badgeBg: "bg-slate-100",
+    badgeTextClass: "text-slate-600",
+    badgeBorder: "border-slate-200",
+    description: "Submit CAC Registration certificate and TIN to verify your corporate business account.",
+    isVerified: false,
+  };
+}
+
+

@@ -33,6 +33,12 @@ export const authService = {
     phone: string;
     country?: string;
     referralCode?: string;
+    accountType?: "individual" | "business";
+    companyName?: string;
+    rcNumber?: string;
+    tin?: string;
+    businessAddress?: string;
+    businessType?: string;
   }) => {
     const res = await apiClient.post("/auth/register", payload);
     return extract(res);
@@ -114,11 +120,18 @@ export const transactionService = {
     buyerEmail?: string;
     buyerPhone?: string;
     inspectionPeriod?: number;
+    dealType?: "p2p" | "b2b_milestone" | "b2b_contract";
+    poNumber?: string;
+    taxRate?: number;
+    taxAmount?: number;
+    contractUrl?: string;
+    termsAndConditions?: string;
     milestones?: Array<{ title: string; amount: number; description?: string }>;
     items?: Array<{ name: string; quantity: number; price: number }>;
   }) => {
     const formattedPayload = {
       ...payload,
+      dealType: payload.dealType || "p2p",
       description: payload.description || payload.title,
       title: payload.title,
       amount: payload.amount,
@@ -275,6 +288,17 @@ export const profileService = {
     return extract(res);
   },
 
+  updateBusiness: async (payload: {
+    companyName?: string;
+    rcNumber?: string;
+    tin?: string;
+    businessAddress?: string;
+    businessType?: string;
+  }) => {
+    const res = await apiClient.put("/profiles/business", payload);
+    return extract(res);
+  },
+
   updateBankDetails: async (payload: {
     bankName: string;
     accountNumber: string;
@@ -286,6 +310,13 @@ export const profileService = {
 
   submitKyc: async (formData: FormData) => {
     const res = await apiClient.post("/profiles/kyc/submit", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return extract(res);
+  },
+
+  submitKyb: async (formData: FormData) => {
+    const res = await apiClient.post("/profiles/kyb/submit", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return extract(res);

@@ -20,11 +20,12 @@ import {
   Sparkles,
   Tag,
   Globe,
+  Building2,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuthStore } from "@/stores/authStore";
 import { profileService } from "@/services/api";
-import { getTierInfo } from "@/lib/utils";
+import { getTierInfo, getKybInfo } from "@/lib/utils";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { getCountryByCode } from "@/data/countries";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -145,7 +146,7 @@ export default function ProfileHubPage() {
           url: referralLink,
         });
       } catch (err) {
-        // User cancelled share or not supported
+        // User cancelled share
       }
     } else {
       copyToClipboard(referralLink, "link");
@@ -162,8 +163,7 @@ export default function ProfileHubPage() {
             Account & Security Settings
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage your personal profile, referral rewards, bank payout details,
-            and security.
+            Manage your personal profile, corporate verification, referral rewards, and security.
           </p>
         </div>
 
@@ -198,6 +198,19 @@ export default function ProfileHubPage() {
                   </h2>
 
                   {(() => {
+                    const isBusiness = (profileData?.accountType || user?.accountType) === "business";
+                    if (isBusiness) {
+                      const kyb = getKybInfo(profileData?.kybStatus || user?.kybStatus);
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${kyb.badgeBg} ${kyb.badgeTextClass} ${kyb.badgeBorder}`}
+                        >
+                          <Building2 className="w-3.5 h-3.5" />
+                          {kyb.title}
+                        </span>
+                      );
+                    }
+
                     const tier = getTierInfo(
                       profileData?.kycStatus || user?.kycStatus,
                     );
@@ -211,6 +224,19 @@ export default function ProfileHubPage() {
                     );
                   })()}
                 </div>
+
+                {/* Corporate Company Name and RC info if business */}
+                {(profileData?.companyName || user?.companyName) && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{profileData?.companyName || user?.companyName}</span>
+                    {(profileData?.rcNumber || user?.rcNumber) && (
+                      <span className="text-slate-400 font-mono text-[11px]">
+                        ({profileData?.rcNumber || user?.rcNumber})
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Contact and Location Metadata */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-medium">
@@ -355,10 +381,10 @@ export default function ProfileHubPage() {
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  Personal Information
+                  Personal & Corporate Profile
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Legal name, email & phone number
+                  Legal name, business entity & contact
                 </p>
               </div>
             </div>
@@ -395,10 +421,10 @@ export default function ProfileHubPage() {
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  Identity & KYC Verification
+                  Identity & KYB Compliance
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Government ID & address verification
+                  Government ID & CAC document audit
                 </p>
               </div>
             </div>

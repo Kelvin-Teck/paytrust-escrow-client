@@ -199,7 +199,9 @@ export function TestimonialsSection() {
               <Star className="w-6 h-6 fill-amber-400 text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-slate-900">4.9 / 5.0</p>
+              <p className="text-2xl font-extrabold text-slate-900">
+                4.9 / 5.0
+              </p>
               <p className="text-xs font-semibold text-slate-500">
                 1,800+ Verified Reviews
               </p>
@@ -235,7 +237,9 @@ export function TestimonialsSection() {
               <Zap className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-slate-900">&lt; 15 Mins</p>
+              <p className="text-2xl font-extrabold text-slate-900">
+                &lt; 15 Mins
+              </p>
               <p className="text-xs font-semibold text-slate-500">
                 Avg. Approval & Payout
               </p>
@@ -258,7 +262,9 @@ export function TestimonialsSection() {
                     : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <Icon
+                  className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`}
+                />
                 {tab.label}
               </button>
             );

@@ -18,12 +18,14 @@ import {
   ChevronRight,
   AlertTriangle,
   BarChart3,
+  Building2,
+  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthStore } from "@/stores/authStore";
 import { profileService, notificationService } from "@/services/api";
-import { getTierInfo } from "@/lib/utils";
+import { getTierInfo, getKybInfo } from "@/lib/utils";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -221,6 +223,39 @@ export function AppShell({
 
           <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
             {(() => {
+              const isBusiness = user?.accountType === "business";
+              if (isBusiness) {
+                const kyb = getKybInfo(user?.kybStatus);
+                return (
+                  <div className="p-3.5 rounded-2xl bg-[#0F172A] text-white shadow-sm border border-slate-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${kyb.statusColor}`}
+                      >
+                        <Building2 className="w-3.5 h-3.5" />
+                        {kyb.title}
+                      </span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                          kyb.isVerified
+                            ? "bg-[#32A05F]/20 text-[#32A05F]"
+                            : kyb.status === "in_review"
+                              ? "bg-amber-400/20 text-amber-400"
+                              : kyb.status === "rejected"
+                                ? "bg-rose-500/20 text-rose-400"
+                                : "bg-slate-800 text-slate-400"
+                        }`}
+                      >
+                        {kyb.badgeText}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-medium leading-relaxed line-clamp-2">
+                      {user?.companyName ? `${user.companyName} • ` : ""}{kyb.description}
+                    </p>
+                  </div>
+                );
+              }
+
               const tier = getTierInfo(user?.kycStatus);
               return (
                 <div className="p-3.5 rounded-2xl bg-[#0F172A] text-white shadow-sm">
@@ -262,7 +297,9 @@ export function AppShell({
                     {displayName}
                   </p>
                   <p className="text-[11px] text-slate-500 truncate">
-                    {user?.email || "user@paytrust.io"}
+                    {user?.accountType === "business" && user?.companyName
+                      ? user.companyName
+                      : user?.email || "user@paytrust.io"}
                   </p>
                 </div>
               </div>
@@ -281,12 +318,23 @@ export function AppShell({
         {/* ─── DESKTOP MAIN CONTENT AREA ─── */}
         <main className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-10">
           <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
-            <div>
+            <div className="flex items-center gap-3">
               {pageTitle ? (
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                    {pageTitle}
-                  </h1>
+                  <div className="flex items-center gap-2.5">
+                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                      {pageTitle}
+                    </h1>
+                    {user?.accountType === "business" ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                        <Building2 className="w-3 h-3" /> Corporate Account
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200 flex items-center gap-1">
+                        <User className="w-3 h-3" /> Personal Account
+                      </span>
+                    )}
+                  </div>
                   {pageSubtitle && (
                     <p className="text-xs text-slate-500 mt-0.5">
                       {pageSubtitle}
@@ -305,6 +353,11 @@ export function AppShell({
                   <span className="text-slate-800 font-semibold capitalize">
                     {pathname.replace("/", "").split("/")[0] || "Dashboard"}
                   </span>
+                  {user?.accountType === "business" && (
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
+                      Corporate
+                    </span>
+                  )}
                 </div>
               )}
             </div>
