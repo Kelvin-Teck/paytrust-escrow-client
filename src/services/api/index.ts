@@ -52,6 +52,30 @@ export const authService = {
     return extract(res);
   },
 
+  forgotPassword: async (payload: { email?: string; phone?: string }) => {
+    const res = await apiClient.post("/auth/forgot-password", payload);
+    return extract(res);
+  },
+
+  verifyResetCode: async (payload: {
+    email?: string;
+    phone?: string;
+    code: string;
+  }) => {
+    const res = await apiClient.post("/auth/forgot-password/verify", payload);
+    return extract(res);
+  },
+
+  resetPassword: async (payload: {
+    email?: string;
+    phone?: string;
+    code: string;
+    password: string;
+  }) => {
+    const res = await apiClient.post("/auth/reset-password", payload);
+    return extract(res);
+  },
+
   logout: async () => {
     const res = await apiClient.post("/auth/logout");
     return extract(res);

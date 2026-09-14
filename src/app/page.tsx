@@ -184,16 +184,24 @@ export default function HomePage() {
       </section>
 
       {/* ─── Footer ─── */}
-      <footer className="border-t border-slate-200 py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-slate-500">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" href="/" />
-            <span>© {new Date().getFullYear()} PayTrust Inc. All rights reserved.</span>
+      <footer className="border-t border-slate-200 py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-6 text-sm text-slate-500">
+          {/* Navigation Links */}
+          <div className="flex flex-wrap items-center justify-center gap-8 font-medium text-slate-600">
+            <Link href="/login" className="hover:text-[#32A05F] transition-colors">Sign In</Link>
+            <Link href="/register" className="hover:text-[#32A05F] transition-colors">Register</Link>
+            <Link href="/dashboard" className="hover:text-[#32A05F] transition-colors">Dashboard</Link>
           </div>
-          <div className="flex items-center gap-6 font-medium">
-            <Link href="/login" className="hover:text-[#32A05F]">Sign In</Link>
-            <Link href="/register" className="hover:text-[#32A05F]">Register</Link>
-            <Link href="/dashboard" className="hover:text-[#32A05F]">Dashboard</Link>
+
+          <div className="w-full border-t border-slate-100" />
+
+          {/* Bottom Signature / Copyright */}
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <Logo size="sm" href="/" />
+              <span>© {new Date().getFullYear()} PayTrust Inc. All rights reserved.</span>
+            </div>
+            <p className="text-slate-400">Next-Gen Escrow Protection Platform</p>
           </div>
         </div>
       </footer>
