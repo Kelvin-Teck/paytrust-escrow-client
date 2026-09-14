@@ -4,11 +4,9 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ShieldCheck,
   ArrowRight,
   Lock,
   Wallet,
-  CheckCircle2,
   Zap,
   Sparkles,
   User,
@@ -16,6 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { SecuritySection } from "@/components/landing/SecuritySection";
 
 export default function HomePage() {
   return (
@@ -233,7 +232,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
+      {/* ─── Security Segment (Institutional Protection) ─── */}
+      <SecuritySection />
+
+      {/* ─── Footer Signature ─── */}
       <footer className="border-t border-slate-200 py-8 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div className="flex items-center gap-2.5">

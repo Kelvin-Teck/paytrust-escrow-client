@@ -4,7 +4,15 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { authService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
@@ -75,7 +83,9 @@ function LoginForm() {
       className="w-full max-w-md p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl"
     >
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Log In</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          Log In
+        </h1>
         <p className="text-sm text-slate-500 mt-1">
           Sign in to manage your escrow contracts and multi-currency wallets.
         </p>
@@ -122,7 +132,11 @@ function LoginForm() {
               Password
             </label>
             <Link
-              href={email ? `/forgot-password?email=${encodeURIComponent(email.trim())}` : "/forgot-password"}
+              href={
+                email
+                  ? `/forgot-password?email=${encodeURIComponent(email.trim())}`
+                  : "/forgot-password"
+              }
               className="text-xs font-semibold text-[#32A05F] hover:text-[#28874E] hover:underline transition-colors"
             >
               Forgot password?
@@ -143,7 +157,11 @@ function LoginForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
@@ -179,12 +197,15 @@ export default function LoginPage() {
           href="/register"
           className="text-xs sm:text-sm font-semibold text-slate-600 hover:text-[#32A05F] transition-colors"
         >
-          Don't have an account? <span className="text-[#32A05F]">Register</span>
+          Don't have an account?{" "}
+          <span className="text-[#32A05F]">Register</span>
         </Link>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
-        <Suspense fallback={<div className="text-slate-400">Loading form...</div>}>
+        <Suspense
+          fallback={<div className="text-slate-400">Loading form...</div>}
+        >
           <LoginForm />
         </Suspense>
       </main>

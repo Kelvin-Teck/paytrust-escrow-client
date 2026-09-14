@@ -21,7 +21,10 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { authService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
-import { PasswordStrengthIndicator, checkPasswordCriteria } from "@/components/ui/PasswordStrengthIndicator";
+import {
+  PasswordStrengthIndicator,
+  checkPasswordCriteria,
+} from "@/components/ui/PasswordStrengthIndicator";
 
 type Step = "request" | "reset" | "success";
 
@@ -71,7 +74,10 @@ function ForgotPasswordForm() {
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -79,7 +85,10 @@ function ForgotPasswordForm() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/[^0-9]/g, "")
+      .slice(0, 6);
     if (!pastedData) return;
 
     const newCode = [...code];
@@ -142,7 +151,8 @@ function ForgotPasswordForm() {
       setResendCooldown(60);
       toast.success("New code sent!", "Please check your inbox.");
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to resend code.";
+      const msg =
+        err.response?.data?.message || err.message || "Failed to resend code.";
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -211,9 +221,12 @@ function ForgotPasswordForm() {
               <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mb-4">
                 <KeyRound className="w-6 h-6" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Forgot Password?</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                Forgot Password?
+              </h1>
               <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
-                Enter your registered email address and we'll send you a 6-digit code to securely reset your password.
+                Enter your registered email address and we'll send you a 6-digit
+                code to securely reset your password.
               </p>
             </div>
 
@@ -284,9 +297,13 @@ function ForgotPasswordForm() {
               <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mb-4">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900">Reset Password</h1>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Reset Password
+              </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Enter the 6-digit code sent to <span className="font-bold text-slate-800">{email}</span> and create your new password.
+                Enter the 6-digit code sent to{" "}
+                <span className="font-bold text-slate-800">{email}</span> and
+                create your new password.
               </p>
             </div>
 
@@ -336,7 +353,9 @@ function ForgotPasswordForm() {
                     Change email
                   </button>
                   {resendCooldown > 0 ? (
-                    <span className="text-slate-400">Resend in {resendCooldown}s</span>
+                    <span className="text-slate-400">
+                      Resend in {resendCooldown}s
+                    </span>
                   ) : (
                     <button
                       type="button"
@@ -344,7 +363,10 @@ function ForgotPasswordForm() {
                       disabled={isResending}
                       className="font-bold text-[#32A05F] hover:text-[#28874E] inline-flex items-center gap-1"
                     >
-                      <RefreshCw className={`w-3 h-3 ${isResending ? "animate-spin" : ""}`} /> Resend code
+                      <RefreshCw
+                        className={`w-3 h-3 ${isResending ? "animate-spin" : ""}`}
+                      />{" "}
+                      Resend code
                     </button>
                   )}
                 </div>
@@ -370,7 +392,11 @@ function ForgotPasswordForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 <PasswordStrengthIndicator password={newPassword} />
@@ -396,7 +422,11 @@ function ForgotPasswordForm() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 {confirmPassword && newPassword !== confirmPassword && (
@@ -447,11 +477,16 @@ function ForgotPasswordForm() {
               Password Reset Complete!
             </h2>
             <p className="text-sm text-slate-500 max-w-xs mx-auto mb-8 leading-relaxed">
-              Your password has been successfully updated. You can now use your new credentials to log in.
+              Your password has been successfully updated. You can now use your
+              new credentials to log in.
             </p>
 
             <Link
-              href={email ? `/login?email=${encodeURIComponent(email.trim())}` : "/login"}
+              href={
+                email
+                  ? `/login?email=${encodeURIComponent(email.trim())}`
+                  : "/login"
+              }
               className="w-full py-4 rounded-2xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/25 transition-all active:scale-[0.98] text-sm"
             >
               <span>Proceed to Log In</span>
@@ -478,7 +513,9 @@ export default function ForgotPasswordPage() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
-        <Suspense fallback={<div className="text-slate-400">Loading form...</div>}>
+        <Suspense
+          fallback={<div className="text-slate-400">Loading form...</div>}
+        >
           <ForgotPasswordForm />
         </Suspense>
       </main>
