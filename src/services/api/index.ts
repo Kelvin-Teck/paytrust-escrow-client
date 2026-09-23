@@ -17,20 +17,21 @@ const extract = (res: any) => {
 // ─── AUTHENTICATION SERVICE ───
 export const authService = {
   login: async (payload: {
-    email: string;
-    password: string;
+    email?: string;
     phone?: string;
+    emailOrPhone?: string;
+    password: string;
   }) => {
     const res = await apiClient.post("/auth/login", payload);
     return extract(res);
   },
 
   register: async (payload: {
-    email: string;
+    email?: string;
     password: string;
     firstName?: string;
     lastName?: string;
-    phone: string;
+    phone?: string;
     country?: string;
     referralCode?: string;
     accountType?: "individual" | "business";
@@ -109,6 +110,11 @@ export const transactionService = {
 
   getTransactionById: async (id: string) => {
     const res = await apiClient.get(`/transactions/${id}`);
+    return extract(res);
+  },
+
+  getPublicPreview: async (id: string) => {
+    const res = await apiClient.get(`/transactions/public/${id}`);
     return extract(res);
   },
 

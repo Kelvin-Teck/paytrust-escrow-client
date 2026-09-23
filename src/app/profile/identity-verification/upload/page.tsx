@@ -28,13 +28,13 @@ function UploadVerificationForm() {
   const isKyb = modeParam === "kyb" || user?.accountType === "business";
 
   const [targetKybTier, setTargetKybTier] = useState<2 | 3>(
-    tierParam === 3 ? 3 : 2
+    tierParam === 3 ? 3 : 2,
   );
 
   // Individual KYC State
-  const [docType, setDocType] = useState<"gov_id" | "passport" | "drivers_license">(
-    (docTypeParam as any) || "gov_id"
-  );
+  const [docType, setDocType] = useState<
+    "gov_id" | "passport" | "drivers_license"
+  >((docTypeParam as any) || "gov_id");
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
 
@@ -75,12 +75,18 @@ function UploadVerificationForm() {
         const freshProfile = await profileService.getProfile();
         if (freshProfile) setUser(freshProfile);
       }
-      setSuccessMsg("Identity document submitted successfully! Your Tier 2 status is now in review.");
+      setSuccessMsg(
+        "Identity document submitted successfully! Your Tier 2 status is now in review.",
+      );
       setTimeout(() => {
         router.push("/profile");
       }, 1500);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || err.message || "Failed to upload KYC document.");
+      setErrorMsg(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to upload KYC document.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -89,11 +95,15 @@ function UploadVerificationForm() {
   const handleSubmitKyb = async (e: React.FormEvent) => {
     e.preventDefault();
     if (targetKybTier === 2 && !cacFile && !user?.cacCertificateUrl) {
-      setErrorMsg("Please select your CAC Certificate of Incorporation document.");
+      setErrorMsg(
+        "Please select your CAC Certificate of Incorporation document.",
+      );
       return;
     }
     if (targetKybTier === 3 && !scumlFile && !financialsFile) {
-      setErrorMsg("Please upload either a SCUML Certificate or Audited Financial Statements for Tier 3 Institutional upgrade.");
+      setErrorMsg(
+        "Please upload either a SCUML Certificate or Audited Financial Statements for Tier 3 Institutional upgrade.",
+      );
       return;
     }
 
@@ -118,12 +128,18 @@ function UploadVerificationForm() {
         const freshProfile = await profileService.getProfile();
         if (freshProfile) setUser(freshProfile);
       }
-      setSuccessMsg(`Corporate Tier ${targetKybTier} documents submitted successfully! Compliance team is auditing your verification.`);
+      setSuccessMsg(
+        `Corporate Tier ${targetKybTier} documents submitted successfully! Compliance team is auditing your verification.`,
+      );
       setTimeout(() => {
         router.push("/profile");
       }, 1500);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || err.message || "Failed to upload Corporate KYB documents.");
+      setErrorMsg(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to upload Corporate KYB documents.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -242,7 +258,9 @@ function UploadVerificationForm() {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Tax ID (TIN)</span>
-                  <span className="text-slate-400 lowercase font-normal">(optional)</span>
+                  <span className="text-slate-400 lowercase font-normal">
+                    (optional)
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -272,9 +290,15 @@ function UploadVerificationForm() {
                   <Upload className="w-5 h-5" />
                 </div>
                 <p className="text-xs font-bold text-slate-900">
-                  {cacFile ? cacFile.name : user?.cacCertificateUrl ? "CAC Certificate Uploaded ✓" : "CAC Certificate of Incorporation *"}
+                  {cacFile
+                    ? cacFile.name
+                    : user?.cacCertificateUrl
+                      ? "CAC Certificate Uploaded ✓"
+                      : "CAC Certificate of Incorporation *"}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">PDF or High-Res Image (Required)</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  PDF or High-Res Image (Required)
+                </p>
               </div>
 
               <div className="p-6 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-[#32A05F] text-center transition-colors cursor-pointer relative">
@@ -288,9 +312,15 @@ function UploadVerificationForm() {
                   <Upload className="w-5 h-5" />
                 </div>
                 <p className="text-xs font-bold text-slate-900">
-                  {addressFile ? addressFile.name : user?.proofOfBusinessAddressUrl ? "Proof of Address Uploaded ✓" : "Proof of Operating Address"}
+                  {addressFile
+                    ? addressFile.name
+                    : user?.proofOfBusinessAddressUrl
+                      ? "Proof of Address Uploaded ✓"
+                      : "Proof of Operating Address"}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Utility bill / lease agreement (Optional)</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Utility bill / lease agreement (Optional)
+                </p>
               </div>
             </div>
           </div>
@@ -299,7 +329,8 @@ function UploadVerificationForm() {
           {targetKybTier === 3 && (
             <div className="space-y-4 pt-2 border-t border-slate-200">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#32A05F]" /> 2. Tier 3 SCUML & Financial Records
+                <Sparkles className="w-4 h-4 text-[#32A05F]" /> 2. Tier 3 SCUML
+                & Financial Records
               </span>
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
@@ -342,25 +373,39 @@ function UploadVerificationForm() {
                     <Upload className="w-5 h-5" />
                   </div>
                   <p className="text-xs font-bold text-slate-900">
-                    {scumlFile ? scumlFile.name : user?.scumlCertificateUrl ? "SCUML Cert Uploaded ✓" : "SCUML Certificate Document"}
+                    {scumlFile
+                      ? scumlFile.name
+                      : user?.scumlCertificateUrl
+                        ? "SCUML Cert Uploaded ✓"
+                        : "SCUML Certificate Document"}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">EFCC / SCUML certificate (PDF)</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    EFCC / SCUML certificate (PDF)
+                  </p>
                 </div>
 
                 <div className="p-6 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-[#32A05F] text-center transition-colors cursor-pointer relative">
                   <input
                     type="file"
                     accept="image/*,.pdf"
-                    onChange={(e) => setFinancialsFile(e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      setFinancialsFile(e.target.files?.[0] || null)
+                    }
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-3">
                     <Upload className="w-5 h-5" />
                   </div>
                   <p className="text-xs font-bold text-slate-900">
-                    {financialsFile ? financialsFile.name : user?.financialsUrl ? "Financials Uploaded ✓" : "Audited Financials / Bank Records"}
+                    {financialsFile
+                      ? financialsFile.name
+                      : user?.financialsUrl
+                        ? "Financials Uploaded ✓"
+                        : "Audited Financials / Bank Records"}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Certified statements (PDF)</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Certified statements (PDF)
+                  </p>
                 </div>
               </div>
             </div>
@@ -420,7 +465,9 @@ function UploadVerificationForm() {
               <p className="text-xs font-bold text-slate-900">
                 {frontFile ? frontFile.name : "Front Side Image *"}
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Click or drag file (Required)</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Click or drag file (Required)
+              </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-white border-2 border-dashed border-slate-300 hover:border-[#32A05F] text-center transition-colors cursor-pointer relative">
@@ -436,7 +483,9 @@ function UploadVerificationForm() {
               <p className="text-xs font-bold text-slate-900">
                 {backFile ? backFile.name : "Back Side Image"}
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Click or drag file (Optional)</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Click or drag file (Optional)
+              </p>
             </div>
           </div>
 
@@ -445,7 +494,9 @@ function UploadVerificationForm() {
             disabled={!frontFile || isSubmitting}
             className="w-full py-4 rounded-xl font-bold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 shadow-lg shadow-[#32A05F]/20 transition-all active:scale-[0.98] disabled:opacity-50 text-sm cursor-pointer"
           >
-            {isSubmitting ? "Uploading & Verifying..." : "Submit Document for Review"}
+            {isSubmitting
+              ? "Uploading & Verifying..."
+              : "Submit Document for Review"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -457,7 +508,11 @@ function UploadVerificationForm() {
 export default function IdentityUploadPage() {
   return (
     <AppShell>
-      <Suspense fallback={<div className="text-slate-400 p-8">Loading upload interface...</div>}>
+      <Suspense
+        fallback={
+          <div className="text-slate-400 p-8">Loading upload interface...</div>
+        }
+      >
         <UploadVerificationForm />
       </Suspense>
     </AppShell>
