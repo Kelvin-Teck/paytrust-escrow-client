@@ -657,120 +657,158 @@ function WalletContent() {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
-            {filteredTransactions.map((tx: any, idx: number) => {
-              const cur = (tx.currency || "NGN").toUpperCase();
-              const isBtc = cur === "BTC";
-              const amt = Number(tx.amount || 0);
-              const isDeposit =
-                tx.type === "deposit" ||
-                tx.type === "CREDIT" ||
-                tx.type === "escrow_credit" ||
-                (amt > 0 &&
-                  !tx.type?.includes("withdrawal") &&
-                  !tx.type?.includes("lock"));
+          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th className="py-3.5 px-5">Activity & Reference</th>
+                    <th className="py-3.5 px-5">Type</th>
+                    <th className="py-3.5 px-5">Date & Time</th>
+                    <th className="py-3.5 px-5">Amount</th>
+                    <th className="py-3.5 px-5">Status</th>
+                    <th className="py-3.5 px-5 text-right">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredTransactions.map((tx: any, idx: number) => {
+                    const cur = (tx.currency || "NGN").toUpperCase();
+                    const isBtc = cur === "BTC";
+                    const amt = Number(tx.amount || 0);
+                    const isDeposit =
+                      tx.type === "deposit" ||
+                      tx.type === "CREDIT" ||
+                      tx.type === "escrow_credit" ||
+                      (amt > 0 &&
+                        !tx.type?.includes("withdrawal") &&
+                        !tx.type?.includes("lock"));
 
-              const status = (tx.status || "success").toLowerCase();
+                    const status = (tx.status || "success").toLowerCase();
 
-              return (
-                <div
-                  key={tx.id || idx}
-                  onClick={() => setSelectedTx(tx)}
-                  className="p-4 sm:px-5 hover:bg-slate-50/80 transition-all cursor-pointer flex items-center justify-between gap-4 group"
-                >
-                  {/* Left: Icon & Description */}
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 transition-transform group-hover:scale-105 ${
-                        isDeposit
-                          ? "bg-[#EBF7F0] text-[#32A05F]"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {isDeposit ? (
-                        <ArrowDownLeft className="w-5 h-5" />
-                      ) : (
-                        <ArrowUpRight className="w-5 h-5" />
-                      )}
-                    </div>
+                    return (
+                      <tr
+                        key={tx.id || idx}
+                        onClick={() => setSelectedTx(tx)}
+                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                      >
+                        {/* 1. Transaction & Reference */}
+                        <td className="py-3.5 px-5 min-w-[220px]">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                                isDeposit
+                                  ? "bg-[#EBF7F0] text-[#32A05F]"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {isDeposit ? (
+                                <ArrowDownLeft className="w-4 h-4" />
+                              ) : (
+                                <ArrowUpRight className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors capitalize truncate">
+                                {tx.description || tx.type || "Wallet Transaction"}
+                              </p>
+                              <p className="text-[11px] text-slate-400 font-mono truncate">
+                                {tx.reference || tx.id || `TXN-${idx + 1}`}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900 capitalize truncate">
-                          {tx.description || tx.type || "Wallet Transaction"}
-                        </p>
-                        {isBtc && (
-                          <span className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold">
-                            BTC
+                        {/* 2. Type */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md capitalize">
+                            {tx.type?.replace("_", " ") || "Transaction"}
                           </span>
-                        )}
-                      </div>
+                          {isBtc && (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold">
+                              BTC
+                            </span>
+                          )}
+                        </td>
 
-                      <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5 font-mono truncate">
-                        <span className="truncate">
-                          {tx.reference || tx.id || `TXN-${idx + 1}`}
-                        </span>
-                        {tx.createdAt && (
-                          <>
-                            <span>•</span>
-                            <span className="shrink-0 font-sans text-slate-500">
-                              {new Date(tx.createdAt).toLocaleDateString(
-                                "en-GB",
-                                {
+                        {/* 3. Date & Time */}
+                        <td className="py-3.5 px-5 whitespace-nowrap text-xs text-slate-500">
+                          {tx.createdAt ? (
+                            <>
+                              <div>
+                                {new Date(tx.createdAt).toLocaleDateString("en-GB", {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
-                                },
-                              )}
-                              ,{" "}
-                              {new Date(tx.createdAt).toLocaleTimeString(
-                                "en-US",
-                                {
+                                })}
+                              </div>
+                              <div className="text-[10px] text-slate-400">
+                                {new Date(tx.createdAt).toLocaleTimeString("en-US", {
                                   hour: "numeric",
                                   minute: "2-digit",
                                   hour12: true,
-                                },
-                              )}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                                })}
+                              </div>
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
 
-                  {/* Right: Amount & Status Badge */}
-                  <div className="text-right shrink-0">
-                    <span
-                      className={`text-sm font-extrabold ${
-                        isDeposit ? "text-[#32A05F]" : "text-slate-900"
-                      }`}
-                    >
-                      {isDeposit ? "+" : "-"}
-                      {isBtc
-                        ? `${Math.abs(amt).toFixed(8)} BTC`
-                        : `₦${Math.abs(amt).toLocaleString("en-NG", {
-                            minimumFractionDigits: 2,
-                          })}`}
-                    </span>
+                        {/* 4. Amount */}
+                        <td className="py-3.5 px-5 whitespace-nowrap font-extrabold text-xs">
+                          <span className={isDeposit ? "text-[#32A05F]" : "text-slate-900"}>
+                            {isDeposit ? "+" : "-"}
+                            {isBtc
+                              ? `${Math.abs(amt).toFixed(8)} BTC`
+                              : `₦${Math.abs(amt).toLocaleString("en-NG", {
+                                  minimumFractionDigits: 2,
+                                })}`}
+                          </span>
+                        </td>
 
-                    <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md capitalize ${
-                          status === "success" || status === "completed"
-                            ? "bg-[#EBF7F0] text-[#1E6B3E]"
-                            : status === "pending"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-rose-50 text-rose-700"
-                        }`}
-                      >
-                        {status}
-                      </span>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 transition-colors" />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                        {/* 5. Status */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
+                              status === "success" || status === "completed"
+                                ? "bg-[#EBF7F0] text-[#1E6B3E] border border-[#32A05F]/20"
+                                : status === "pending"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-rose-50 text-rose-700 border border-rose-200"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                status === "success" || status === "completed"
+                                  ? "bg-[#32A05F]"
+                                  : status === "pending"
+                                    ? "bg-amber-500"
+                                    : "bg-rose-500"
+                              }`}
+                            />
+                            {status}
+                          </span>
+                        </td>
+
+                        {/* 6. Action */}
+                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedTx(tx);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 group-hover:bg-[#32A05F] text-slate-700 group-hover:text-white text-[11px] font-bold transition-all cursor-pointer"
+                          >
+                            Receipt <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
