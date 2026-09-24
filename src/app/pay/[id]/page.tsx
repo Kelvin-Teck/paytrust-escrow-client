@@ -80,19 +80,26 @@ export default function PublicInvoicePayPage() {
     setClaimError(null);
 
     try {
-      const buyerEmail = transaction?.buyer?.email;
-      const buyerPhone = transaction?.buyer?.phone;
+      const buyerEmail = transaction?.buyer?.email ? transaction.buyer.email.trim() : undefined;
+      const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
 
-      // 1. Claim/Register account with the buyer's email
-      const registerRes = await authService.register({
-        email: buyerEmail,
-        phone: buyerPhone,
-        password,
-        firstName: transaction?.buyer?.name || "Buyer",
-      });
+      try {
+        // 1. Try to claim/register account with the buyer's email/phone
+        await authService.register({
+          email: buyerEmail,
+          phone: buyerPhone,
+          password,
+          firstName: transaction?.buyer?.name || "Buyer",
+        });
+      } catch (regErr: any) {
+        // If already registered or claimed, proceed to login directly
+        console.warn("Register step skipped / user already created, trying login:", regErr.message);
+      }
 
       // 2. Log in immediately
       const loginRes = await authService.login({
+        email: buyerEmail,
+        phone: buyerPhone,
         emailOrPhone: buyerEmail || buyerPhone,
         password,
       });
@@ -110,17 +117,11 @@ export default function PublicInvoicePayPage() {
       }
     } catch (err: any) {
       console.error("Claim account error:", err);
-      // If user already has full credentials, direct them to login
-      if (err.response?.status === 409 || err.message?.includes("already exists")) {
-        toast.info("Account already exists. Please log in to proceed.");
-        router.push(`/login?redirect=/transaction/${id}`);
-      } else {
-        setClaimError(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to activate account. Please try logging in."
-        );
-      }
+      setClaimError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to activate account. Please verify credentials."
+      );
     } finally {
       setIsClaiming(false);
     }
