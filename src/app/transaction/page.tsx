@@ -21,7 +21,6 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { transactionService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
-import { DealCardSkeleton } from "@/components/ui/Skeleton";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 
@@ -102,7 +101,9 @@ export default function EscrowTransactionPage() {
     const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
 
     const buyerPhone = deal.buyerPhone || deal.buyer?.phone;
-    const cleanPhone = buyerPhone ? String(buyerPhone).replace(/[^0-9]/g, "") : "";
+    const cleanPhone = buyerPhone
+      ? String(buyerPhone).replace(/[^0-9]/g, "")
+      : "";
     const waUrl = cleanPhone
       ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -171,7 +172,6 @@ export default function EscrowTransactionPage() {
             <p className="text-sm text-slate-500 mt-1">
               Create and manage milestone-backed deals with automated
               buyer/seller protection.
-              Create and manage milestone-backed deals with automated buyer/seller protection.
             </p>
           </div>
 
@@ -194,7 +194,6 @@ export default function EscrowTransactionPage() {
               placeholder="Search by contract title, counterparty, or Order ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 shadow-2xs"
             />
           </div>
@@ -211,7 +210,6 @@ export default function EscrowTransactionPage() {
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   filterStatus === status
                     ? "bg-[#32A05F] text-white shadow-xs"
@@ -221,8 +219,8 @@ export default function EscrowTransactionPage() {
                 {status === "ALL"
                   ? "All Deals"
                   : status === "AWAITING_PAYMENT"
-                  ? "Awaiting Payment"
-                  : status.replace("_", " ")}
+                    ? "Awaiting Payment"
+                    : status.replace("_", " ")}
               </button>
             ))}
           </div>
@@ -230,23 +228,10 @@ export default function EscrowTransactionPage() {
 
         {/* Transactions Table Ledger */}
         {isLoading ? (
-          <DealCardSkeleton count={3} />
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
             <TableSkeleton rows={6} cols={5} />
           </div>
         ) : filteredTransactions.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredTransactions.map((deal) => {
-              const isCurrentUserBuyer =
-                currentUser?.id === deal.buyerId ||
-                (currentUser?.email &&
-                  deal.buyer?.email &&
-                  currentUser.email.toLowerCase() ===
-                    deal.buyer.email.toLowerCase()) ||
-                (currentUser?.email &&
-                  deal.buyerEmail &&
-                  currentUser.email.toLowerCase() ===
-                    deal.buyerEmail.toLowerCase());
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
@@ -272,16 +257,6 @@ export default function EscrowTransactionPage() {
                         currentUser.email.toLowerCase() ===
                           deal.buyerEmail.toLowerCase());
 
-              const isCurrentUserSeller =
-                currentUser?.id === deal.sellerId ||
-                (currentUser?.email &&
-                  deal.seller?.email &&
-                  currentUser.email.toLowerCase() ===
-                    deal.seller.email.toLowerCase()) ||
-                (currentUser?.email &&
-                  deal.sellerEmail &&
-                  currentUser.email.toLowerCase() ===
-                    deal.sellerEmail.toLowerCase());
                     const isCurrentUserSeller =
                       currentUser?.id === deal.sellerId ||
                       (currentUser?.email &&
@@ -293,14 +268,6 @@ export default function EscrowTransactionPage() {
                         currentUser.email.toLowerCase() ===
                           deal.sellerEmail.toLowerCase());
 
-              const buyerLabel =
-                deal.buyer?.name ||
-                (deal.buyer?.firstName
-                  ? `${deal.buyer.firstName} ${deal.buyer.lastName || ""}`.trim()
-                  : null) ||
-                deal.buyer?.email ||
-                deal.buyerEmail ||
-                "Buyer";
                     const buyerLabel =
                       deal.buyer?.name ||
                       (deal.buyer?.firstName
@@ -310,14 +277,6 @@ export default function EscrowTransactionPage() {
                       deal.buyerEmail ||
                       "Buyer";
 
-              const sellerLabel =
-                deal.seller?.name ||
-                (deal.seller?.firstName
-                  ? `${deal.seller.firstName} ${deal.seller.lastName || ""}`.trim()
-                  : null) ||
-                deal.seller?.email ||
-                deal.sellerEmail ||
-                "Seller";
                     const sellerLabel =
                       deal.seller?.name ||
                       (deal.seller?.firstName
@@ -327,69 +286,16 @@ export default function EscrowTransactionPage() {
                       deal.sellerEmail ||
                       "Seller";
 
-              return (
-                <div
-                  key={deal.id}
-                  className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#32A05F]/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
-                >
-                  <div className="space-y-2 max-w-xl">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700">
-                        {deal.id?.slice(0, 8)}
-                      </span>
-                      <span className="text-xs font-semibold text-[#32A05F] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full capitalize">
-                        {deal.status?.replace("_", " ").toLowerCase() ||
-                          "Active"}
-                      </span>
-                      {isCurrentUserBuyer && (
-                        <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                          You are Buying
-                        </span>
-                      )}
-                      {isCurrentUserSeller && (
-                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                          You are Selling
-                        </span>
-                      )}
-                    </div>
                     const rawStatus = (deal.status || "").toUpperCase();
                     const isAwaiting =
                       rawStatus === "AWAITING_PAYMENT" ||
                       rawStatus === "PENDING" ||
                       rawStatus === "DRAFT";
 
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {deal.title || deal.description || "Escrow Agreement"}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Buyer:{" "}
-                      <span className="font-semibold text-slate-700">
-                        {buyerLabel}
-                        {isCurrentUserBuyer ? " (You)" : ""}
-                      </span>{" "}
-                      • Seller:{" "}
-                      <span className="font-semibold text-slate-700">
-                        {sellerLabel}
-                        {isCurrentUserSeller ? " (You)" : ""}
-                      </span>
-                    </p>
-                  </div>
                     const totalAmount = Number(
-                      deal.totalAmount || deal.amount || 0
+                      deal.totalAmount || deal.amount || 0,
                     );
 
-                  <div className="flex flex-col md:items-end justify-between gap-4">
-                    <div className="text-left md:text-right">
-                      <span className="text-xs text-slate-400 font-bold uppercase">
-                        Escrow Value
-                      </span>
-                      <div className="text-2xl font-extrabold text-slate-900">
-                        ₦
-                        {Number(
-                          deal.totalAmount || deal.amount || 0,
-                        ).toLocaleString()}
-                      </div>
-                    </div>
                     return (
                       <tr
                         key={deal.id}
@@ -409,16 +315,21 @@ export default function EscrowTransactionPage() {
                             )}
                           </div>
                           <div className="font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors text-sm line-clamp-1">
-                            {deal.title || deal.description || "Escrow Agreement"}
+                            {deal.title ||
+                              deal.description ||
+                              "Escrow Agreement"}
                           </div>
                           <div className="text-xs text-slate-400 mt-1 flex items-center gap-2 font-medium">
                             {deal.createdAt && (
                               <span>
-                                {new Date(deal.createdAt).toLocaleDateString("en-GB", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
+                                {new Date(deal.createdAt).toLocaleDateString(
+                                  "en-GB",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </span>
                             )}
                             {deal.inspectionPeriod && (
@@ -430,16 +341,6 @@ export default function EscrowTransactionPage() {
                           </div>
                         </td>
 
-                    <Link
-                      href={`/transaction/${deal.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-semibold transition-all"
-                    >
-                      View Details <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
                         {/* Column 2: Role & Counterparty */}
                         <td className="py-4 px-6 min-w-[200px]">
                           <div className="flex items-center gap-1.5 mb-1">
@@ -460,18 +361,28 @@ export default function EscrowTransactionPage() {
                           <div className="text-xs font-semibold text-slate-800">
                             {isCurrentUserBuyer ? (
                               <span>
-                                Seller: <strong className="text-slate-900">{sellerLabel}</strong>
+                                Seller:{" "}
+                                <strong className="text-slate-900">
+                                  {sellerLabel}
+                                </strong>
                               </span>
                             ) : (
                               <span>
-                                Buyer: <strong className="text-slate-900">{buyerLabel}</strong>
+                                Buyer:{" "}
+                                <strong className="text-slate-900">
+                                  {buyerLabel}
+                                </strong>
                               </span>
                             )}
                           </div>
                           <div className="text-[11px] text-slate-400 truncate max-w-[190px] font-mono mt-0.5">
                             {isCurrentUserBuyer
-                              ? deal.seller?.email || deal.sellerEmail || "Registered Seller"
-                              : deal.buyer?.email || deal.buyerEmail || "Registered Buyer"}
+                              ? deal.seller?.email ||
+                                deal.sellerEmail ||
+                                "Registered Seller"
+                              : deal.buyer?.email ||
+                                deal.buyerEmail ||
+                                "Registered Buyer"}
                           </div>
                         </td>
 
@@ -511,7 +422,8 @@ export default function EscrowTransactionPage() {
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold shadow-xs transition-all"
                             >
-                              View Details <ChevronRight className="w-3.5 h-3.5" />
+                              View Details{" "}
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </Link>
                           </div>
                         </td>
@@ -526,8 +438,15 @@ export default function EscrowTransactionPage() {
             <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <span>
-                  Showing <strong className="text-slate-900">{filteredTransactions.length}</strong> of{" "}
-                  <strong className="text-slate-900">{transactions.length}</strong> total contracts
+                  Showing{" "}
+                  <strong className="text-slate-900">
+                    {filteredTransactions.length}
+                  </strong>{" "}
+                  of{" "}
+                  <strong className="text-slate-900">
+                    {transactions.length}
+                  </strong>{" "}
+                  total contracts
                 </span>
                 {filterStatus !== "ALL" && (
                   <button
@@ -544,8 +463,6 @@ export default function EscrowTransactionPage() {
             </div>
           </div>
         ) : (
-          <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto">
           <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-4 shadow-sm">
             <div className="w-14 h-14 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto shadow-inner">
               <ShieldCheck className="w-7 h-7" />
@@ -557,12 +474,6 @@ export default function EscrowTransactionPage() {
               You do not have any active escrow agreements matching your query.
               Create an invoice to lock funds securely.
             </p>
-            <Link
-              href="/transaction/invoice"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-sm font-semibold shadow-sm transition-all"
-            >
-              <PlusCircle className="w-4 h-4" /> Create New Invoice
-            </Link>
             <div className="flex items-center justify-center gap-3 pt-2">
               {filterStatus !== "ALL" && (
                 <button
@@ -602,19 +513,25 @@ export default function EscrowTransactionPage() {
                 Share Escrow Invoice
               </h3>
               <p className="text-xs text-slate-500">
-                Send this link to the buyer via WhatsApp or copy it to your clipboard.
+                Send this link to the buyer via WhatsApp or copy it to your
+                clipboard.
               </p>
             </div>
 
             {/* Deal Overview Snippet */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 text-xs">
               <div className="font-bold text-slate-800 line-clamp-1">
-                {sharingDeal.title || sharingDeal.description || "Escrow Agreement"}
+                {sharingDeal.title ||
+                  sharingDeal.description ||
+                  "Escrow Agreement"}
               </div>
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
                 <span>Escrow Total:</span>
                 <span className="font-bold text-[#32A05F]">
-                  ₦{Number(sharingDeal.totalAmount || sharingDeal.amount || 0).toLocaleString()}
+                  ₦
+                  {Number(
+                    sharingDeal.totalAmount || sharingDeal.amount || 0,
+                  ).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -654,7 +571,8 @@ export default function EscrowTransactionPage() {
                 rel="noreferrer"
                 className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                Preview What Buyer Sees <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                Preview What Buyer Sees{" "}
+                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
               </a>
             </div>
           </div>
