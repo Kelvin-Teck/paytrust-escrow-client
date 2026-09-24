@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -17,6 +17,10 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  KeyRound,
+  RotateCw,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { transactionService, authService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
@@ -32,12 +36,18 @@ export default function PublicInvoicePayPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Quick Account Claim Modal state
+  // 2-Step Secure Account Activation Modal state
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [authStep, setAuthStep] = useState<"password" | "otp">("password");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimError, setClaimError] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
+  const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     async function loadPublicDeal() {
@@ -61,42 +71,104 @@ export default function PublicInvoicePayPage() {
     loadPublicDeal();
   }, [id]);
 
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (authStep === "otp" && countdown > 0) {
+      timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    } else if (countdown === 0) {
+      setCanResend(true);
+    }
+    return () => clearTimeout(timer);
+  }, [authStep, countdown]);
+
   const handleProceedToPayment = () => {
     if (currentUser) {
       router.push(`/transaction/${id}`);
     } else {
+      setAuthStep("password");
       setShowClaimModal(true);
     }
   };
 
-  const handleQuickClaimAndPay = async (e: React.FormEvent) => {
+  // Step 1: Submit chosen password & trigger OTP
+  const handleInitiatePasswordStep = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || password.length < 6) {
-      setClaimError("Password must be at least 6 characters long.");
+      setModalError("Password must be at least 6 characters long.");
       return;
     }
 
-    setIsClaiming(true);
-    setClaimError(null);
+    setIsProcessing(true);
+    setModalError(null);
+
+    const buyerEmail = transaction?.buyer?.email ? transaction.buyer.email.trim() : undefined;
+    const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
 
     try {
-      const buyerEmail = transaction?.buyer?.email ? transaction.buyer.email.trim() : undefined;
-      const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
+      // 1. Claim account & set password (backend dispatches 6-digit OTP)
+      await authService.register({
+        email: buyerEmail,
+        phone: buyerPhone,
+        password,
+        firstName: transaction?.buyer?.name || "Buyer",
+      });
 
-      try {
-        // 1. Try to claim/register account with the buyer's email/phone
-        await authService.register({
-          email: buyerEmail,
-          phone: buyerPhone,
-          password,
-          firstName: transaction?.buyer?.name || "Buyer",
-        });
-      } catch (regErr: any) {
-        // If already registered or claimed, proceed to login directly
-        console.warn("Register step skipped / user already created, trying login:", regErr.message);
+      // Switch to Step 2: OTP Verification
+      setAuthStep("otp");
+      setCountdown(60);
+      setCanResend(false);
+      toast.success("6-digit verification code sent to your email / phone!");
+    } catch (err: any) {
+      console.warn("Register step notice:", err.message);
+      // If user already exists and registered with their password, attempt to send OTP or direct to login
+      if (err.response?.status === 409 || err.message?.includes("already exists")) {
+        try {
+          await authService.resendVerification({ email: buyerEmail, phone: buyerPhone });
+          setAuthStep("otp");
+          setCountdown(60);
+          setCanResend(false);
+          toast.info("Account exists. A fresh verification code has been sent!");
+        } catch {
+          toast.info("Account already active. Please log in to proceed.");
+          router.push(`/login?redirect=/transaction/${id}`);
+        }
+      } else {
+        setModalError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to initiate account security. Please try again."
+        );
       }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-      // 2. Log in immediately
+  // Step 2: Verify 6-Digit OTP and Log In
+  const handleVerifyOtpAndLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fullOtp = otpCode.join("").trim();
+    if (fullOtp.length !== 6) {
+      setModalError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setModalError(null);
+
+    const buyerEmail = transaction?.buyer?.email ? transaction.buyer.email.trim() : undefined;
+    const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
+
+    try {
+      // 1. Verify code on backend
+      await authService.verifyEmail({
+        email: buyerEmail,
+        phone: buyerPhone,
+        code: fullOtp,
+      });
+
+      // 2. Log in with the verified credentials
       const loginRes = await authService.login({
         email: buyerEmail,
         phone: buyerPhone,
@@ -107,8 +179,8 @@ export default function PublicInvoicePayPage() {
       if (loginRes.token && loginRes.user) {
         setAuth(loginRes.user, loginRes.token);
         toast.success(
-          "Account secured successfully!",
-          "Redirecting you to secure escrow payment..."
+          "Identity verified successfully!",
+          "Redirecting to secure escrow checkout..."
         );
         setShowClaimModal(false);
         router.push(`/transaction/${id}`);
@@ -116,15 +188,71 @@ export default function PublicInvoicePayPage() {
         router.push(`/login?redirect=/transaction/${id}`);
       }
     } catch (err: any) {
-      console.error("Claim account error:", err);
-      setClaimError(
+      console.error("OTP verification error:", err);
+      setModalError(
         err.response?.data?.message ||
           err.message ||
-          "Failed to activate account. Please verify credentials."
+          "Invalid or expired verification code. Please request a new one."
       );
     } finally {
-      setIsClaiming(false);
+      setIsProcessing(false);
     }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+    setIsProcessing(true);
+    setModalError(null);
+    const buyerEmail = transaction?.buyer?.email ? transaction.buyer.email.trim() : undefined;
+    const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
+
+    try {
+      await authService.resendVerification({ email: buyerEmail, phone: buyerPhone });
+      setCountdown(60);
+      setCanResend(false);
+      setOtpCode(["", "", "", "", "", ""]);
+      toast.success("Fresh verification code sent!");
+      if (otpInputsRef.current[0]) {
+        otpInputsRef.current[0].focus();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to resend code");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // OTP Input handlers
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    const newOtp = [...otpCode];
+    newOtp[index] = value;
+    setOtpCode(newOtp);
+
+    // Auto-advance
+    if (value && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpInputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newOtp = [...otpCode];
+    for (let i = 0; i < pasted.length; i++) {
+      newOtp[i] = pasted[i];
+    }
+    setOtpCode(newOtp);
+    const focusIdx = Math.min(pasted.length, 5);
+    otpInputsRef.current[focusIdx]?.focus();
   };
 
   if (isLoading) {
@@ -168,6 +296,7 @@ export default function PublicInvoicePayPage() {
   const totalAmount = Number(transaction.totalAmount || transaction.amount || 0);
   const sellerName = transaction.seller?.name || transaction.seller?.companyName || "Verified Seller";
   const sellerType = transaction.seller?.accountType === "business" ? "Corporate Business" : "Verified Individual";
+  const buyerContact = transaction.buyer?.email || transaction.buyer?.phone || "your contact address";
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-10 px-4 sm:px-6">
@@ -353,7 +482,7 @@ export default function PublicInvoicePayPage() {
             <div className="pt-2">
               <button
                 onClick={handleProceedToPayment}
-                className="w-full py-4 rounded-2xl bg-[#32A05F] hover:bg-[#28874E] text-white text-base font-bold shadow-lg shadow-[#32A05F]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+                className="w-full py-4 rounded-2xl bg-[#32A05F] hover:bg-[#28874E] text-white text-base font-bold shadow-lg shadow-[#32A05F]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
               >
                 <Lock className="w-5 h-5" /> Accept & Pay with Escrow (₦{totalAmount.toLocaleString()})
               </button>
@@ -365,85 +494,167 @@ export default function PublicInvoicePayPage() {
         </div>
       </div>
 
-      {/* Quick Account Claim Modal */}
+      {/* 2-Step Secure Account Activation Modal */}
       {showClaimModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="space-y-2 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Secure Your Escrow Account
-              </h3>
-              <p className="text-xs text-slate-500">
-                Set a password to protect your payment and track your delivery.
-              </p>
-            </div>
-
-            <form onSubmit={handleQuickClaimAndPay} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Your Email / Phone
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={transaction.buyer?.email || transaction.buyer?.phone || ""}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-sm font-medium cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Create Account Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Enter at least 6 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-4 pr-11 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+            {authStep === "password" ? (
+              // Step 1: Password Creation
+              <>
+                <div className="space-y-2 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto shadow-inner">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Secure Your Escrow Account
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Set a password to protect your payment and track your delivery.
+                  </p>
                 </div>
-              </div>
 
-              {claimError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
-                  {claimError}
+                <form onSubmit={handleInitiatePasswordStep} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Your Email / Phone
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value={transaction.buyer?.email || transaction.buyer?.phone || ""}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-sm font-medium cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Create Account Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="Enter at least 6 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-4 pr-11 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {modalError && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+                      {modalError}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowClaimModal(false)}
+                      className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isProcessing}
+                      className="flex-1 py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-sm font-bold shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isProcessing ? "Sending OTP..." : "Send Verification Code"} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              // Step 2: 6-Digit OTP Verification
+              <>
+                <div className="space-y-2 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#32A05F] flex items-center justify-center mx-auto shadow-inner">
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Verify Your Identity
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    We sent a 6-digit verification code to{" "}
+                    <strong className="text-slate-700">{buyerContact}</strong>.
+                  </p>
                 </div>
-              )}
 
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowClaimModal(false)}
-                  className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isClaiming}
-                  className="flex-1 py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-sm font-bold shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
-                >
-                  {isClaiming ? "Securing..." : "Proceed to Pay"} <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
+                <form onSubmit={handleVerifyOtpAndLogin} className="space-y-5">
+                  {/* 6 Digit Input Boxes */}
+                  <div className="flex items-center justify-between gap-2">
+                    {otpCode.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => {
+                          otpInputsRef.current[index] = el;
+                        }}
+                        type="text"
+                        maxLength={1}
+                        inputMode="numeric"
+                        autoFocus={index === 0}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        onPaste={handleOtpPaste}
+                        className="w-11 h-13 text-center text-xl font-black rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 focus:border-[#32A05F] transition-all"
+                      />
+                    ))}
+                  </div>
+
+                  {modalError && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+                      {modalError}
+                    </div>
+                  )}
+
+                  {/* Resend Timer */}
+                  <div className="text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                    {canResend ? (
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={isProcessing}
+                        className="text-[#32A05F] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" /> Resend Code
+                      </button>
+                    ) : (
+                      <span>Resend code in <strong className="text-slate-800">{countdown}s</strong></span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setAuthStep("password")}
+                      className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isProcessing || otpCode.join("").length !== 6}
+                      className="flex-1 py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-sm font-bold shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isProcessing ? "Verifying..." : "Verify & Pay"} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
     </div>
   );
 }
-
