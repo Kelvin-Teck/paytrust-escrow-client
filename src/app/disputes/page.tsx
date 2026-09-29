@@ -212,27 +212,27 @@ export default function DisputesHubPage() {
 
         {/* Disputes Table */}
         {isLoading ? (
-          <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
+          <div className="bg-white border border-slate-200 p-6">
             <TableSkeleton rows={4} cols={9} />
           </div>
         ) : filteredDisputes.length > 0 ? (
-          <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-4 whitespace-nowrap">Dispute ID</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Disputed Deal</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Reason</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Details / Notes</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Date</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Time</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Frozen Amount</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Status</th>
-                    <th className="py-4 px-4 text-right whitespace-nowrap">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-3 whitespace-nowrap">Dispute ID</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Disputed Deal</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Reason</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Details / Notes</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Date</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Time</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Frozen Amount</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {filteredDisputes.map((dsp) => {
                     const amount = dsp.transaction?.amount ?? dsp.amount ?? 0;
                     const title =
@@ -244,11 +244,11 @@ export default function DisputesHubPage() {
                     return (
                       <tr
                         key={dsp.id}
-                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                        className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
                       >
                         {/* 1. Dispute ID */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
                             #{dsp.id?.slice(0, 8)}
                           </span>
                           {dsp.transactionId && (
@@ -259,26 +259,27 @@ export default function DisputesHubPage() {
                         </td>
 
                         {/* 2. Disputed Deal */}
-                        <td className="py-4 px-4 min-w-[200px]">
+                        <td className="py-3 px-3 max-w-[200px]">
                           <Link
                             href={`/disputes/${dsp.id}`}
-                            className="font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors text-sm line-clamp-1"
+                            className="font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors text-xs sm:text-sm truncate block"
+                            title={title}
                           >
                             {title}
                           </Link>
                         </td>
 
                         {/* 3. Reason */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <span className="inline-flex items-center text-xs font-semibold text-slate-800 bg-slate-100/90 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center text-xs font-semibold text-slate-800 bg-slate-100/90 px-2 py-0.5 rounded border border-slate-200/60">
                             {dsp.reason}
                           </span>
                         </td>
 
                         {/* 4. Details / Notes */}
-                        <td className="py-4 px-4 min-w-[180px]">
+                        <td className="py-3 px-3 max-w-[200px]">
                           <p
-                            className="text-[11px] text-slate-500 line-clamp-1 max-w-[220px]"
+                            className="text-[11px] text-slate-500 truncate"
                             title={dsp.details || undefined}
                           >
                             {dsp.details || "—"}
@@ -286,65 +287,56 @@ export default function DisputesHubPage() {
                         </td>
 
                         {/* 5. Date Column */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>{formatTableDate(dsp.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
+                          {formatTableDate(dsp.createdAt)}
                         </td>
 
                         {/* 6. Time Column */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
-                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{formatTableTime(dsp.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
+                            {formatTableTime(dsp.createdAt)}
+                          </span>
                         </td>
 
                         {/* 7. Frozen Amount */}
-                        <td className="py-4 px-4 whitespace-nowrap min-w-[130px]">
-                          <div className="text-sm font-extrabold text-slate-900">
-                            ₦{Number(amount).toLocaleString()}
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-medium">
-                            Frozen in Escrow
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap font-bold text-slate-900 text-xs sm:text-sm">
+                          ₦{Number(amount).toLocaleString()}
                         </td>
 
                         {/* 8. Status */}
-                        <td className="py-4 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           {status === "OPEN" && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                               Under Mediation
                             </span>
                           )}
                           {status === "resolved_refund" && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d] bg-[#EBF7F0] px-2.5 py-1 rounded-full border border-[#32A05F]/20">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full border border-[#32A05F]/20">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#32A05F]"></span>
                               Resolved & Refunded
                             </span>
                           )}
                           {status === "resolved_release" && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                               Resolved & Released
                             </span>
                           )}
                           {status !== "OPEN" && status !== "resolved_refund" && status !== "resolved_release" && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full capitalize">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full capitalize">
                               {status.replace("_", " ").toLowerCase()}
                             </span>
                           )}
                         </td>
 
                         {/* 9. Actions */}
-                        <td className="py-4 px-4 text-right whitespace-nowrap min-w-[140px]">
+                        <td className="py-3 px-3 text-right whitespace-nowrap">
                           <Link
                             href={`/disputes/${dsp.id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold shadow-xs transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold transition-all"
                           >
-                            Mediation Room <ChevronRight className="w-3.5 h-3.5" />
+                            Mediation Room <ChevronRight className="w-3 h-3" />
                           </Link>
                         </td>
                       </tr>
@@ -353,13 +345,13 @@ export default function DisputesHubPage() {
                 </tbody>
               </table>
             </div>
-            <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
               <span>Showing <strong>{filteredDisputes.length}</strong> dispute record{filteredDisputes.length === 1 ? "" : "s"}</span>
               <span className="text-[11px] text-slate-400 font-medium">Assigned to PayTrust Dispute Arbitration Panel</span>
             </div>
           </div>
         ) : (
-          <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-3">
+          <div className="py-16 text-center bg-white border border-slate-200 p-8 space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto">
               <Shield className="w-6 h-6" />
             </div>

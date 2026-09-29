@@ -719,22 +719,22 @@ function WalletContent() {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+          <div className="border border-slate-200 bg-white overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 whitespace-nowrap">Reference No</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Description</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Type</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Date</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Time</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Amount</th>
-                    <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
-                    <th className="py-3.5 px-4 text-right whitespace-nowrap">Receipt</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-3 whitespace-nowrap">Reference No</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Description</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Type</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Date</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Time</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Amount</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-3 text-right whitespace-nowrap">Receipt</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {filteredTransactions.map((tx: any, idx: number) => {
                     const cur = (tx.currency || "NGN").toUpperCase();
                     const isBtc = cur === "BTC";
@@ -753,29 +753,29 @@ function WalletContent() {
                       <tr
                         key={tx.id || idx}
                         onClick={() => setSelectedTx(tx)}
-                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                        className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
                       >
                         {/* 1. Reference No */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
                             {tx.reference || tx.id || `TXN-${idx + 1}`}
                           </span>
                         </td>
 
                         {/* 2. Description */}
-                        <td className="py-3.5 px-4 min-w-[200px]">
-                          <div className="flex items-center gap-2.5">
+                        <td className="py-3 px-3 max-w-[220px]">
+                          <div className="flex items-center gap-2">
                             <div
-                              className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                              className={`w-7 h-7 rounded flex items-center justify-center font-bold text-xs shrink-0 ${
                                 isDeposit
                                   ? "bg-[#EBF7F0] text-[#32A05F]"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
                               {isDeposit ? (
-                                <ArrowDownLeft className="w-4 h-4" />
+                                <ArrowDownLeft className="w-3.5 h-3.5" />
                               ) : (
-                                <ArrowUpRight className="w-4 h-4" />
+                                <ArrowUpRight className="w-3.5 h-3.5" />
                               )}
                             </div>
                             <span className="text-xs font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors capitalize truncate">
@@ -785,35 +785,31 @@ function WalletContent() {
                         </td>
 
                         {/* 3. Type */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md capitalize">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded capitalize">
                             {tx.type?.replace("_", " ") || "Transaction"}
                           </span>
                           {isBtc && (
-                            <span className="ml-1.5 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold">
+                            <span className="ml-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold">
                               BTC
                             </span>
                           )}
                         </td>
 
                         {/* 4. Date */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>{formatTableDate(tx.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
+                          {formatTableDate(tx.createdAt)}
                         </td>
 
                         {/* 5. Time */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
-                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{formatTableTime(tx.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
+                            {formatTableTime(tx.createdAt)}
+                          </span>
                         </td>
 
                         {/* 6. Amount */}
-                        <td className="py-3.5 px-4 whitespace-nowrap font-extrabold text-xs">
+                        <td className="py-3 px-3 whitespace-nowrap font-extrabold text-xs">
                           <span className={isDeposit ? "text-[#32A05F]" : "text-slate-900"}>
                             {isDeposit ? "+" : "-"}
                             {isBtc
@@ -825,7 +821,7 @@ function WalletContent() {
                         </td>
 
                         {/* 7. Status */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
                               status === "success" || status === "completed"
@@ -849,14 +845,14 @@ function WalletContent() {
                         </td>
 
                         {/* 8. Action */}
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <td className="py-3 px-3 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedTx(tx);
                             }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 group-hover:bg-[#32A05F] text-slate-700 group-hover:text-white text-[11px] font-bold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 group-hover:bg-[#32A05F] text-slate-700 group-hover:text-white text-[11px] font-bold transition-all cursor-pointer"
                           >
                             Receipt <ChevronRight className="w-3 h-3" />
                           </button>

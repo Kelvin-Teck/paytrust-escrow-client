@@ -283,27 +283,27 @@ export default function EscrowTransactionPage() {
 
         {/* Transactions Table Ledger */}
         {isLoading ? (
-          <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
+          <div className="bg-white border border-slate-200 p-6">
             <TableSkeleton rows={6} cols={9} />
           </div>
         ) : filteredTransactions.length > 0 ? (
-          <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-4 whitespace-nowrap">Deal ID</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Contract Title</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Role</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Counterparty</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Date</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Time</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Escrow Amount</th>
-                    <th className="py-4 px-4 whitespace-nowrap">Status</th>
-                    <th className="py-4 px-4 text-right whitespace-nowrap">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-3 whitespace-nowrap">Deal ID</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Contract Title</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Role</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Counterparty</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Date</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Time</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Escrow Amount</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {filteredTransactions.map((deal) => {
                     const isCurrentUserBuyer =
                       currentUser?.id === deal.buyerId ||
@@ -359,38 +359,39 @@ export default function EscrowTransactionPage() {
                       <tr
                         key={deal.id}
                         onClick={() => router.push(`/transaction/${deal.id}`)}
-                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                        className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
                       >
                         {/* 1. Deal ID */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="flex flex-col items-start gap-1">
-                            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
-                              #{deal.id?.slice(0, 8)}
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
+                            #{deal.id?.slice(0, 8)}
+                          </span>
+                          {deal.dealType === "b2b_milestone" && (
+                            <span className="block text-[9px] font-semibold text-indigo-700 mt-0.5">
+                              B2B Milestone
                             </span>
-                            {deal.dealType === "b2b_milestone" && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                B2B Milestone
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </td>
 
                         {/* 2. Contract Title */}
-                        <td className="py-4 px-4 min-w-[200px]">
-                          <div className="font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors text-sm line-clamp-1">
+                        <td className="py-3 px-3 max-w-[210px]">
+                          <div
+                            className="font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors text-xs sm:text-sm truncate"
+                            title={deal.title || deal.description || "Escrow Agreement"}
+                          >
                             {deal.title ||
                               deal.description ||
                               "Escrow Agreement"}
                           </div>
                           {deal.inspectionPeriod && (
-                            <div className="text-[11px] text-slate-400 mt-0.5 font-medium">
-                              <span>{deal.inspectionPeriod}d inspection period</span>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              <span>{deal.inspectionPeriod}d inspection</span>
                             </div>
                           )}
                         </td>
 
                         {/* 3. Role */}
-                        <td className="py-4 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           {isCurrentUserBuyer ? (
                             <span className="inline-flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                               Buyer
@@ -407,11 +408,11 @@ export default function EscrowTransactionPage() {
                         </td>
 
                         {/* 4. Counterparty */}
-                        <td className="py-4 px-4 min-w-[180px]">
-                          <div className="text-xs font-semibold text-slate-800">
+                        <td className="py-3 px-3 max-w-[170px]">
+                          <div className="text-xs font-semibold text-slate-800 truncate">
                             {isCurrentUserBuyer ? sellerLabel : buyerLabel}
                           </div>
-                          <div className="text-[11px] text-slate-400 truncate max-w-[170px] font-mono mt-0.5">
+                          <div className="text-[10px] text-slate-400 truncate font-mono">
                             {isCurrentUserBuyer
                               ? deal.seller?.email ||
                                 deal.sellerEmail ||
@@ -423,39 +424,30 @@ export default function EscrowTransactionPage() {
                         </td>
 
                         {/* 5. Date */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>{formatTableDate(deal.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
+                          {formatTableDate(deal.createdAt)}
                         </td>
 
                         {/* 6. Time */}
-                        <td className="py-4 px-4 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
-                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{formatTableTime(deal.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
+                            {formatTableTime(deal.createdAt)}
+                          </span>
                         </td>
 
                         {/* 7. Escrow Amount */}
-                        <td className="py-4 px-4 whitespace-nowrap min-w-[130px]">
-                          <div className="text-sm font-extrabold text-slate-900">
-                            ₦{totalAmount.toLocaleString()}
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-medium">
-                            Escrow Value
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap font-bold text-slate-900 text-xs sm:text-sm">
+                          ₦{totalAmount.toLocaleString()}
                         </td>
 
                         {/* 8. Status */}
-                        <td className="py-4 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           {getStatusBadge(deal.status)}
                         </td>
 
                         {/* 9. Actions */}
-                        <td className="py-4 px-4 text-right whitespace-nowrap min-w-[140px]">
-                          <div className="inline-flex items-center justify-end gap-2">
+                        <td className="py-3 px-3 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center justify-end gap-1.5">
                             {isAwaiting && (
                               <button
                                 type="button"
@@ -464,7 +456,7 @@ export default function EscrowTransactionPage() {
                                   setSharingDeal(deal);
                                 }}
                                 title="Share Invoice on WhatsApp / Link"
-                                className="p-2 rounded-xl bg-slate-50 hover:bg-[#EBF7F0] border border-slate-200 hover:border-[#32A05F]/40 text-slate-600 hover:text-[#32A05F] transition-all cursor-pointer shadow-2xs"
+                                className="p-1.5 rounded bg-slate-50 hover:bg-[#EBF7F0] border border-slate-200 hover:border-[#32A05F]/40 text-slate-600 hover:text-[#32A05F] transition-all cursor-pointer"
                               >
                                 <Share2 className="w-3.5 h-3.5" />
                               </button>
@@ -472,10 +464,10 @@ export default function EscrowTransactionPage() {
                             <Link
                               href={`/transaction/${deal.id}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold shadow-xs transition-all"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold shadow-2xs transition-all"
                             >
                               View Details{" "}
-                              <ChevronRight className="w-3.5 h-3.5" />
+                              <ChevronRight className="w-3 h-3" />
                             </Link>
                           </div>
                         </td>
@@ -487,7 +479,7 @@ export default function EscrowTransactionPage() {
             </div>
 
             {/* Table Footer */}
-            <div className="px-6 py-4 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <span>
                   Showing{" "}
@@ -515,7 +507,7 @@ export default function EscrowTransactionPage() {
             </div>
           </div>
         ) : (
-          <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-8 space-y-4 shadow-sm">
+          <div className="py-16 text-center bg-white border border-slate-200 p-8 space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto shadow-inner">
               <ShieldCheck className="w-7 h-7" />
             </div>

@@ -267,10 +267,10 @@ export default function DashboardPage() {
         )}
 
         {/* Transactions Section */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white border border-slate-200 overflow-hidden">
+          <div className="p-4 sm:px-5 sm:py-3.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900">
                 Recent Transactions & Escrow Orders
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -286,7 +286,7 @@ export default function DashboardPage() {
               />
               <button
                 onClick={() => setActiveTab("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
                   activeTab === "all"
                     ? "bg-[#32A05F] text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -298,24 +298,26 @@ export default function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <TableSkeleton rows={4} cols={9} />
+            <div className="p-5">
+              <TableSkeleton rows={4} cols={9} />
+            </div>
           ) : transactions.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="pb-3 pr-4 whitespace-nowrap">Order ID</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Agreement</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Role</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Counterparty</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Date</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Time</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Amount</th>
-                    <th className="pb-3 pr-4 whitespace-nowrap">Status</th>
-                    <th className="pb-3 text-right whitespace-nowrap">Action</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-3 whitespace-nowrap">Order ID</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Agreement</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Role</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Counterparty</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Date</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Time</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Amount</th>
+                    <th className="py-3 px-3 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-3 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {transactions.map((tx: any) => {
                     const isBuyer =
                       user?.id === tx.buyerId ||
@@ -343,26 +345,29 @@ export default function DashboardPage() {
                     return (
                       <tr
                         key={tx.id}
-                        className="hover:bg-slate-50 transition-colors group"
+                        className="hover:bg-slate-50/70 transition-colors group"
                       >
                         {/* 1. Order ID */}
-                        <td className="py-4 pr-4 whitespace-nowrap">
-                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
                             #{tx.id?.slice(0, 8)}
                           </span>
                         </td>
 
                         {/* 2. Agreement */}
-                        <td className="py-4 pr-4 min-w-[180px]">
-                          <div className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors line-clamp-1">
+                        <td className="py-3 px-3 max-w-[200px]">
+                          <div
+                            className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors truncate"
+                            title={tx.title || tx.description || "Escrow Agreement"}
+                          >
                             {tx.title || tx.description || "Escrow Agreement"}
                           </div>
                         </td>
 
                         {/* 3. Role */}
-                        <td className="py-4 pr-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           <span
-                            className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               isBuyer
                                 ? "bg-blue-50 text-blue-700 border border-blue-200"
                                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -373,30 +378,26 @@ export default function DashboardPage() {
                         </td>
 
                         {/* 4. Counterparty */}
-                        <td className="py-4 pr-4 text-slate-600 font-medium min-w-[160px]">
-                          <div className="text-xs font-semibold text-slate-800">
+                        <td className="py-3 px-3 max-w-[160px]">
+                          <div className="text-xs font-semibold text-slate-800 truncate">
                             {counterpartyLabel}
                           </div>
                         </td>
 
                         {/* 5. Date Column */}
-                        <td className="py-4 pr-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>{formatTableDate(tx.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
+                          {formatTableDate(tx.createdAt)}
                         </td>
 
                         {/* 6. Time Column */}
-                        <td className="py-4 pr-4 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
-                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                            <span>{formatTableTime(tx.createdAt)}</span>
-                          </div>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
+                            {formatTableTime(tx.createdAt)}
+                          </span>
                         </td>
 
                         {/* 7. Amount Column */}
-                        <td className="py-4 pr-4 font-bold text-slate-900 whitespace-nowrap">
+                        <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap text-xs sm:text-sm">
                           ₦
                           {Number(
                             tx.totalAmount || tx.amount || 0,
@@ -404,20 +405,20 @@ export default function DashboardPage() {
                         </td>
 
                         {/* 8. Status */}
-                        <td className="py-4 pr-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
                             {tx.status?.replace("_", " ").toLowerCase() ||
                               "Active"}
                           </span>
                         </td>
 
                         {/* 9. Action */}
-                        <td className="py-4 text-right whitespace-nowrap">
+                        <td className="py-3 px-3 text-right whitespace-nowrap">
                           <Link
                             href={`/transaction/${tx.id}`}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-[#32A05F] hover:underline"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold transition-all"
                           >
-                            Details <ChevronRight className="w-3.5 h-3.5" />
+                            Details <ChevronRight className="w-3 h-3" />
                           </Link>
                         </td>
                       </tr>

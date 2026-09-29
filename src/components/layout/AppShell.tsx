@@ -317,7 +317,7 @@ export function AppShell({
 
         {/* ─── DESKTOP MAIN CONTENT AREA ─── */}
         <main className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-10">
-          <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
+          <div className="hidden lg:flex items-center justify-between px-4 sm:px-6 py-3.5 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               {pageTitle ? (
                 <div>
@@ -389,7 +389,7 @@ export function AppShell({
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 lg:p-8 flex-1">{children}</div>
+          <div className="px-3 sm:px-5 lg:px-6 py-5 flex-1 w-full min-w-0 max-w-full">{children}</div>
         </main>
       </div>
 
