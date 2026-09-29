@@ -10,6 +10,7 @@ export interface User {
   country?: string;
   role?: string;
   referralCode?: string;
+  referralQrCode?: string;
   isEmailVerified?: boolean;
   kycStatus?: string;
   tier?: number;
