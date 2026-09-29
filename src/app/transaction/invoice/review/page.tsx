@@ -93,12 +93,12 @@ export default function InvoiceReviewPage() {
                 <span className="font-semibold text-slate-900">₦500,000</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>PayTrust Platform Fee (2.5%):</span>
-                <span className="font-semibold text-rose-600">-₦12,500</span>
+                <span>PayTrust Platform Fee (0.5%):</span>
+                <span className="font-semibold text-rose-600">-₦2,500</span>
               </div>
               <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold">
                 <span className="text-slate-900">Net Seller Payout:</span>
-                <span className="text-[#32A05F]">₦487,500</span>
+                <span className="text-[#32A05F]">₦497,500</span>
               </div>
             </div>
           </div>

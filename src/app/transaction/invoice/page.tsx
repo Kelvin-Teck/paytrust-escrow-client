@@ -119,7 +119,9 @@ export default function CreateInvoicePage() {
   const effectiveTaxRate = applyTax && dealType === "b2b_milestone" ? taxRate : 0;
   const taxAmount = (baseValue * effectiveTaxRate) / 100;
   const grossInvoiceTotal = baseValue + taxAmount;
-  const platformFee = (grossInvoiceTotal * 2.5) / 100;
+  const platformFeePercentage =
+    Number(process.env.NEXT_PUBLIC_ESCROW_FEE_PERCENTAGE) || 0.5;
+  const platformFee = (grossInvoiceTotal * platformFeePercentage) / 100;
   const netSellerPayout = grossInvoiceTotal - platformFee;
 
   // Active limit check
@@ -577,7 +579,7 @@ export default function CreateInvoicePage() {
               )}
 
               <div className="flex justify-between text-slate-300">
-                <span>PayTrust Platform Fee (2.5%):</span>
+                <span>PayTrust Platform Fee ({platformFeePercentage}%):</span>
                 <span className="font-semibold text-rose-300">-₦{platformFee.toLocaleString()}</span>
               </div>
 

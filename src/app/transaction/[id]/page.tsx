@@ -215,7 +215,10 @@ export default function TransactionDetailPage() {
   const totalAmount = Number(
     transaction?.totalAmount || transaction?.amount || 0,
   );
-  const feePercentage = Number(transaction?.feePercentage) || 2.5;
+  const feePercentage =
+    Number(transaction?.feePercentage) ||
+    Number(process.env.NEXT_PUBLIC_ESCROW_FEE_PERCENTAGE) ||
+    0.5;
   const platformFee =
     Number(transaction?.platformFee) || (totalAmount * feePercentage) / 100;
   const netAmount =
