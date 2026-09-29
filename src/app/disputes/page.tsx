@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Shield,
   Clock,
+  Calendar,
   CheckCircle2,
   ChevronRight,
   PlusCircle,
@@ -20,6 +21,37 @@ import AppShell from "@/components/layout/AppShell";
 import { disputeService, transactionService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
 import { TableSkeleton } from "@/components/ui/Skeleton";
+import ExportTableButton from "@/components/ui/ExportTableButton";
+import {
+  formatTableDate,
+  formatTableTime,
+  ExportColumn,
+} from "@/lib/exportUtils";
+
+const disputeExportColumns: ExportColumn<any>[] = [
+  { header: "Dispute ID", accessor: (dsp) => dsp.id || "N/A" },
+  { header: "Transaction ID", accessor: (dsp) => dsp.transactionId || "N/A" },
+  {
+    header: "Deal Title",
+    accessor: (dsp) =>
+      dsp.transaction?.title || dsp.title || "Escrow Agreement",
+  },
+  { header: "Dispute Reason", accessor: (dsp) => dsp.reason || "N/A" },
+  { header: "Details", accessor: (dsp) => dsp.details || "N/A" },
+  {
+    header: "Frozen Amount",
+    accessor: (dsp) => {
+      const amt = dsp.transaction?.amount ?? dsp.amount ?? 0;
+      return `₦${Number(amt).toLocaleString()}`;
+    },
+  },
+  { header: "Date Created", accessor: (dsp) => formatTableDate(dsp.createdAt) },
+  { header: "Time Created", accessor: (dsp) => formatTableTime(dsp.createdAt) },
+  {
+    header: "Status",
+    accessor: (dsp) => (dsp.status || "OPEN").toUpperCase(),
+  },
+];
 
 export default function DisputesHubPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,6 +159,11 @@ export default function DisputesHubPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <ExportTableButton
+              data={filteredDisputes}
+              columns={disputeExportColumns}
+              filenamePrefix="paytrust-disputes"
+            />
             <button
               onClick={fetchDisputes}
               disabled={isLoading}
@@ -176,7 +213,7 @@ export default function DisputesHubPage() {
         {/* Disputes Table */}
         {isLoading ? (
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
-            <TableSkeleton rows={4} cols={5} />
+            <TableSkeleton rows={4} cols={7} />
           </div>
         ) : filteredDisputes.length > 0 ? (
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
@@ -184,11 +221,13 @@ export default function DisputesHubPage() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-6">Dispute & Deal</th>
-                    <th className="py-4 px-6">Reason / Details</th>
-                    <th className="py-4 px-6">Frozen Amount</th>
-                    <th className="py-4 px-6">Status</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Dispute & Deal</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Reason / Details</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Date</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Time</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Frozen Amount</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Status</th>
+                    <th className="py-4 px-6 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -222,9 +261,6 @@ export default function DisputesHubPage() {
                           >
                             {title}
                           </Link>
-                          <div className="text-xs text-slate-400 mt-0.5">
-                            Created: {new Date(dsp.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                          </div>
                         </td>
 
                         <td className="py-4 px-6 min-w-[200px]">
@@ -236,6 +272,22 @@ export default function DisputesHubPage() {
                               {dsp.details}
                             </div>
                           )}
+                        </td>
+
+                        {/* Date Column */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{formatTableDate(dsp.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* Time Column */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
+                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{formatTableTime(dsp.createdAt)}</span>
+                          </div>
                         </td>
 
                         <td className="py-4 px-6 min-w-[140px]">

@@ -10,6 +10,7 @@ import {
   PlusCircle,
   CheckCircle2,
   Clock,
+  Calendar,
   AlertCircle,
   ChevronRight,
   TrendingUp,
@@ -28,6 +29,40 @@ import {
   walletService,
   transactionService,
 } from "@/services/api";
+import ExportTableButton from "@/components/ui/ExportTableButton";
+import {
+  formatTableDate,
+  formatTableTime,
+  ExportColumn,
+} from "@/lib/exportUtils";
+
+const dashboardExportColumns: ExportColumn<any>[] = [
+  { header: "Order ID", accessor: (tx) => tx.id || "N/A" },
+  {
+    header: "Title",
+    accessor: (tx) => tx.title || tx.description || "Escrow Agreement",
+  },
+  {
+    header: "Counterparty",
+    accessor: (tx) =>
+      tx.seller?.name ||
+      tx.seller?.email ||
+      tx.buyer?.name ||
+      tx.buyer?.email ||
+      "N/A",
+  },
+  {
+    header: "Amount",
+    accessor: (tx) =>
+      `₦${Number(tx.totalAmount || tx.amount || 0).toLocaleString()}`,
+  },
+  { header: "Date Created", accessor: (tx) => formatTableDate(tx.createdAt) },
+  { header: "Time Created", accessor: (tx) => formatTableTime(tx.createdAt) },
+  {
+    header: "Status",
+    accessor: (tx) => (tx.status || "ACTIVE").toUpperCase(),
+  },
+];
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -244,6 +279,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <ExportTableButton
+                data={transactions}
+                columns={dashboardExportColumns}
+                filenamePrefix="paytrust-recent-transactions"
+              />
               <button
                 onClick={() => setActiveTab("all")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -258,17 +298,19 @@ export default function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <TableSkeleton rows={4} cols={5} />
+            <TableSkeleton rows={4} cols={7} />
           ) : transactions.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="pb-3">Transaction Details</th>
-                    <th className="pb-3">Counterparty</th>
-                    <th className="pb-3">Amount</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3 text-right">Action</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Transaction Details</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Counterparty</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Date</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Time</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Amount</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Status</th>
+                    <th className="pb-3 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -306,10 +348,7 @@ export default function DashboardPage() {
                             {tx.title || tx.description || "Escrow Agreement"}
                           </div>
                           <div className="text-xs text-slate-400 mt-0.5 font-mono">
-                            {tx.id?.slice(0, 8)} •{" "}
-                            {new Date(
-                              tx.createdAt || Date.now(),
-                            ).toLocaleDateString()}
+                            #{tx.id?.slice(0, 8)}
                           </div>
                         </td>
                         <td className="py-4 pr-4 text-slate-600 font-medium">
@@ -325,6 +364,22 @@ export default function DashboardPage() {
                           >
                             {isBuyer ? "Buying from" : "Selling to"}
                           </span>
+                        </td>
+
+                        {/* Date Column */}
+                        <td className="py-4 pr-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{formatTableDate(tx.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* Time Column */}
+                        <td className="py-4 pr-4 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
+                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{formatTableTime(tx.createdAt)}</span>
+                          </div>
                         </td>
                         <td className="py-4 pr-4 font-bold text-slate-900">
                           ₦

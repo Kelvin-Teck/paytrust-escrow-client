@@ -13,6 +13,7 @@ import {
   ExternalLink,
   X,
   Clock,
+  Calendar,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
@@ -23,6 +24,55 @@ import { transactionService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
+import ExportTableButton from "@/components/ui/ExportTableButton";
+import {
+  formatTableDate,
+  formatTableTime,
+  ExportColumn,
+} from "@/lib/exportUtils";
+
+const transactionExportColumns: ExportColumn<any>[] = [
+  { header: "Deal ID", accessor: (deal) => deal.id || "N/A" },
+  {
+    header: "Title",
+    accessor: (deal) => deal.title || deal.description || "Escrow Agreement",
+  },
+  {
+    header: "Deal Type",
+    accessor: (deal) => deal.dealType || "Standard",
+  },
+  {
+    header: "Counterparty",
+    accessor: (deal) =>
+      deal.seller?.name ||
+      deal.seller?.email ||
+      deal.buyer?.name ||
+      deal.buyer?.email ||
+      deal.counterpartyEmail ||
+      "N/A",
+  },
+  {
+    header: "Amount",
+    accessor: (deal) =>
+      `₦${Number(deal.totalAmount || deal.amount || 0).toLocaleString()}`,
+  },
+  {
+    header: "Date Created",
+    accessor: (deal) => formatTableDate(deal.createdAt),
+  },
+  {
+    header: "Time Created",
+    accessor: (deal) => formatTableTime(deal.createdAt),
+  },
+  {
+    header: "Status",
+    accessor: (deal) => (deal.status || "ACTIVE").toUpperCase(),
+  },
+  {
+    header: "Inspection Period (Days)",
+    accessor: (deal) => deal.inspectionPeriod || 0,
+  },
+];
 
 export default function EscrowTransactionPage() {
   const router = useRouter();
@@ -176,6 +226,11 @@ export default function EscrowTransactionPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <ExportTableButton
+              data={filteredTransactions}
+              columns={transactionExportColumns}
+              filenamePrefix="paytrust-deals"
+            />
             <Link
               href="/transaction/invoice"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-sm font-semibold shadow-sm shadow-[#32A05F]/20 transition-all active:scale-95"
@@ -229,7 +284,7 @@ export default function EscrowTransactionPage() {
         {/* Transactions Table Ledger */}
         {isLoading ? (
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
-            <TableSkeleton rows={6} cols={5} />
+            <TableSkeleton rows={6} cols={7} />
           </div>
         ) : filteredTransactions.length > 0 ? (
           <div className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
@@ -237,11 +292,13 @@ export default function EscrowTransactionPage() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-6">Deal & Contract</th>
-                    <th className="py-4 px-6">Role & Counterparty</th>
-                    <th className="py-4 px-6">Escrow Amount</th>
-                    <th className="py-4 px-6">Status</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Deal & Contract</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Role & Counterparty</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Date</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Time</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Escrow Amount</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Status</th>
+                    <th className="py-4 px-6 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -319,26 +376,11 @@ export default function EscrowTransactionPage() {
                               deal.description ||
                               "Escrow Agreement"}
                           </div>
-                          <div className="text-xs text-slate-400 mt-1 flex items-center gap-2 font-medium">
-                            {deal.createdAt && (
-                              <span>
-                                {new Date(deal.createdAt).toLocaleDateString(
-                                  "en-GB",
-                                  {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  },
-                                )}
-                              </span>
-                            )}
-                            {deal.inspectionPeriod && (
-                              <>
-                                <span>•</span>
-                                <span>{deal.inspectionPeriod}d inspection</span>
-                              </>
-                            )}
-                          </div>
+                          {deal.inspectionPeriod && (
+                            <div className="text-xs text-slate-400 mt-1 font-medium">
+                              <span>{deal.inspectionPeriod}d inspection period</span>
+                            </div>
+                          )}
                         </td>
 
                         {/* Column 2: Role & Counterparty */}
@@ -386,7 +428,23 @@ export default function EscrowTransactionPage() {
                           </div>
                         </td>
 
-                        {/* Column 3: Escrow Amount */}
+                        {/* Column 3: Date */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{formatTableDate(deal.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* Column 4: Time */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
+                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{formatTableTime(deal.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* Column 5: Escrow Amount */}
                         <td className="py-4 px-6 min-w-[150px]">
                           <div className="text-base font-extrabold text-slate-900">
                             ₦{totalAmount.toLocaleString()}

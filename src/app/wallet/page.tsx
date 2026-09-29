@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CheckCircle2,
   Clock,
+  Calendar,
   ShieldCheck,
   X,
   AlertCircle,
@@ -31,6 +32,62 @@ import AppShell from "@/components/layout/AppShell";
 import { walletService, paymentService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton";
+import ExportTableButton from "@/components/ui/ExportTableButton";
+import {
+  formatTableDate,
+  formatTableTime,
+  ExportColumn,
+} from "@/lib/exportUtils";
+
+const walletExportColumns: ExportColumn<any>[] = [
+  {
+    header: "Transaction Reference",
+    accessor: (tx) => tx.reference || tx.id || "N/A",
+  },
+  {
+    header: "Description / Activity",
+    accessor: (tx) => tx.description || tx.type || "Wallet Transaction",
+  },
+  {
+    header: "Type",
+    accessor: (tx) => (tx.type || "transaction").replace("_", " ").toUpperCase(),
+  },
+  {
+    header: "Currency",
+    accessor: (tx) => (tx.currency || "NGN").toUpperCase(),
+  },
+  {
+    header: "Amount",
+    accessor: (tx) => {
+      const cur = (tx.currency || "NGN").toUpperCase();
+      const amt = Number(tx.amount || 0);
+      const isDeposit =
+        tx.type === "deposit" ||
+        tx.type === "CREDIT" ||
+        tx.type === "escrow_credit" ||
+        (amt > 0 &&
+          !tx.type?.includes("withdrawal") &&
+          !tx.type?.includes("lock"));
+      return `${isDeposit ? "+" : "-"}${
+        cur === "BTC"
+          ? Math.abs(amt).toFixed(8) + " BTC"
+          : "₦" + Math.abs(amt).toLocaleString()
+      }`;
+    },
+  },
+  {
+    header: "Date",
+    accessor: (tx) => formatTableDate(tx.createdAt),
+  },
+  {
+    header: "Time",
+    accessor: (tx) => formatTableTime(tx.createdAt),
+  },
+  {
+    header: "Status",
+    accessor: (tx) => (tx.status || "success").toUpperCase(),
+  },
+];
 
 type CurrencyFilter = "ALL" | "NGN" | "BTC";
 type StatusFilter = "ALL" | "success" | "pending" | "failed";
@@ -417,6 +474,11 @@ function WalletContent() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <ExportTableButton
+              data={filteredTransactions}
+              columns={walletExportColumns}
+              filenamePrefix="paytrust-wallet-ledger"
+            />
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
@@ -632,7 +694,7 @@ function WalletContent() {
 
         {/* Transaction Ledger Table / List */}
         {isLoading && history.length === 0 ? (
-          <TableSkeleton rows={5} cols={5} />
+          <TableSkeleton rows={5} cols={7} />
         ) : filteredTransactions.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
@@ -662,12 +724,13 @@ function WalletContent() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-5">Activity & Reference</th>
-                    <th className="py-3.5 px-5">Type</th>
-                    <th className="py-3.5 px-5">Date & Time</th>
-                    <th className="py-3.5 px-5">Amount</th>
-                    <th className="py-3.5 px-5">Status</th>
-                    <th className="py-3.5 px-5 text-right">Receipt</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Activity & Reference</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Type</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Date</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Time</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Amount</th>
+                    <th className="py-3.5 px-5 whitespace-nowrap">Status</th>
+                    <th className="py-3.5 px-5 text-right whitespace-nowrap">Receipt</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -730,28 +793,20 @@ function WalletContent() {
                           )}
                         </td>
 
-                        {/* 3. Date & Time */}
-                        <td className="py-3.5 px-5 whitespace-nowrap text-xs text-slate-500">
-                          {tx.createdAt ? (
-                            <>
-                              <div>
-                                {new Date(tx.createdAt).toLocaleDateString("en-GB", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </div>
-                              <div className="text-[10px] text-slate-400">
-                                {new Date(tx.createdAt).toLocaleTimeString("en-US", {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                })}
-                              </div>
-                            </>
-                          ) : (
-                            "—"
-                          )}
+                        {/* 3. Date */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{formatTableDate(tx.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* 4. Time */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
+                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{formatTableTime(tx.createdAt)}</span>
+                          </div>
                         </td>
 
                         {/* 4. Amount */}
