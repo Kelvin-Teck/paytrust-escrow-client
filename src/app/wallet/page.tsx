@@ -694,7 +694,7 @@ function WalletContent() {
 
         {/* Transaction Ledger Table / List */}
         {isLoading && history.length === 0 ? (
-          <TableSkeleton rows={5} cols={7} />
+          <TableSkeleton rows={5} cols={8} />
         ) : filteredTransactions.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
@@ -724,13 +724,14 @@ function WalletContent() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-5 whitespace-nowrap">Activity & Reference</th>
-                    <th className="py-3.5 px-5 whitespace-nowrap">Type</th>
-                    <th className="py-3.5 px-5 whitespace-nowrap">Date</th>
-                    <th className="py-3.5 px-5 whitespace-nowrap">Time</th>
-                    <th className="py-3.5 px-5 whitespace-nowrap">Amount</th>
-                    <th className="py-3.5 px-5 whitespace-nowrap">Status</th>
-                    <th className="py-3.5 px-5 text-right whitespace-nowrap">Receipt</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Reference No</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Description</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Type</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Date</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Time</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Amount</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3.5 px-4 text-right whitespace-nowrap">Receipt</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -754,11 +755,18 @@ function WalletContent() {
                         onClick={() => setSelectedTx(tx)}
                         className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                       >
-                        {/* 1. Transaction & Reference */}
-                        <td className="py-3.5 px-5 min-w-[220px]">
-                          <div className="flex items-center gap-3">
+                        {/* 1. Reference No */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
+                            {tx.reference || tx.id || `TXN-${idx + 1}`}
+                          </span>
+                        </td>
+
+                        {/* 2. Description */}
+                        <td className="py-3.5 px-4 min-w-[200px]">
+                          <div className="flex items-center gap-2.5">
                             <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
                                 isDeposit
                                   ? "bg-[#EBF7F0] text-[#32A05F]"
                                   : "bg-slate-100 text-slate-600"
@@ -770,19 +778,14 @@ function WalletContent() {
                                 <ArrowUpRight className="w-4 h-4" />
                               )}
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors capitalize truncate">
-                                {tx.description || tx.type || "Wallet Transaction"}
-                              </p>
-                              <p className="text-[11px] text-slate-400 font-mono truncate">
-                                {tx.reference || tx.id || `TXN-${idx + 1}`}
-                              </p>
-                            </div>
+                            <span className="text-xs font-bold text-slate-900 group-hover:text-[#32A05F] transition-colors capitalize truncate">
+                              {tx.description || tx.type || "Wallet Transaction"}
+                            </span>
                           </div>
                         </td>
 
-                        {/* 2. Type */}
-                        <td className="py-3.5 px-5 whitespace-nowrap">
+                        {/* 3. Type */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md capitalize">
                             {tx.type?.replace("_", " ") || "Transaction"}
                           </span>
@@ -793,24 +796,24 @@ function WalletContent() {
                           )}
                         </td>
 
-                        {/* 3. Date */}
-                        <td className="py-3.5 px-5 whitespace-nowrap">
+                        {/* 4. Date */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
                             <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span>{formatTableDate(tx.createdAt)}</span>
                           </div>
                         </td>
 
-                        {/* 4. Time */}
-                        <td className="py-3.5 px-5 whitespace-nowrap">
+                        {/* 5. Time */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
                             <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                             <span>{formatTableTime(tx.createdAt)}</span>
                           </div>
                         </td>
 
-                        {/* 4. Amount */}
-                        <td className="py-3.5 px-5 whitespace-nowrap font-extrabold text-xs">
+                        {/* 6. Amount */}
+                        <td className="py-3.5 px-4 whitespace-nowrap font-extrabold text-xs">
                           <span className={isDeposit ? "text-[#32A05F]" : "text-slate-900"}>
                             {isDeposit ? "+" : "-"}
                             {isBtc
@@ -821,8 +824,8 @@ function WalletContent() {
                           </span>
                         </td>
 
-                        {/* 5. Status */}
-                        <td className="py-3.5 px-5 whitespace-nowrap">
+                        {/* 7. Status */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
                               status === "success" || status === "completed"
@@ -845,8 +848,8 @@ function WalletContent() {
                           </span>
                         </td>
 
-                        {/* 6. Action */}
-                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        {/* 8. Action */}
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={(e) => {

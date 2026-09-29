@@ -39,7 +39,7 @@ import {
 const dashboardExportColumns: ExportColumn<any>[] = [
   { header: "Order ID", accessor: (tx) => tx.id || "N/A" },
   {
-    header: "Title",
+    header: "Agreement",
     accessor: (tx) => tx.title || tx.description || "Escrow Agreement",
   },
   {
@@ -298,13 +298,15 @@ export default function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <TableSkeleton rows={4} cols={7} />
+            <TableSkeleton rows={4} cols={9} />
           ) : transactions.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="pb-3 pr-4 whitespace-nowrap">Transaction Details</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Order ID</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Agreement</th>
+                    <th className="pb-3 pr-4 whitespace-nowrap">Role</th>
                     <th className="pb-3 pr-4 whitespace-nowrap">Counterparty</th>
                     <th className="pb-3 pr-4 whitespace-nowrap">Date</th>
                     <th className="pb-3 pr-4 whitespace-nowrap">Time</th>
@@ -343,30 +345,41 @@ export default function DashboardPage() {
                         key={tx.id}
                         className="hover:bg-slate-50 transition-colors group"
                       >
-                        <td className="py-4 pr-4">
-                          <div className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors">
-                            {tx.title || tx.description || "Escrow Agreement"}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-0.5 font-mono">
+                        {/* 1. Order ID */}
+                        <td className="py-4 pr-4 whitespace-nowrap">
+                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200/70">
                             #{tx.id?.slice(0, 8)}
-                          </div>
-                        </td>
-                        <td className="py-4 pr-4 text-slate-600 font-medium">
-                          <div className="text-xs font-semibold text-slate-800">
-                            {counterpartyLabel}
-                          </div>
-                          <span
-                            className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-0.5 ${
-                              isBuyer
-                                ? "bg-blue-50 text-blue-700"
-                                : "bg-emerald-50 text-emerald-700"
-                            }`}
-                          >
-                            {isBuyer ? "Buying from" : "Selling to"}
                           </span>
                         </td>
 
-                        {/* Date Column */}
+                        {/* 2. Agreement */}
+                        <td className="py-4 pr-4 min-w-[180px]">
+                          <div className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors line-clamp-1">
+                            {tx.title || tx.description || "Escrow Agreement"}
+                          </div>
+                        </td>
+
+                        {/* 3. Role */}
+                        <td className="py-4 pr-4 whitespace-nowrap">
+                          <span
+                            className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                              isBuyer
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            }`}
+                          >
+                            {isBuyer ? "Buyer" : "Seller"}
+                          </span>
+                        </td>
+
+                        {/* 4. Counterparty */}
+                        <td className="py-4 pr-4 text-slate-600 font-medium min-w-[160px]">
+                          <div className="text-xs font-semibold text-slate-800">
+                            {counterpartyLabel}
+                          </div>
+                        </td>
+
+                        {/* 5. Date Column */}
                         <td className="py-4 pr-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 text-xs text-slate-800 font-medium">
                             <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -374,26 +387,32 @@ export default function DashboardPage() {
                           </div>
                         </td>
 
-                        {/* Time Column */}
+                        {/* 6. Time Column */}
                         <td className="py-4 pr-4 whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/70 text-slate-700 font-mono text-[11px] font-semibold">
                             <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                             <span>{formatTableTime(tx.createdAt)}</span>
                           </div>
                         </td>
-                        <td className="py-4 pr-4 font-bold text-slate-900">
+
+                        {/* 7. Amount Column */}
+                        <td className="py-4 pr-4 font-bold text-slate-900 whitespace-nowrap">
                           ₦
                           {Number(
                             tx.totalAmount || tx.amount || 0,
                           ).toLocaleString()}
                         </td>
-                        <td className="py-4 pr-4">
+
+                        {/* 8. Status */}
+                        <td className="py-4 pr-4 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
                             {tx.status?.replace("_", " ").toLowerCase() ||
                               "Active"}
                           </span>
                         </td>
-                        <td className="py-4 text-right">
+
+                        {/* 9. Action */}
+                        <td className="py-4 text-right whitespace-nowrap">
                           <Link
                             href={`/transaction/${tx.id}`}
                             className="inline-flex items-center gap-1 text-xs font-bold text-[#32A05F] hover:underline"
