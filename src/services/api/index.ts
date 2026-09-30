@@ -245,6 +245,57 @@ export const transactionService = {
     });
     return extract(res);
   },
+
+  submitMilestoneDeliverable: async (
+    transactionId: string,
+    milestoneId: string,
+    payload: {
+      deliverableUrl?: string;
+      notes: string;
+      attachmentUrls?: string[];
+    },
+  ) => {
+    const res = await apiClient.post(
+      `/transactions/${transactionId}/milestones/${milestoneId}/submit`,
+      payload,
+    );
+    return extract(res);
+  },
+
+  approveMilestoneRelease: async (
+    transactionId: string,
+    milestoneId: string,
+  ) => {
+    const res = await apiClient.post(
+      `/transactions/${transactionId}/milestones/${milestoneId}/approve`,
+    );
+    return extract(res);
+  },
+
+  requestInspectionExtension: async (
+    transactionId: string,
+    payload: {
+      additionalDays: number;
+      reason: string;
+    },
+  ) => {
+    const res = await apiClient.post(
+      `/transactions/${transactionId}/inspection-extension/request`,
+      payload,
+    );
+    return extract(res);
+  },
+
+  respondToInspectionExtension: async (
+    transactionId: string,
+    action: "approve" | "decline",
+  ) => {
+    const res = await apiClient.post(
+      `/transactions/${transactionId}/inspection-extension/respond`,
+      { action },
+    );
+    return extract(res);
+  },
 };
 
 // ─── WALLET & PAYOUT SERVICE ───

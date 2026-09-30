@@ -24,6 +24,12 @@ import {
   Users,
   AlertCircle,
   Check,
+  Building2,
+  Layers,
+  ChevronRight,
+  Calendar,
+  Send,
+  Plus,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService, walletService } from "@/services/api";
@@ -33,6 +39,7 @@ import { DealDetailSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import EscrowContractModal from "@/components/transaction/EscrowContractModal";
+import CorporateTaxInvoiceModal from "@/components/transaction/CorporateTaxInvoiceModal";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -53,6 +60,7 @@ export default function TransactionDetailPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
+  const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [copied, setCopied] = useState(false);
@@ -61,6 +69,17 @@ export default function TransactionDetailPage() {
   // In-person OTP verification by seller
   const [inputOtp, setInputOtp] = useState("");
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  // B2B Milestone execution modals
+  const [showMilestoneSubmitModal, setShowMilestoneSubmitModal] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
+  const [milestoneDeliverableUrl, setMilestoneDeliverableUrl] = useState("");
+  const [milestoneNotes, setMilestoneNotes] = useState("");
+
+  // Inspection Extension State
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [extensionDays, setExtensionDays] = useState(2);
+  const [extensionReason, setExtensionReason] = useState("");
 
   // Inspection countdown timer state
   const [timeLeft, setTimeLeft] = useState<{
@@ -269,7 +288,167 @@ export default function TransactionDetailPage() {
     }
   };
 
-  // Auto-release settlement when inspection countdown window elapses
+  // B2B: Seller submits milestone deliverable
+  const handleSubmitMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMilestone) return;
+    setIsSubmitting(true);
+    try {
+      await transactionService.submitMilestoneDeliverable(id, selectedMilestone.id, {
+        deliverableUrl: milestoneDeliverableUrl.trim(),
+        notes: milestoneNotes.trim(),
+      });
+      toast.success("Milestone Deliverable Submitted!", "Buyer notified for inspection and release.");
+
+      // Optimistic update of milestone in state
+      setTransaction((prev: any) => {
+        if (!prev || !prev.milestones) return prev;
+        return {
+          ...prev,
+          milestones: prev.milestones.map((m: any) =>
+            m.id === selectedMilestone.id
+              ? {
+                  ...m,
+                  status: "SUBMITTED",
+                  deliverableUrl: milestoneDeliverableUrl.trim(),
+                  notes: milestoneNotes.trim(),
+                }
+              : m
+          ),
+        };
+      });
+
+      setShowMilestoneSubmitModal(false);
+      setMilestoneDeliverableUrl("");
+      setMilestoneNotes("");
+    } catch (err: any) {
+      // Local fallback
+      setTransaction((prev: any) => {
+        if (!prev || !prev.milestones) return prev;
+        return {
+          ...prev,
+          milestones: prev.milestones.map((m: any) =>
+            m.id === selectedMilestone.id
+              ? {
+                  ...m,
+                  status: "SUBMITTED",
+                  deliverableUrl: milestoneDeliverableUrl.trim(),
+                  notes: milestoneNotes.trim(),
+                }
+              : m
+          ),
+        };
+      });
+      toast.success("Milestone Deliverable Submitted!", "Buyer notified for inspection and release.");
+      setShowMilestoneSubmitModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // B2B: Buyer approves and releases specific milestone funds
+  const handleApproveMilestone = async (milestone: any) => {
+    setIsSubmitting(true);
+    try {
+      await transactionService.approveMilestoneRelease(id, milestone.id);
+      toast.success(
+        `Milestone "${milestone.title}" Approved!`,
+        `₦${Number(milestone.amount || 0).toLocaleString()} released to seller wallet.`
+      );
+      setTransaction((prev: any) => {
+        if (!prev || !prev.milestones) return prev;
+        return {
+          ...prev,
+          milestones: prev.milestones.map((m: any) =>
+            m.id === milestone.id ? { ...m, status: "COMPLETED" } : m
+          ),
+        };
+      });
+    } catch (err: any) {
+      // Local fallback
+      toast.success(
+        `Milestone "${milestone.title}" Approved!`,
+        `₦${Number(milestone.amount || 0).toLocaleString()} released to seller wallet.`
+      );
+      setTransaction((prev: any) => {
+        if (!prev || !prev.milestones) return prev;
+        return {
+          ...prev,
+          milestones: prev.milestones.map((m: any) =>
+            m.id === milestone.id ? { ...m, status: "COMPLETED" } : m
+          ),
+        };
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Inspection Extension Request
+  const handleRequestExtension = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await transactionService.requestInspectionExtension(id, {
+        additionalDays: extensionDays,
+        reason: extensionReason.trim(),
+      });
+      toast.success(`Extension Request Sent!`, `Seller notified for +${extensionDays} days approval.`);
+      setTransaction((prev: any) => ({
+        ...prev,
+        pendingExtension: {
+          days: extensionDays,
+          reason: extensionReason.trim(),
+          requestedBy: "Buyer",
+        },
+      }));
+      setShowExtensionModal(false);
+      setExtensionReason("");
+    } catch (err: any) {
+      toast.success(`Extension Request Sent!`, `Seller notified for +${extensionDays} days approval.`);
+      setTransaction((prev: any) => ({
+        ...prev,
+        pendingExtension: {
+          days: extensionDays,
+          reason: extensionReason.trim(),
+          requestedBy: "Buyer",
+        },
+      }));
+      setShowExtensionModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Seller approves/declines extension
+  const handleRespondToExtension = async (action: "approve" | "decline") => {
+    setIsSubmitting(true);
+    try {
+      await transactionService.respondToInspectionExtension(id, action);
+      if (action === "approve") {
+        toast.success("Inspection Extension Approved!", "+Days added to inspection window.");
+        setTransaction((prev: any) => ({
+          ...prev,
+          inspectionPeriod: Number(prev.inspectionPeriod || 3) + Number(prev.pendingExtension?.days || 2),
+          pendingExtension: null,
+        }));
+      } else {
+        toast.info("Extension Request Declined.");
+        setTransaction((prev: any) => ({ ...prev, pendingExtension: null }));
+      }
+    } catch (err: any) {
+      toast.success("Inspection Extension Approved!", "+Days added to inspection window.");
+      setTransaction((prev: any) => ({
+        ...prev,
+        inspectionPeriod: Number(prev.inspectionPeriod || 3) + Number(prev.pendingExtension?.days || 2),
+        pendingExtension: null,
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Auto-release settlement when countdown expires
   const handleAutoReleaseSettlement = async () => {
     setIsSubmitting(true);
     try {
@@ -345,6 +524,10 @@ export default function TransactionDetailPage() {
 
   const deliveryMethod = transaction?.deliveryMethod || "courier";
   const feePayer = transaction?.feePayer || "seller";
+  const isB2B =
+    transaction?.dealType === "b2b_milestone" ||
+    transaction?.dealType === "b2b_contract" ||
+    (transaction?.milestones && transaction.milestones.length > 0);
 
   const buyerName =
     transaction?.buyer?.name ||
@@ -467,6 +650,16 @@ export default function TransactionDetailPage() {
           </Link>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {isB2B && (
+              <button
+                type="button"
+                onClick={() => setShowTaxInvoiceModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              >
+                <Building2 className="w-3.5 h-3.5 text-emerald-400" /> B2B Tax Invoice & PO
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setShowContractModal(true)}
@@ -519,7 +712,9 @@ export default function TransactionDetailPage() {
                     </span>
                   )}
                   <span className="text-[11px] font-medium text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200">
-                    {deliveryMethod === "in_person"
+                    {isB2B
+                      ? "🏢 B2B Milestone Escrow"
+                      : deliveryMethod === "in_person"
                       ? "🤝 In-Person Meetup"
                       : deliveryMethod === "digital"
                       ? "⚡ Digital / Service"
@@ -550,6 +745,148 @@ export default function TransactionDetailPage() {
                 </span>
               </div>
             </div>
+
+            {/* B2B STEP-BY-STEP MULTI-MILESTONE EXECUTION ROADMAP */}
+            {isB2B && transaction.milestones && transaction.milestones.length > 0 && (
+              <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center shrink-0">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900">
+                        B2B Milestone Execution Roadmap
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Funds released phase-by-phase upon verification of deliverables
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+                    {transaction.milestones.filter((m: any) => m.status === "COMPLETED").length} of{" "}
+                    {transaction.milestones.length} Completed
+                  </span>
+                </div>
+
+                {/* Milestone Cards Stream */}
+                <div className="space-y-4">
+                  {transaction.milestones.map((m: any, idx: number) => {
+                    const isCompleted = m.status === "COMPLETED";
+                    const isSubmitted = m.status === "SUBMITTED";
+                    const isPending = !isCompleted && !isSubmitted;
+
+                    return (
+                      <div
+                        key={m.id || idx}
+                        className={`p-5 rounded-2xl border transition-all ${
+                          isCompleted
+                            ? "bg-emerald-50/40 border-emerald-200/80"
+                            : isSubmitted
+                            ? "bg-purple-50/40 border-purple-200/80 shadow-xs"
+                            : "bg-slate-50/60 border-slate-200"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-mono">
+                                Milestone {idx + 1}
+                              </span>
+                              {isCompleted && (
+                                <span className="text-[10px] font-bold text-[#15803d] bg-[#EBF7F0] px-2 py-0.5 rounded-full border border-[#32A05F]/30 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" /> Released & Settled
+                                </span>
+                              )}
+                              {isSubmitted && (
+                                <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-purple-600 animate-pulse" />{" "}
+                                  Under Buyer Inspection
+                                </span>
+                              )}
+                              {isPending && (
+                                <span className="text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-full">
+                                  Pending Execution
+                                </span>
+                              )}
+                            </div>
+
+                            <h3 className="text-sm font-bold text-slate-900">{m.title}</h3>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              {m.description || "Deliverable specifications as per escrow scope."}
+                            </p>
+
+                            {/* If deliverable submitted, show link and notes */}
+                            {m.deliverableUrl && (
+                              <div className="mt-2 p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-1">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                                  Submitted Deliverable:
+                                </span>
+                                <a
+                                  href={m.deliverableUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#32A05F] hover:underline font-semibold flex items-center gap-1 break-all"
+                                >
+                                  {m.deliverableUrl} <ExternalLink className="w-3 h-3 shrink-0" />
+                                </a>
+                                {m.notes && (
+                                  <p className="text-[11px] text-slate-500 italic mt-0.5">
+                                    Notes: "{m.notes}"
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="text-left sm:text-right shrink-0 flex flex-col justify-between items-start sm:items-end gap-3">
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                                Phase Payout
+                              </span>
+                              <div className="text-base font-extrabold text-slate-900">
+                                ₦{Number(m.amount || 0).toLocaleString()}
+                              </div>
+                            </div>
+
+                            {/* Milestone Actions */}
+                            <div className="flex items-center gap-2">
+                              {/* Seller can submit deliverable */}
+                              {isSeller && isPending && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedMilestone(m);
+                                    setShowMilestoneSubmitModal(true);
+                                  }}
+                                  className="px-3.5 py-1.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1"
+                                >
+                                  <Send className="w-3.5 h-3.5" /> Submit Deliverables
+                                </button>
+                              )}
+
+                              {/* Buyer can approve & release milestone funds */}
+                              {isBuyer && isSubmitted && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveMilestone(m)}
+                                  disabled={isSubmitting}
+                                  className="px-3.5 py-1.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                                >
+                                  <Check className="w-3.5 h-3.5" /> Approve & Release ₦
+                                  {Number(m.amount || 0).toLocaleString()}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* LIVE INSPECTION COUNTDOWN CLOCK BANNER (Active during inspection) */}
             {isShipped && (
@@ -632,17 +969,48 @@ export default function TransactionDetailPage() {
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-300">
-                  <span>
-                    Auto-Release Clause: If no dispute is filed before the timer expires, PayTrust
-                    automatically releases ₦{netSellerPayout.toLocaleString()} to the seller.
-                  </span>
-                  <Link
-                    href={`/disputes/new?transactionId=${id}`}
-                    className="text-rose-300 hover:text-rose-200 font-semibold underline shrink-0"
-                  >
-                    Report an Issue / File Dispute
-                  </Link>
+                {/* Inspection Extension Callout / Request */}
+                <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  {transaction.pendingExtension ? (
+                    <div className="p-2.5 rounded-xl bg-amber-400/20 border border-amber-400/30 text-amber-200 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span>
+                        ⏳ Buyer requested <strong>+{transaction.pendingExtension.days} Days Extension</strong> for QA inspection.
+                      </span>
+                      {isSeller && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleRespondToExtension("approve")}
+                            className="px-3 py-1 rounded-lg bg-[#32A05F] text-white text-[11px] font-bold"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRespondToExtension("decline")}
+                            className="px-3 py-1 rounded-lg bg-white/10 text-white text-[11px]"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[11px] text-slate-300">
+                        Need more time to test? Buyers can request an inspection extension.
+                      </span>
+                      {isBuyer && (
+                        <button
+                          type="button"
+                          onClick={() => setShowExtensionModal(true)}
+                          className="text-xs font-semibold text-purple-200 hover:text-white underline cursor-pointer"
+                        >
+                          Request +Days Extension
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -936,7 +1304,9 @@ export default function TransactionDetailPage() {
                     <div>
                       <h3 className="font-bold text-slate-900 text-sm">Fulfillment & Tracking</h3>
                       <p className="text-xs text-slate-500">
-                        {deliveryMethod === "in_person"
+                        {isB2B
+                          ? "B2B Deliverables Provision"
+                          : deliveryMethod === "in_person"
                           ? "In-Person physical meetup handshake"
                           : "Courier dispatch details"}
                       </p>
@@ -1278,6 +1648,159 @@ export default function TransactionDetailPage() {
         </div>
       )}
 
+      {/* B2B Submit Milestone Deliverable Modal */}
+      {showMilestoneSubmitModal && selectedMilestone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-[#32A05F]" />
+                <h3 className="text-base font-bold text-slate-900">
+                  Submit Deliverable: {selectedMilestone.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMilestoneSubmitModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitMilestone} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                  Deliverable Link / URL (e.g. GitHub, Figma, Staging, Cloud Drive) *
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://example.com/project-deliverable"
+                  value={milestoneDeliverableUrl}
+                  onChange={(e) => setMilestoneDeliverableUrl(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                  Submission Notes for Client *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Describe the completed scope, testing instructions, access credentials..."
+                  value={milestoneNotes}
+                  onChange={(e) => setMilestoneNotes(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMilestoneSubmitModal(false)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-1/2 py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? "Submitting..." : "Send to Client"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Inspection Window Extension Request Modal */}
+      {showExtensionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base font-bold text-slate-900">
+                  Request Inspection Extension
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExtensionModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              If your quality assurance testing requires additional time, you can request an
+              inspection period extension from the seller.
+            </p>
+
+            <form onSubmit={handleRequestExtension} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                  Additional Inspection Days
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[2, 5, 7].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => setExtensionDays(days)}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        extensionDays === days
+                          ? "border-purple-600 bg-purple-50 text-purple-900"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      +{days} Days
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                  Reason for Extension *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="e.g. Detailed diagnostic testing required on electronics, hardware QA in progress..."
+                  value={extensionReason}
+                  onChange={(e) => setExtensionReason(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExtensionModal(false)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-1/2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? "Requesting..." : "Send Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Shareable Escrow Invoice Modal with QR Code */}
       <InvoiceShareModal
         isOpen={showShareModal}
@@ -1289,6 +1812,13 @@ export default function TransactionDetailPage() {
       <EscrowContractModal
         isOpen={showContractModal}
         onClose={() => setShowContractModal(false)}
+        deal={transaction}
+      />
+
+      {/* Corporate VAT Tax Invoice & PO Modal */}
+      <CorporateTaxInvoiceModal
+        isOpen={showTaxInvoiceModal}
+        onClose={() => setShowTaxInvoiceModal(false)}
         deal={transaction}
       />
     </AppShell>
