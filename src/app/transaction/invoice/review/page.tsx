@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Copy, ArrowRight } from "lucide-react";
+import { ArrowLeft, Copy, ArrowRight, QrCode } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 
 export default function InvoiceReviewPage() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleShare = () => {
     navigator.clipboard.writeText("https://paytrust.io/invoice/INV-2026-9824");
@@ -103,20 +105,30 @@ export default function InvoiceReviewPage() {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/30 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="text-xs text-slate-800 font-medium">
               Shareable Escrow Link:{" "}
               <span className="font-mono font-bold text-[#32A05F]">
                 https://paytrust.io/invoice/INV-2026-9824
               </span>
             </div>
-            <button
-              onClick={handleShare}
-              className="px-3 py-1.5 rounded-lg bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold flex items-center gap-1 transition-all"
-            >
-              <Copy className="w-3.5 h-3.5" />{" "}
-              {copied ? "Copied Link!" : "Copy Link"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <QrCode className="w-3.5 h-3.5 text-emerald-400" /> View QR Code
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="px-3 py-1.5 rounded-lg bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />{" "}
+                {copied ? "Copied Link!" : "Copy Link"}
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-4">
@@ -128,6 +140,18 @@ export default function InvoiceReviewPage() {
             </button>
           </div>
         </div>
+
+        {/* Invoice QR & Share Modal */}
+        <InvoiceShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          deal={{
+            id: "INV-2026-9824",
+            title: "Escrow Milestone Invoice",
+            totalAmount: 500000,
+            inspectionPeriod: 3,
+          }}
+        />
       </div>
     </AppShell>
   );

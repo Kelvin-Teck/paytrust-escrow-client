@@ -26,6 +26,7 @@ import { TableSkeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import ExportTableButton from "@/components/ui/ExportTableButton";
 import TablePagination from "@/components/ui/TablePagination";
+import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import {
   formatTableDate,
   formatTableTime,
@@ -534,90 +535,12 @@ export default function EscrowTransactionPage() {
         )}
       </div>
 
-      {/* Quick Share Modal for Table Rows */}
-      {sharingDeal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 relative">
-            <button
-              onClick={() => setSharingDeal(null)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="space-y-2 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto shadow-inner">
-                <Share2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Share Escrow Invoice
-              </h3>
-              <p className="text-xs text-slate-500">
-                Send this link to the buyer via WhatsApp or copy it to your
-                clipboard.
-              </p>
-            </div>
-
-            {/* Deal Overview Snippet */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 text-xs">
-              <div className="font-bold text-slate-800 line-clamp-1">
-                {sharingDeal.title ||
-                  sharingDeal.description ||
-                  "Escrow Agreement"}
-              </div>
-              <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Escrow Total:</span>
-                <span className="font-bold text-[#32A05F]">
-                  ₦
-                  {Number(
-                    sharingDeal.totalAmount || sharingDeal.amount || 0,
-                  ).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Link Box */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Public Escrow Payment URL
-              </span>
-              <div className="flex items-center justify-between gap-2 bg-white px-3 py-2.5 rounded-xl border border-slate-200">
-                <span className="text-xs font-mono font-semibold text-slate-700 truncate">
-                  {getEscrowPayUrl(sharingDeal.id)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyLink(sharingDeal)}
-                  className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shrink-0 flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <Copy className="w-3.5 h-3.5" /> {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2.5">
-              <button
-                type="button"
-                onClick={() => handleWhatsAppShare(sharingDeal)}
-                className="w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
-              >
-                <Share2 className="w-4 h-4" /> Send Invoice on WhatsApp
-              </button>
-
-              <a
-                href={getEscrowPayUrl(sharingDeal.id)}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                Preview What Buyer Sees{" "}
-                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Quick Share Modal for Table Rows with QR Code */}
+      <InvoiceShareModal
+        isOpen={!!sharingDeal}
+        onClose={() => setSharingDeal(null)}
+        deal={sharingDeal}
+      />
     </AppShell>
   );
 }

@@ -21,10 +21,12 @@ import {
   RotateCw,
   Mail,
   Phone,
+  QrCode,
 } from "lucide-react";
 import { transactionService, authService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
+import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 
 export default function PublicInvoicePayPage() {
   const params = useParams();
@@ -35,6 +37,7 @@ export default function PublicInvoicePayPage() {
   const [transaction, setTransaction] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // 2-Step Secure Account Activation Modal state
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -325,9 +328,18 @@ export default function PublicInvoicePayPage() {
               <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-white/10 text-emerald-300">
                 Order #{transaction.id?.slice(0, 8)}
               </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#32A05F] text-white">
-                🛡️ Escrow Protected
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-emerald-300" /> Invoice QR Code
+                </button>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#32A05F] text-white">
+                  🛡️ Escrow Protected
+                </span>
+              </div>
             </div>
 
             <div>
@@ -655,6 +667,13 @@ export default function PublicInvoicePayPage() {
           </div>
         </div>
       )}
+
+      {/* Invoice QR & Share Modal */}
+      <InvoiceShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        deal={transaction}
+      />
     </div>
   );
 }
