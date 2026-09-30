@@ -33,6 +33,7 @@ import { walletService, paymentService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton";
 import ExportTableButton from "@/components/ui/ExportTableButton";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   formatTableDate,
   formatTableTime,
@@ -116,6 +117,14 @@ function WalletContent() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [sortBy, setSortBy] = useState<SortOption>("date_desc");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, currencyFilter, statusFilter, typeFilter, sortBy]);
 
   // Selected transaction for detailed receipt modal
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
@@ -239,6 +248,13 @@ function WalletContent() {
         }
       });
   }, [history, currencyFilter, statusFilter, typeFilter, sortBy, searchQuery]);
+
+  const paginatedTransactions = useMemo(() => {
+    return filteredTransactions.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize,
+    );
+  }, [filteredTransactions, currentPage, pageSize]);
 
   // Statistics summary for current filtered view
   const { totalInflow, totalOutflow, countNgn, countBtc } = useMemo(() => {
@@ -735,7 +751,7 @@ function WalletContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredTransactions.map((tx: any, idx: number) => {
+                  {paginatedTransactions.map((tx: any, idx: number) => {
                     const cur = (tx.currency || "NGN").toUpperCase();
                     const isBtc = cur === "BTC";
                     const amt = Number(tx.amount || 0);
@@ -863,6 +879,16 @@ function WalletContent() {
                 </tbody>
               </table>
             </div>
+
+            {/* Table Pagination */}
+            <TablePagination
+              currentPage={currentPage}
+              totalItems={filteredTransactions.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="transactions"
+            />
           </div>
         )}
       </div>

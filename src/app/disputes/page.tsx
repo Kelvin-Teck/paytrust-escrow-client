@@ -22,6 +22,7 @@ import { disputeService, transactionService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import ExportTableButton from "@/components/ui/ExportTableButton";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   formatTableDate,
   formatTableTime,
@@ -59,6 +60,10 @@ export default function DisputesHubPage() {
   const [activeTransactions, setActiveTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form state for raising a dispute
   const [selectedTxId, setSelectedTxId] = useState("");
@@ -144,6 +149,15 @@ export default function DisputesHubPage() {
       txId.toLowerCase().includes(q)
     );
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const paginatedDisputes = filteredDisputes.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   return (
     <AppShell>
@@ -233,7 +247,7 @@ export default function DisputesHubPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredDisputes.map((dsp) => {
+                  {paginatedDisputes.map((dsp) => {
                     const amount = dsp.transaction?.amount ?? dsp.amount ?? 0;
                     const title =
                       dsp.transaction?.title ||
@@ -345,10 +359,15 @@ export default function DisputesHubPage() {
                 </tbody>
               </table>
             </div>
-            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-              <span>Showing <strong>{filteredDisputes.length}</strong> dispute record{filteredDisputes.length === 1 ? "" : "s"}</span>
-              <span className="text-[11px] text-slate-400 font-medium">Assigned to PayTrust Dispute Arbitration Panel</span>
-            </div>
+            {/* Table Pagination */}
+            <TablePagination
+              currentPage={currentPage}
+              totalItems={filteredDisputes.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="disputes"
+            />
           </div>
         ) : (
           <div className="py-16 text-center bg-white border border-slate-200 p-8 space-y-3">

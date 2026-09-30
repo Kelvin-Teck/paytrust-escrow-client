@@ -25,6 +25,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { TableSkeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import ExportTableButton from "@/components/ui/ExportTableButton";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   formatTableDate,
   formatTableTime,
@@ -82,9 +83,17 @@ export default function EscrowTransactionPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Quick share modal state
   const [sharingDeal, setSharingDeal] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
 
   useEffect(() => {
     async function loadTransactions() {
@@ -125,6 +134,11 @@ export default function EscrowTransactionPage() {
     }
     return matchesSearch && tStatus === filterStatus.toUpperCase();
   });
+
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   const getEscrowPayUrl = (dealId: string) => {
     const origin =
@@ -304,7 +318,7 @@ export default function EscrowTransactionPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredTransactions.map((deal) => {
+                  {paginatedTransactions.map((deal) => {
                     const isCurrentUserBuyer =
                       currentUser?.id === deal.buyerId ||
                       (currentUser?.email &&
@@ -478,33 +492,15 @@ export default function EscrowTransactionPage() {
               </table>
             </div>
 
-            {/* Table Footer */}
-            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-              <div className="flex items-center gap-2">
-                <span>
-                  Showing{" "}
-                  <strong className="text-slate-900">
-                    {filteredTransactions.length}
-                  </strong>{" "}
-                  of{" "}
-                  <strong className="text-slate-900">
-                    {transactions.length}
-                  </strong>{" "}
-                  total contracts
-                </span>
-                {filterStatus !== "ALL" && (
-                  <button
-                    onClick={() => setFilterStatus("ALL")}
-                    className="text-[#32A05F] font-bold hover:underline ml-2 cursor-pointer"
-                  >
-                    Clear Filter
-                  </button>
-                )}
-              </div>
-              <div className="text-[11px] text-slate-400 font-medium">
-                Protected by PayTrust automated escrow infrastructure
-              </div>
-            </div>
+            {/* Table Pagination */}
+            <TablePagination
+              currentPage={currentPage}
+              totalItems={filteredTransactions.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="contracts"
+            />
           </div>
         ) : (
           <div className="py-16 text-center bg-white border border-slate-200 p-8 space-y-4">

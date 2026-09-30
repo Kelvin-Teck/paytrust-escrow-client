@@ -30,6 +30,7 @@ import {
   transactionService,
 } from "@/services/api";
 import ExportTableButton from "@/components/ui/ExportTableButton";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   formatTableDate,
   formatTableTime,
@@ -73,6 +74,59 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || "").toUpperCase();
+    if (s === "AWAITING_PAYMENT" || s === "PENDING" || s === "DRAFT") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+          Awaiting Payment
+        </span>
+      );
+    }
+    if (s === "SECURED" || s === "IN_ESCROW" || s === "PAID") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+          Secured in Escrow
+        </span>
+      );
+    }
+    if (s === "SHIPPED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"></span>
+          In Transit
+        </span>
+      );
+    }
+    if (s === "DELIVERED" || s === "COMPLETED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-[#15803d] bg-[#EBF7F0] border border-[#32A05F]/20 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#32A05F] shrink-0"></span>
+          Completed
+        </span>
+      );
+    }
+    if (s === "DISPUTED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+          Under Dispute
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 capitalize whitespace-nowrap">
+        {status?.replace("_", " ").toLowerCase() || "Active"}
+      </span>
+    );
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -302,131 +356,143 @@ export default function DashboardPage() {
               <TableSkeleton rows={4} cols={9} />
             </div>
           ) : transactions.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3 px-3 whitespace-nowrap">Order ID</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Agreement</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Role</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Counterparty</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Date</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Time</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Amount</th>
-                    <th className="py-3 px-3 whitespace-nowrap">Status</th>
-                    <th className="py-3 px-3 text-right whitespace-nowrap">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {transactions.map((tx: any) => {
-                    const isBuyer =
-                      user?.id === tx.buyerId ||
-                      (user?.email &&
-                        tx.buyer?.email &&
-                        user.email.toLowerCase() ===
-                          tx.buyer.email.toLowerCase());
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="py-3 px-3 whitespace-nowrap">Order ID</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Agreement</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Role</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Counterparty</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Date</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Time</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Amount</th>
+                      <th className="py-3 px-3 whitespace-nowrap">Status</th>
+                      <th className="py-3 px-3 text-right whitespace-nowrap">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {transactions
+                      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                      .map((tx: any) => {
+                      const isBuyer =
+                        user?.id === tx.buyerId ||
+                        (user?.email &&
+                          tx.buyer?.email &&
+                          user.email.toLowerCase() ===
+                            tx.buyer.email.toLowerCase());
 
-                    const counterpartyLabel = isBuyer
-                      ? tx.seller?.name ||
-                        (tx.seller?.firstName
-                          ? `${tx.seller.firstName} ${tx.seller.lastName || ""}`.trim()
-                          : null) ||
-                        tx.seller?.email ||
-                        tx.sellerEmail ||
-                        "Seller"
-                      : tx.buyer?.name ||
-                        (tx.buyer?.firstName
-                          ? `${tx.buyer.firstName} ${tx.buyer.lastName || ""}`.trim()
-                          : null) ||
-                        tx.buyer?.email ||
-                        tx.buyerEmail ||
-                        "Buyer";
+                      const counterpartyLabel = isBuyer
+                        ? tx.seller?.name ||
+                          (tx.seller?.firstName
+                            ? `${tx.seller.firstName} ${tx.seller.lastName || ""}`.trim()
+                            : null) ||
+                          tx.seller?.email ||
+                          tx.sellerEmail ||
+                          "Seller"
+                        : tx.buyer?.name ||
+                          (tx.buyer?.firstName
+                            ? `${tx.buyer.firstName} ${tx.buyer.lastName || ""}`.trim()
+                            : null) ||
+                          tx.buyer?.email ||
+                          tx.buyerEmail ||
+                          "Buyer";
 
-                    return (
-                      <tr
-                        key={tx.id}
-                        className="hover:bg-slate-50/70 transition-colors group"
-                      >
-                        {/* 1. Order ID */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
-                            #{tx.id?.slice(0, 8)}
-                          </span>
-                        </td>
+                      return (
+                        <tr
+                          key={tx.id}
+                          className="hover:bg-slate-50/70 transition-colors group"
+                        >
+                          {/* 1. Order ID */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="inline-flex items-center font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200/80">
+                              #{tx.id?.slice(0, 8)}
+                            </span>
+                          </td>
 
-                        {/* 2. Agreement */}
-                        <td className="py-3 px-3 max-w-[200px]">
-                          <div
-                            className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors truncate"
-                            title={tx.title || tx.description || "Escrow Agreement"}
-                          >
-                            {tx.title || tx.description || "Escrow Agreement"}
-                          </div>
-                        </td>
+                          {/* 2. Agreement */}
+                          <td className="py-3 px-3 max-w-[200px]">
+                            <div
+                              className="font-semibold text-slate-900 group-hover:text-[#32A05F] transition-colors truncate"
+                              title={tx.title || tx.description || "Escrow Agreement"}
+                            >
+                              {tx.title || tx.description || "Escrow Agreement"}
+                            </div>
+                          </td>
 
-                        {/* 3. Role */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span
-                            className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              isBuyer
-                                ? "bg-blue-50 text-blue-700 border border-blue-200"
-                                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            }`}
-                          >
-                            {isBuyer ? "Buyer" : "Seller"}
-                          </span>
-                        </td>
+                          {/* 3. Role */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span
+                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                isBuyer
+                                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              }`}
+                            >
+                              {isBuyer ? "Buyer" : "Seller"}
+                            </span>
+                          </td>
 
-                        {/* 4. Counterparty */}
-                        <td className="py-3 px-3 max-w-[160px]">
-                          <div className="text-xs font-semibold text-slate-800 truncate">
-                            {counterpartyLabel}
-                          </div>
-                        </td>
+                          {/* 4. Counterparty */}
+                          <td className="py-3 px-3 max-w-[160px]">
+                            <div className="text-xs font-semibold text-slate-800 truncate">
+                              {counterpartyLabel}
+                            </div>
+                          </td>
 
-                        {/* 5. Date Column */}
-                        <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
-                          {formatTableDate(tx.createdAt)}
-                        </td>
+                          {/* 5. Date Column */}
+                          <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-700 font-medium">
+                            {formatTableDate(tx.createdAt)}
+                          </td>
 
-                        {/* 6. Time Column */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
-                            {formatTableTime(tx.createdAt)}
-                          </span>
-                        </td>
+                          {/* 6. Time Column */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="font-mono text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 font-semibold">
+                              {formatTableTime(tx.createdAt)}
+                            </span>
+                          </td>
 
-                        {/* 7. Amount Column */}
-                        <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap text-xs sm:text-sm">
-                          ₦
-                          {Number(
-                            tx.totalAmount || tx.amount || 0,
-                          ).toLocaleString()}
-                        </td>
+                          {/* 7. Amount Column */}
+                          <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap text-xs sm:text-sm">
+                            ₦
+                            {Number(
+                              tx.totalAmount || tx.amount || 0,
+                            ).toLocaleString()}
+                          </td>
 
-                        {/* 8. Status */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-[#EBF7F0] text-[#32A05F] border border-[#32A05F]/20 capitalize">
-                            {tx.status?.replace("_", " ").toLowerCase() ||
-                              "Active"}
-                          </span>
-                        </td>
+                          {/* 8. Status */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {getStatusBadge(tx.status)}
+                          </td>
 
-                        {/* 9. Action */}
-                        <td className="py-3 px-3 text-right whitespace-nowrap">
-                          <Link
-                            href={`/transaction/${tx.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold transition-all"
-                          >
-                            Details <ChevronRight className="w-3 h-3" />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          {/* 9. Action */}
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <Link
+                              href={`/transaction/${tx.id}`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0F172A] hover:bg-[#32A05F] text-white text-xs font-semibold transition-all"
+                            >
+                              Details <ChevronRight className="w-3 h-3" />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table Pagination */}
+              <TablePagination
+                currentPage={currentPage}
+                totalItems={transactions.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[5, 10, 20]}
+                itemLabel="orders"
+              />
+            </>
           ) : (
             <div className="py-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mx-auto">
