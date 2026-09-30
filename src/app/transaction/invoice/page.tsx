@@ -20,6 +20,11 @@ import {
   Phone,
   Mail,
   ExternalLink,
+  Truck,
+  QrCode,
+  Laptop,
+  Users2,
+  CreditCard,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
@@ -46,6 +51,9 @@ export default function CreateInvoicePage() {
   const [dealType, setDealType] = useState<"p2p" | "b2b_milestone">(
     isBusiness ? "b2b_milestone" : "p2p"
   );
+
+  const [feePayer, setFeePayer] = useState<"seller" | "buyer" | "split_50_50">("seller");
+  const [deliveryMethod, setDeliveryMethod] = useState<"courier" | "in_person" | "digital">("courier");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -120,10 +128,23 @@ export default function CreateInvoicePage() {
   const effectiveTaxRate = applyTax && dealType === "b2b_milestone" ? taxRate : 0;
   const taxAmount = (baseValue * effectiveTaxRate) / 100;
   const grossInvoiceTotal = baseValue + taxAmount;
+
   const platformFeePercentage =
     Number(process.env.NEXT_PUBLIC_ESCROW_FEE_PERCENTAGE) || 0.5;
   const platformFee = (grossInvoiceTotal * platformFeePercentage) / 100;
-  const netSellerPayout = grossInvoiceTotal - platformFee;
+
+  let buyerFeeShare = 0;
+  let sellerFeeShare = platformFee;
+  if (feePayer === "buyer") {
+    buyerFeeShare = platformFee;
+    sellerFeeShare = 0;
+  } else if (feePayer === "split_50_50") {
+    buyerFeeShare = platformFee / 2;
+    sellerFeeShare = platformFee / 2;
+  }
+
+  const totalBuyerDeposit = grossInvoiceTotal + buyerFeeShare;
+  const netSellerPayout = grossInvoiceTotal - sellerFeeShare;
 
   // Active limit check
   const activeLimit = isBusiness ? kyb.singleLimit : kyc.singleLimit;
@@ -162,6 +183,13 @@ export default function CreateInvoicePage() {
         buyerPhone: buyerPhone.trim() || undefined,
         inspectionPeriod: Number(inspectionPeriod),
         dealType,
+        feePayer,
+        deliveryMethod,
+        platformFee,
+        buyerFeeShare,
+        sellerFeeShare,
+        totalBuyerDeposit,
+        netSellerPayout,
       };
 
       if (dealType === "b2b_milestone") {
@@ -218,7 +246,7 @@ export default function CreateInvoicePage() {
 
     const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
 
-    const cleanPhone = buyerPhone ? buyerPhone.replace(/[^0-9]/g, "") : "";
+    const cleanPhone = buyerPhone ? String(buyerPhone).replace(/[^0-9]/g, "") : "";
     const waUrl = cleanPhone
       ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -228,7 +256,8 @@ export default function CreateInvoicePage() {
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto space-y-8 pb-12">
+      <div className="max-w-3xl mx-auto space-y-8">
+        {/* Back Link */}
         <Link
           href="/transaction"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
@@ -237,106 +266,86 @@ export default function CreateInvoicePage() {
         </Link>
 
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Create Escrow Invoice
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Issue a buyer/seller protected payment agreement with inspection terms.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start">
-            <ShieldCheck className="w-4 h-4 text-[#32A05F]" />
-            <span>
-              {isBusiness ? `B2B ${kyb.title}` : `Personal ${kyc.tierName}`}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#32A05F] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full">
+              Escrow Invoice Generator
             </span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Create Protected Escrow Deal
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Lock buyer funds in PayTrust neutral custody until inspection and delivery requirements are met.
+          </p>
         </div>
 
-        {/* Deal Mode Switcher */}
-        <div className="p-1.5 rounded-2xl bg-slate-100 border border-slate-200 grid grid-cols-2 gap-1.5">
-          <button
-            type="button"
-            onClick={() => setDealType("p2p")}
-            className={`py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              dealType === "p2p"
-                ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <User className="w-4 h-4" />
-            <div className="text-left">
-              <div>Quick Escrow (P2P / B2C)</div>
-              <div className="text-[10px] font-normal text-slate-400">Standard single-delivery transaction</div>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDealType("b2b_milestone")}
-            className={`py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              dealType === "b2b_milestone"
-                ? "bg-[#32A05F] text-white shadow-sm shadow-[#32A05F]/20"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            <div className="text-left">
-              <div>Corporate Contract (B2B)</div>
-              <div className={`text-[10px] font-normal ${dealType === "b2b_milestone" ? "text-white/80" : "text-slate-400"}`}>
-                Milestones, PO number, VAT & legal terms
-              </div>
-            </div>
-          </button>
-        </div>
-
-        {/* Limit Warning Alert */}
-        {isExceedingLimit && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start justify-between gap-3 shadow-sm">
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">
-                  Amount Exceeds Your Current {isBusiness ? kyb.title : kyc.tierName} Limit (₦{activeLimit.toLocaleString()})
-                </span>
-                <span className="text-amber-700 mt-0.5 block">
-                  To create escrow agreements of this volume, upgrade your tier in Profile → Compliance.
-                </span>
-              </div>
-            </div>
-            <Link
-              href="/profile/identity-verification"
-              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 transition-colors"
-            >
-              Upgrade Tier
-            </Link>
-          </div>
-        )}
-
-        {error && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
-            <span>{error}</span>
-          </div>
-        )}
-
+        {/* Form Container */}
         <form
           onSubmit={handleSubmit}
           className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6"
         >
-          {/* Agreement Title */}
+          {error && (
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="font-bold">Cannot Create Invoice</span>
+                <p>{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Deal Type Switcher */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Deal Classification *
+            </label>
+            <div className="grid grid-cols-2 gap-3 p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setDealType("p2p")}
+                className={`py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  dealType === "p2p"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <User className="w-4 h-4 text-[#32A05F]" />
+                Peer-to-Peer (P2P)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDealType("b2b_milestone")}
+                className={`py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  dealType === "b2b_milestone"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <Building2 className="w-4 h-4 text-[#32A05F]" />
+                B2B Milestone Contract
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 px-1">
+              {dealType === "p2p"
+                ? "Ideal for physical goods, electronics, vehicles, and direct one-off sales."
+                : "Ideal for agencies, construction, software projects, and phased corporate deliverables."}
+            </p>
+          </div>
+
+          {/* Title */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Agreement Title / Project Subject *
+              Agreement Title *
             </label>
             <input
               type="text"
               required
               placeholder={
                 dealType === "b2b_milestone"
-                  ? "e.g. Enterprise Cloud Infrastructure & Frontend Modernization"
-                  : "e.g. iPhone 13 Pro Max Delivery / Graphic Design Project"
+                  ? "e.g. Enterprise Fintech Application Development Contract"
+                  : "e.g. iPhone 15 Pro Max 256GB Natural Titanium"
               }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -344,7 +353,7 @@ export default function CreateInvoicePage() {
             />
           </div>
 
-          {/* Buyer Email & WhatsApp / Phone */}
+          {/* Counterparty Contact */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -394,7 +403,7 @@ export default function CreateInvoicePage() {
             </div>
           )}
 
-          {/* Amount (for P2P) */}
+          {/* Amount & Inspection Period (for P2P) */}
           {dealType === "p2p" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -438,6 +447,153 @@ export default function CreateInvoicePage() {
             </div>
           )}
 
+          {/* Delivery & Fulfillment Method */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Fulfillment & Delivery Method *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("courier")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  deliveryMethod === "courier"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                    deliveryMethod === "courier" ? "bg-[#32A05F] text-white" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-900">Courier Shipping</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Carrier dispatch with tracking number & waybill verification.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("in_person")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  deliveryMethod === "in_person"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                    deliveryMethod === "in_person" ? "bg-[#32A05F] text-white" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-900">In-Person Handover</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Local meetup verified via Secret Release OTP & QR handshake.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("digital")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  deliveryMethod === "digital"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                    deliveryMethod === "digital" ? "bg-[#32A05F] text-white" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    <Laptop className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-900">Digital / Service</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Online files, digital accounts, or milestone deliverables.
+                </p>
+              </button>
+            </div>
+          </div>
+
+          {/* Who Pays Escrow Fee Selector */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Escrow Fee Responsibility ({platformFeePercentage}%) *
+              </label>
+              <span className="text-[11px] font-semibold text-[#32A05F]">
+                Total Fee: ₦{platformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setFeePayer("seller")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  feePayer === "seller"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-slate-900">Seller Pays (100%)</span>
+                  {feePayer === "seller" && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F]" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Standard practice. Fee is deducted from seller disbursement.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFeePayer("buyer")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  feePayer === "buyer"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-slate-900">Buyer Pays (100%)</span>
+                  {feePayer === "buyer" && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F]" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Fee is added to buyer's escrow checkout deposit.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFeePayer("split_50_50")}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                  feePayer === "split_50_50"
+                    ? "border-[#32A05F] bg-[#EBF7F0]/60 ring-2 ring-[#32A05F]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-slate-900">50 / 50 Shared Split</span>
+                  {feePayer === "split_50_50" && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F]" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Fair split. Buyer and seller each pay half of the escrow fee.
+                </p>
+              </button>
+            </div>
+          </div>
+
           {/* Milestones (for B2B) */}
           {dealType === "b2b_milestone" && (
             <div className="space-y-4 pt-2">
@@ -474,7 +630,7 @@ export default function CreateInvoicePage() {
                         <button
                           type="button"
                           onClick={() => removeMilestone(m.id)}
-                          className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -562,13 +718,18 @@ export default function CreateInvoicePage() {
 
           {/* Pricing Settlement Box */}
           <div className="p-5 rounded-2xl bg-slate-900 text-white space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Estimated Escrow Settlement Summary
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Escrow Monetization & Payout Summary
+              </h4>
+              <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full">
+                Fee Payer: {feePayer === "buyer" ? "Buyer (100%)" : feePayer === "split_50_50" ? "50/50 Split" : "Seller (100%)"}
+              </span>
+            </div>
 
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-300">
-                <span>Base Transaction Value:</span>
+                <span>Agreed Base Value:</span>
                 <span className="font-semibold text-white">₦{baseValue.toLocaleString()}</span>
               </div>
 
@@ -580,13 +741,38 @@ export default function CreateInvoicePage() {
               )}
 
               <div className="flex justify-between text-slate-300">
-                <span>PayTrust Platform Fee ({platformFeePercentage}%):</span>
-                <span className="font-semibold text-rose-300">-₦{platformFee.toLocaleString()}</span>
+                <span>Total Escrow Protection Fee ({platformFeePercentage}%):</span>
+                <span className="font-semibold text-slate-300">₦{platformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
 
-              <div className="pt-2.5 border-t border-slate-800 flex justify-between text-sm font-bold">
-                <span className="text-white">Net Seller Payout:</span>
-                <span className="text-[#32A05F] text-base">₦{netSellerPayout.toLocaleString()}</span>
+              <div className="flex justify-between text-slate-400 text-[11px] pl-2 border-l border-slate-700">
+                <span>Buyer Fee Share:</span>
+                <span className="text-blue-400 font-semibold">+₦{buyerFeeShare.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+
+              <div className="flex justify-between text-slate-400 text-[11px] pl-2 border-l border-slate-700">
+                <span>Seller Fee Share:</span>
+                <span className="text-rose-400 font-semibold">-₦{sellerFeeShare.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+
+              <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 gap-3 text-xs">
+                <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
+                  <span className="text-[10px] text-blue-300 uppercase font-bold block">
+                    Buyer Deposit Total
+                  </span>
+                  <span className="text-sm font-bold text-white">
+                    ₦{totalBuyerDeposit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
+                  <span className="text-[10px] text-emerald-300 uppercase font-bold block">
+                    Net Seller Disbursement
+                  </span>
+                  <span className="text-sm font-bold text-[#32A05F]">
+                    ₦{netSellerPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -83,6 +83,26 @@ export const authService = {
     return extract(res);
   },
 
+  initiateClaim: async (payload: {
+    email?: string;
+    phone?: string;
+    password?: string;
+    transactionId?: string;
+  }) => {
+    const res = await apiClient.post("/auth/claim/initiate", payload);
+    return extract(res);
+  },
+
+  completeClaim: async (payload: {
+    email?: string;
+    phone?: string;
+    otp: string;
+    transactionId?: string;
+  }) => {
+    const res = await apiClient.post("/auth/claim/complete", payload);
+    return extract(res);
+  },
+
   logout: async () => {
     const res = await apiClient.post("/auth/logout");
     return extract(res);
@@ -192,6 +212,25 @@ export const transactionService = {
 
   confirmDelivery: async (transactionId: string) => {
     const res = await apiClient.post(`/transactions/${transactionId}/confirm`);
+    return extract(res);
+  },
+
+  cancelTransaction: async (transactionId: string, reason?: string) => {
+    const res = await apiClient.post(`/transactions/${transactionId}/cancel`, {
+      reason,
+    });
+    return extract(res);
+  },
+
+  verifyReleaseOtp: async (transactionId: string, otp: string) => {
+    const res = await apiClient.post(`/transactions/${transactionId}/verify-otp`, {
+      otp,
+    });
+    return extract(res);
+  },
+
+  autoReleaseSettlement: async (transactionId: string) => {
+    const res = await apiClient.post(`/transactions/${transactionId}/auto-release`);
     return extract(res);
   },
 

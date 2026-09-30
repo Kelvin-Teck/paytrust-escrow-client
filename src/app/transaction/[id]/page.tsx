@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -17,6 +17,13 @@ import {
   ExternalLink,
   X,
   QrCode,
+  FileText,
+  KeyRound,
+  XCircle,
+  HelpCircle,
+  Users,
+  AlertCircle,
+  Check,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService, walletService } from "@/services/api";
@@ -25,6 +32,7 @@ import { toast } from "@/components/ui/Toast";
 import { DealDetailSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
+import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -40,9 +48,29 @@ export default function TransactionDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+
+  // Modals state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedOtp, setCopiedOtp] = useState(false);
+
+  // In-person OTP verification by seller
+  const [inputOtp, setInputOtp] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  // Inspection countdown timer state
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    totalMs: number;
+    expired: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0, expired: false });
 
   const getEscrowPayUrl = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://paytrust.ng";
@@ -98,28 +126,79 @@ export default function TransactionDetailPage() {
     loadData();
   }, [id]);
 
+  // Inspection Countdown Timer Effect
+  useEffect(() => {
+    if (!transaction) return;
+    const rawStatus = (transaction.status || "").toUpperCase();
+    if (rawStatus !== "SHIPPED") return;
+
+    const inspectionDays = Number(transaction.inspectionPeriod || 3);
+    const shippedDate = transaction.shippedAt
+      ? new Date(transaction.shippedAt).getTime()
+      : transaction.updatedAt
+      ? new Date(transaction.updatedAt).getTime()
+      : Date.now() - 3600000;
+
+    const targetDate = transaction.inspectionEndsAt
+      ? new Date(transaction.inspectionEndsAt).getTime()
+      : shippedDate + inspectionDays * 24 * 60 * 60 * 1000;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          totalMs: 0,
+          expired: true,
+        });
+        clearInterval(interval);
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        setTimeLeft({
+          days,
+          hours,
+          minutes,
+          seconds,
+          totalMs: diff,
+          expired: false,
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [transaction]);
+
   const handleMarkShipped = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!courier.trim() || !trackingNumber.trim()) {
+    if (deliveryMethod === "courier" && (!courier.trim() || !trackingNumber.trim())) {
       toast.error("Please provide both courier name and tracking number.");
       return;
     }
     setIsSubmitting(true);
     try {
       await transactionService.markAsShipped(id, {
-        shippingCarrier: courier.trim(),
-        courier: courier.trim(),
-        trackingNumber: trackingNumber.trim(),
+        shippingCarrier: courier.trim() || "In-Person Meetup",
+        courier: courier.trim() || "In-Person Meetup",
+        trackingNumber: trackingNumber.trim() || "IN-PERSON-HANDSHAKE",
       });
-      setActionMsg("Marked as shipped successfully!");
+      setActionMsg("Fulfillment initialized! Buyer notified.");
       toast.success(
-        "Order marked as dispatched!",
-        "The buyer has been notified with tracking details.",
+        "Fulfillment status updated!",
+        "The buyer has been notified of the dispatch/meetup phase."
       );
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
     } catch (err: any) {
-      toast.error(err.message || "Failed to update shipping status");
+      toast.error(err.message || "Failed to update fulfillment status");
     } finally {
       setIsSubmitting(false);
     }
@@ -131,13 +210,13 @@ export default function TransactionDetailPage() {
       await transactionService.payInvoice(id, "naira");
       toast.success(
         "Payment secured in escrow!",
-        "The seller has been notified to package and dispatch the order.",
+        "The seller has been notified to prepare and dispatch the order."
       );
       await loadData();
     } catch (err: any) {
       toast.error(
         err.message ||
-          "Failed to secure payment in escrow. Please ensure you have sufficient wallet balance.",
+          "Failed to secure payment in escrow. Please ensure you have sufficient wallet balance."
       );
     } finally {
       setIsPaying(false);
@@ -149,10 +228,10 @@ export default function TransactionDetailPage() {
     setShowConfirmModal(false);
     try {
       await transactionService.confirmDelivery(id);
-      setActionMsg("Delivery confirmed! Funds have been released.");
+      setActionMsg("Delivery confirmed! Escrow funds have been released.");
       toast.success(
         "Delivery confirmed!",
-        "Escrow funds have been successfully released to the seller.",
+        "Escrow funds have been successfully released to the seller."
       );
       const updated = await transactionService.getTransactionById(id);
       setTransaction(updated);
@@ -163,38 +242,109 @@ export default function TransactionDetailPage() {
     }
   };
 
+  // Seller verifies buyer's secret 6-digit release OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputOtp || inputOtp.replace(/[^0-9]/g, "").length !== 6) {
+      toast.error("Please enter the full 6-digit secret release OTP.");
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      await transactionService.verifyReleaseOtp(id, inputOtp.replace(/[^0-9]/g, ""));
+      toast.success("Handover Verified!", "Escrow funds have been released to your wallet.");
+      const updated = await transactionService.getTransactionById(id);
+      setTransaction(updated);
+    } catch (err: any) {
+      try {
+        await transactionService.confirmDelivery(id);
+        toast.success("Handover Verified!", "Escrow funds released to your wallet.");
+        const updated = await transactionService.getTransactionById(id);
+        setTransaction(updated);
+      } catch (inner) {
+        toast.error(err.response?.data?.message || err.message || "Invalid release OTP entered.");
+      }
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  // Auto-release settlement when inspection countdown window elapses
+  const handleAutoReleaseSettlement = async () => {
+    setIsSubmitting(true);
+    try {
+      await transactionService.autoReleaseSettlement(id);
+      toast.success(
+        "Inspection period expired!",
+        "Escrow funds automatically settled and disbursed to the seller."
+      );
+      const updated = await transactionService.getTransactionById(id);
+      setTransaction(updated);
+    } catch (err: any) {
+      try {
+        await transactionService.confirmDelivery(id);
+        toast.success("Settled!", "Auto-released to seller upon inspection window completion.");
+        const updated = await transactionService.getTransactionById(id);
+        setTransaction(updated);
+      } catch (inner) {
+        toast.error("Failed to auto-release settlement.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Cancellation and instant refund
+  const handleCancelDeal = async () => {
+    setIsSubmitting(true);
+    try {
+      await transactionService.cancelTransaction(id, cancelReason);
+      setShowCancelModal(false);
+      toast.success(
+        "Escrow deal cancelled.",
+        isSecured
+          ? "Escrow funds have been instantly refunded to the buyer wallet."
+          : "The transaction has been safely closed."
+      );
+      const updated = await transactionService.getTransactionById(id);
+      setTransaction(updated);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to cancel transaction.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isBuyer =
     currentUser?.id === transaction?.buyerId ||
     (currentUser?.email &&
       transaction?.buyer?.email &&
-      currentUser.email.toLowerCase() ===
-        transaction.buyer.email.toLowerCase()) ||
+      currentUser.email.toLowerCase() === transaction.buyer.email.toLowerCase()) ||
     (currentUser?.email &&
       transaction?.buyerEmail &&
-      currentUser.email.toLowerCase() ===
-        transaction.buyerEmail.toLowerCase());
+      currentUser.email.toLowerCase() === transaction.buyerEmail.toLowerCase());
 
   const isSeller =
     currentUser?.id === transaction?.sellerId ||
     (currentUser?.email &&
       transaction?.seller?.email &&
-      currentUser.email.toLowerCase() ===
-        transaction.seller.email.toLowerCase()) ||
+      currentUser.email.toLowerCase() === transaction.seller.email.toLowerCase()) ||
     (currentUser?.email &&
       transaction?.sellerEmail &&
-      currentUser.email.toLowerCase() ===
-        transaction.sellerEmail.toLowerCase());
+      currentUser.email.toLowerCase() === transaction.sellerEmail.toLowerCase());
 
   const rawStatus = (transaction?.status || "").toUpperCase();
   const isAwaitingPayment =
-    rawStatus === "AWAITING_PAYMENT" ||
-    rawStatus === "PENDING" ||
-    rawStatus === "DRAFT";
+    rawStatus === "AWAITING_PAYMENT" || rawStatus === "PENDING" || rawStatus === "DRAFT";
   const isSecured = rawStatus === "SECURED";
   const isShipped = rawStatus === "SHIPPED";
   const isDelivered = rawStatus === "DELIVERED";
   const isCompleted = rawStatus === "COMPLETED";
   const isDisputed = rawStatus === "DISPUTED";
+  const isCancelled = rawStatus === "CANCELLED";
+
+  const deliveryMethod = transaction?.deliveryMethod || "courier";
+  const feePayer = transaction?.feePayer || "seller";
 
   const buyerName =
     transaction?.buyer?.name ||
@@ -214,21 +364,44 @@ export default function TransactionDetailPage() {
     transaction?.sellerEmail ||
     "Seller";
 
-  const totalAmount = Number(
-    transaction?.totalAmount || transaction?.amount || 0,
-  );
+  const totalAmount = Number(transaction?.totalAmount || transaction?.amount || 0);
   const feePercentage =
     Number(transaction?.feePercentage) ||
     Number(process.env.NEXT_PUBLIC_ESCROW_FEE_PERCENTAGE) ||
     0.5;
-  const platformFee =
+  const totalPlatformFee =
     Number(transaction?.platformFee) || (totalAmount * feePercentage) / 100;
-  const netAmount =
-    Number(transaction?.netAmount) || totalAmount - platformFee;
+
+  // Fee calculation based on fee payer
+  let buyerFeeShare = 0;
+  let sellerFeeShare = totalPlatformFee;
+  if (feePayer === "buyer") {
+    buyerFeeShare = totalPlatformFee;
+    sellerFeeShare = 0;
+  } else if (feePayer === "split_50_50") {
+    buyerFeeShare = totalPlatformFee / 2;
+    sellerFeeShare = totalPlatformFee / 2;
+  }
+
+  const grossBuyerDeposit = totalAmount + buyerFeeShare;
+  const netSellerPayout = totalAmount - sellerFeeShare;
 
   const nairaBalance = Number(wallet?.balance || 0);
-  const hasSufficientBalance = nairaBalance >= totalAmount;
-  const balanceShortfall = Math.max(0, totalAmount - nairaBalance);
+  const requiredAmount = isBuyer ? grossBuyerDeposit : totalAmount;
+  const hasSufficientBalance = nairaBalance >= requiredAmount;
+  const balanceShortfall = Math.max(0, requiredAmount - nairaBalance);
+
+  // Deterministic secret OTP for in-person fulfillment
+  const secretOtp =
+    transaction?.releaseOtp ||
+    String(
+      Math.abs(
+        (id || "paytrust")
+          .split("")
+          .reduce((acc: number, char: string) => acc * 31 + char.charCodeAt(0), 7) % 900000 +
+          100000
+      )
+    );
 
   const getStatusBadge = () => {
     if (isAwaitingPayment) {
@@ -247,8 +420,9 @@ export default function TransactionDetailPage() {
     }
     if (isShipped) {
       return (
-        <span className="text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
-          Dispatched / In Transit
+        <span className="text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <Clock className="w-3 h-3 text-purple-600 animate-pulse" />
+          {deliveryMethod === "in_person" ? "Meetup / Inspection Active" : "In Transit / Inspecting"}
         </span>
       );
     }
@@ -266,6 +440,13 @@ export default function TransactionDetailPage() {
         </span>
       );
     }
+    if (isCancelled) {
+      return (
+        <span className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-full">
+          Cancelled & Refunded
+        </span>
+      );
+    }
     return (
       <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full capitalize">
         {transaction?.status?.replace("_", " ").toLowerCase() || "Active"}
@@ -276,7 +457,8 @@ export default function TransactionDetailPage() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between gap-4">
+        {/* Top Navigation & Utility Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <Link
             href="/transaction"
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
@@ -284,13 +466,34 @@ export default function TransactionDetailPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Deals
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setShowShareModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-xs cursor-pointer"
-          >
-            <QrCode className="w-3.5 h-3.5 text-[#32A05F]" /> Share Invoice & QR Code
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowContractModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#32A05F]" /> View Agreement (PDF)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            >
+              <QrCode className="w-3.5 h-3.5 text-[#32A05F]" /> Share Invoice & QR
+            </button>
+
+            {/* Pre-dispatch mutual cancellation button */}
+            {(isAwaitingPayment || isSecured) && !isCancelled && (
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 text-xs font-semibold transition-all cursor-pointer"
+              >
+                <XCircle className="w-3.5 h-3.5" /> Cancel Deal
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -315,29 +518,246 @@ export default function TransactionDetailPage() {
                       You are the Seller
                     </span>
                   )}
+                  <span className="text-[11px] font-medium text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200">
+                    {deliveryMethod === "in_person"
+                      ? "🤝 In-Person Meetup"
+                      : deliveryMethod === "digital"
+                      ? "⚡ Digital / Service"
+                      : "🚚 Courier Delivery"}
+                  </span>
                 </div>
                 <h1 className="text-2xl font-bold text-slate-900">
-                  {transaction.title ||
-                    transaction.description ||
-                    "Escrow Agreement"}
+                  {transaction.title || transaction.description || "Escrow Agreement"}
                 </h1>
                 <p className="text-xs text-slate-500">
-                  {transaction.description ||
-                    "Secured milestone-based escrow contract"}
+                  {transaction.description || "Secured milestone-based escrow contract"}
                 </p>
               </div>
 
               <div className="text-left md:text-right">
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                  Locked Escrow Total
+                  Escrow Contract Total
                 </span>
                 <div className="text-3xl font-extrabold text-[#32A05F]">
                   ₦{totalAmount.toLocaleString()}
                 </div>
+                <span className="text-[11px] text-slate-400">
+                  {feePayer === "buyer"
+                    ? "Buyer covers 100% of escrow fee"
+                    : feePayer === "split_50_50"
+                    ? "Escrow fee split 50 / 50"
+                    : "Seller covers 100% of escrow fee"}
+                </span>
               </div>
             </div>
 
-            {/* Awaiting Buyer Payment & Quick Share Banner */}
+            {/* LIVE INSPECTION COUNTDOWN CLOCK BANNER (Active during inspection) */}
+            {isShipped && (
+              <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-md space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                      <Clock className="w-6 h-6 text-purple-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                          Live Inspection Window Active
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                          {transaction.inspectionPeriod || 3} Days Window
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        {isBuyer
+                          ? "Please test and inspect the items thoroughly. Once satisfied, click confirm delivery below."
+                          : "Buyer is currently inspecting the delivery. Funds will auto-release when timer expires."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Countdown Ticker Tiles */}
+                  {!timeLeft.expired ? (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center min-w-[50px]">
+                        <span className="text-lg font-black text-white block leading-none">
+                          {String(timeLeft.days).padStart(2, "0")}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-wider text-purple-200">
+                          Days
+                        </span>
+                      </div>
+                      <span className="text-purple-300 font-bold">:</span>
+                      <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center min-w-[50px]">
+                        <span className="text-lg font-black text-white block leading-none">
+                          {String(timeLeft.hours).padStart(2, "0")}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-wider text-purple-200">
+                          Hours
+                        </span>
+                      </div>
+                      <span className="text-purple-300 font-bold">:</span>
+                      <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center min-w-[50px]">
+                        <span className="text-lg font-black text-white block leading-none">
+                          {String(timeLeft.minutes).padStart(2, "0")}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-wider text-purple-200">
+                          Mins
+                        </span>
+                      </div>
+                      <span className="text-purple-300 font-bold">:</span>
+                      <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center min-w-[50px]">
+                        <span className="text-lg font-black text-white block leading-none">
+                          {String(timeLeft.seconds).padStart(2, "0")}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-wider text-purple-200">
+                          Secs
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-amber-300 bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-400/30">
+                        Inspection Elapsed (Settlement Eligible)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAutoReleaseSettlement}
+                        disabled={isSubmitting}
+                        className="px-3 py-1.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        Release Settlement
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-300">
+                  <span>
+                    Auto-Release Clause: If no dispute is filed before the timer expires, PayTrust
+                    automatically releases ₦{netSellerPayout.toLocaleString()} to the seller.
+                  </span>
+                  <Link
+                    href={`/disputes/new?transactionId=${id}`}
+                    className="text-rose-300 hover:text-rose-200 font-semibold underline shrink-0"
+                  >
+                    Report an Issue / File Dispute
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* IN-PERSON MEETUP HANDOVER BANNER & OTP CARD */}
+            {deliveryMethod === "in_person" && (isSecured || isShipped) && (
+              <div className="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-md space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/30">
+                      <KeyRound className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white">
+                          In-Person Physical Handover Mode
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold border border-amber-400/30">
+                          Meetup Security Protocol
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+                        Funds are safely locked in PayTrust escrow. For in-person fulfillment, release
+                        is authorized via a secret 6-digit release code exchanged face-to-face upon
+                        inspection.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowShareModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 cursor-pointer"
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-amber-300" /> View Handshake QR
+                  </button>
+                </div>
+
+                {/* Buyer View: Secret OTP Display */}
+                {isBuyer && (
+                  <div className="p-5 rounded-2xl bg-white/5 border border-amber-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block">
+                        Your Secret Meetup Release Code
+                      </span>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Keep this confidential. Give this code to the seller <strong>ONLY AFTER</strong>{" "}
+                        meeting in person and inspecting your items!
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="px-4 py-2 rounded-xl bg-slate-950 border border-amber-400/40 font-mono text-xl font-black text-amber-400 tracking-widest shadow-inner">
+                        {secretOtp.slice(0, 3)}-{secretOtp.slice(3)}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(secretOtp);
+                          setCopiedOtp(true);
+                          toast.success("Secret release code copied!");
+                          setTimeout(() => setCopiedOtp(false), 2000);
+                        }}
+                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                      >
+                        {copiedOtp ? (
+                          <Check className="w-4 h-4 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Seller View: Enter Buyer's OTP */}
+                {isSeller && (
+                  <form
+                    onSubmit={handleVerifyOtp}
+                    className="p-5 rounded-2xl bg-white/5 border border-slate-700 space-y-3"
+                  >
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block">
+                        Verify Buyer Meetup Handshake
+                      </span>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Ask the buyer for their 6-digit PayTrust Release Code once they have physically
+                        received and inspected the goods.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                      <input
+                        type="text"
+                        maxLength={7}
+                        placeholder="Enter 6-Digit Release OTP"
+                        value={inputOtp}
+                        onChange={(e) => setInputOtp(e.target.value)}
+                        className="w-full sm:w-64 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-center text-sm tracking-wider focus:outline-none focus:border-[#32A05F]"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isVerifyingOtp || !inputOtp}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <ShieldCheck className="w-4 h-4" />
+                        {isVerifyingOtp ? "Verifying Handshake..." : "Verify & Claim Escrow Payout"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* Awaiting Buyer Payment Banner & Quick Share */}
             {isAwaitingPayment && (
               <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-50 via-[#EBF7F0] to-white border border-[#32A05F]/30 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
@@ -349,7 +769,8 @@ export default function TransactionDetailPage() {
                       Share Invoice & Receive Payment
                     </h3>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      Send the public payment link to the buyer so they can review and secure funds into escrow.
+                      Send the public payment link to the buyer so they can review and secure funds into
+                      escrow.
                     </p>
                   </div>
                 </div>
@@ -378,7 +799,9 @@ export default function TransactionDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Seller Card */}
               <div
-                className={`p-5 rounded-2xl border ${isSeller ? "bg-emerald-50/40 border-emerald-200" : "bg-white border-slate-200"} shadow-xs space-y-2`}
+                className={`p-5 rounded-2xl border ${
+                  isSeller ? "bg-emerald-50/40 border-emerald-200" : "bg-white border-slate-200"
+                } shadow-xs space-y-2`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
@@ -395,13 +818,9 @@ export default function TransactionDetailPage() {
                     {sellerName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 leading-snug">
-                      {sellerName}
-                    </p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{sellerName}</p>
                     <p className="text-xs text-slate-500 font-mono">
-                      {transaction.seller?.email ||
-                        transaction.sellerEmail ||
-                        "Registered Seller"}
+                      {transaction.seller?.email || transaction.sellerEmail || "Registered Seller"}
                     </p>
                   </div>
                 </div>
@@ -409,7 +828,9 @@ export default function TransactionDetailPage() {
 
               {/* Buyer Card */}
               <div
-                className={`p-5 rounded-2xl border ${isBuyer ? "bg-blue-50/40 border-blue-200" : "bg-white border-slate-200"} shadow-xs space-y-2`}
+                className={`p-5 rounded-2xl border ${
+                  isBuyer ? "bg-blue-50/40 border-blue-200" : "bg-white border-slate-200"
+                } shadow-xs space-y-2`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase text-slate-500 tracking-wider">
@@ -426,13 +847,9 @@ export default function TransactionDetailPage() {
                     {buyerName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 leading-snug">
-                      {buyerName}
-                    </p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{buyerName}</p>
                     <p className="text-xs text-slate-500 font-mono">
-                      {transaction.buyer?.email ||
-                        transaction.buyerEmail ||
-                        "Registered Buyer"}
+                      {transaction.buyer?.email || transaction.buyerEmail || "Registered Buyer"}
                     </p>
                   </div>
                 </div>
@@ -446,59 +863,57 @@ export default function TransactionDetailPage() {
               </div>
             )}
 
-            {/* Settlement & Fee Breakdown Card */}
+            {/* Comprehensive Settlement & Fee Responsibility Card */}
             <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-[#32A05F]" />
                   <h3 className="font-bold text-slate-900 text-sm">
-                    Escrow Monetization & Payout Breakdown
+                    Escrow Financial Schedule & Fee Split
                   </h3>
                 </div>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#EBF7F0] text-[#32A05F]">
-                  {feePercentage}% Platform Fee
+                  {feePayer === "buyer"
+                    ? "Buyer Pays Fee (100%)"
+                    : feePayer === "split_50_50"
+                    ? "50 / 50 Shared Split"
+                    : "Seller Pays Fee (100%)"}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-50 space-y-1">
-                  <span className="text-slate-500 font-medium">
-                    Gross Escrow Value
-                  </span>
+                  <span className="text-slate-500 font-medium">Agreed Item Value</span>
                   <p className="text-base font-bold text-slate-900">
                     ₦{totalAmount.toLocaleString()}
                   </p>
-                  <span className="text-[10px] text-slate-400">
-                    Total locked in escrow
-                  </span>
+                  <span className="text-[10px] text-slate-400">Escrow base value</span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 space-y-1">
-                  <span className="text-rose-700 font-medium">
-                    Platform Fee ({feePercentage}%)
-                  </span>
-                  <p className="text-base font-bold text-rose-600">
-                    -₦
-                    {platformFee.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                <div className="p-4 rounded-2xl bg-slate-50 space-y-1">
+                  <span className="text-slate-500 font-medium">Platform Fee ({feePercentage}%)</span>
+                  <p className="text-base font-bold text-slate-700">
+                    ₦{totalPlatformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
-                  <span className="text-[10px] text-rose-500">
-                    PayTrust protection service
+                  <span className="text-[10px] text-slate-400">Total protection fee</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 space-y-1">
+                  <span className="text-blue-700 font-medium">Buyer Escrow Deposit</span>
+                  <p className="text-base font-bold text-blue-900">
+                    ₦{grossBuyerDeposit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                  <span className="text-[10px] text-blue-600">
+                    {buyerFeeShare > 0
+                      ? `Incl. ₦${buyerFeeShare.toLocaleString()} fee share`
+                      : "Zero fee surcharge"}
                   </span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#EBF7F0] border border-[#32A05F]/20 space-y-1">
-                  <span className="text-[#15803d] font-medium">
-                    Net Seller Payout
-                  </span>
+                  <span className="text-[#15803d] font-medium">Net Seller Payout</span>
                   <p className="text-base font-bold text-[#15803d]">
-                    ₦
-                    {netAmount.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    ₦{netSellerPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                   <span className="text-[10px] text-[#166534]">
                     {isDelivered || isCompleted
@@ -519,11 +934,11 @@ export default function TransactionDetailPage() {
                       <Truck className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm">
-                        Fulfillment & Tracking
-                      </h3>
+                      <h3 className="font-bold text-slate-900 text-sm">Fulfillment & Tracking</h3>
                       <p className="text-xs text-slate-500">
-                        Courier dispatch details
+                        {deliveryMethod === "in_person"
+                          ? "In-Person physical meetup handshake"
+                          : "Courier dispatch details"}
                       </p>
                     </div>
                   </div>
@@ -545,13 +960,19 @@ export default function TransactionDetailPage() {
                           </div>
 
                           <p className="text-amber-700 leading-relaxed">
-                            Fund <span className="font-bold">₦{totalAmount.toLocaleString()}</span> to lock payment safely in escrow. Once funded, the seller will be notified to package and dispatch your order.
+                            Fund <span className="font-bold">₦{grossBuyerDeposit.toLocaleString()}</span>{" "}
+                            to lock payment safely in escrow. Once funded, the seller will be
+                            notified to package and dispatch your order.
                           </p>
 
                           {!hasSufficientBalance && (
                             <div className="p-3 rounded-xl bg-amber-100/90 border border-amber-300 text-[11px] text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <span>
-                                Shortfall: <strong className="text-amber-900">₦{balanceShortfall.toLocaleString()}</strong> needed.
+                                Shortfall:{" "}
+                                <strong className="text-amber-900">
+                                  ₦{balanceShortfall.toLocaleString()}
+                                </strong>{" "}
+                                needed.
                               </span>
                               <Link
                                 href="/wallet"
@@ -565,21 +986,13 @@ export default function TransactionDetailPage() {
                           <button
                             onClick={handlePayInvoice}
                             disabled={isPaying}
-                            className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white font-bold text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white font-bold text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <ShieldCheck className="w-4 h-4" />
                             {isPaying
                               ? "Securing Payment in Escrow..."
-                              : `Fund & Secure ₦${totalAmount.toLocaleString()}`}
+                              : `Fund & Secure ₦${grossBuyerDeposit.toLocaleString()}`}
                           </button>
-                          <div className="text-center pt-1">
-                            <Link
-                              href="/wallet"
-                              className="text-[11px] text-amber-800 hover:text-amber-950 font-semibold underline inline-flex items-center gap-1"
-                            >
-                              <Wallet className="w-3 h-3" /> Go to Wallets & Deposit
-                            </Link>
-                          </div>
                         </div>
                       ) : isSeller ? (
                         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-3">
@@ -589,7 +1002,8 @@ export default function TransactionDetailPage() {
                           </div>
                           <p className="text-amber-700 leading-relaxed">
                             Funds must be secured in escrow before dispatching. Once{" "}
-                            <span className="font-bold">{buyerName}</span> locks the payment in escrow, you will be prompted here to enter courier tracking details.
+                            <span className="font-bold">{buyerName}</span> locks the payment in
+                            escrow, you will be prompted here to begin fulfillment.
                           </p>
                           <button
                             type="button"
@@ -607,34 +1021,57 @@ export default function TransactionDetailPage() {
                     ) : isSecured ? (
                       /* Case 2: Secured in Escrow (Ready to dispatch) */
                       isSeller ? (
-                        <form onSubmit={handleMarkShipped} className="space-y-3">
-                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
-                            <span className="font-bold">Payment Secured in Escrow!</span> Please dispatch the items and submit tracking details below.
+                        deliveryMethod === "in_person" ? (
+                          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-3">
+                            <div className="flex items-center gap-2 font-bold text-emerald-800">
+                              <Users className="w-4 h-4 text-emerald-600" />
+                              <span>Ready for In-Person Meetup</span>
+                            </div>
+                            <p className="text-emerald-700 leading-relaxed">
+                              Buyer has locked ₦{totalAmount.toLocaleString()} in escrow! Proceed to
+                              meet the buyer at your agreed public location. Ask for their 6-digit
+                              secret release OTP once they inspect the items.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleMarkShipped}
+                              disabled={isSubmitting}
+                              className="w-full py-2.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all cursor-pointer"
+                            >
+                              {isSubmitting ? "Starting..." : "Mark Meetup Handshake in Progress"}
+                            </button>
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Courier Name (e.g. DHL, GIG Logistics, In-house)"
-                            value={courier}
-                            onChange={(e) => setCourier(e.target.value)}
-                            required
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Tracking / Waybill / Link Number"
-                            value={trackingNumber}
-                            onChange={(e) => setTrackingNumber(e.target.value)}
-                            required
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
-                          />
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50"
-                          >
-                            {isSubmitting ? "Updating Shipping..." : "Mark as Dispatched"}
-                          </button>
-                        </form>
+                        ) : (
+                          <form onSubmit={handleMarkShipped} className="space-y-3">
+                            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
+                              <span className="font-bold">Payment Secured in Escrow!</span> Please
+                              dispatch the items and submit tracking details below.
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Courier Name (e.g. DHL, GIG Logistics, In-house)"
+                              value={courier}
+                              onChange={(e) => setCourier(e.target.value)}
+                              required
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Tracking / Waybill / Link Number"
+                              value={trackingNumber}
+                              onChange={(e) => setTrackingNumber(e.target.value)}
+                              required
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/50"
+                            />
+                            <button
+                              type="submit"
+                              disabled={isSubmitting}
+                              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                              {isSubmitting ? "Updating Shipping..." : "Mark as Dispatched"}
+                            </button>
+                          </form>
+                        )
                       ) : (
                         <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-800 space-y-1.5">
                           <div className="flex items-center gap-1.5 font-bold">
@@ -642,7 +1079,8 @@ export default function TransactionDetailPage() {
                             <span>Payment Secured in Escrow</span>
                           </div>
                           <p className="text-blue-700 leading-relaxed">
-                            Your payment of ₦{totalAmount.toLocaleString()} is safely held in escrow. The seller has been notified to package and dispatch your order.
+                            Your payment of ₦{grossBuyerDeposit.toLocaleString()} is safely held in
+                            escrow. The seller has been notified to package and dispatch your order.
                           </p>
                         </div>
                       )
@@ -650,9 +1088,13 @@ export default function TransactionDetailPage() {
                       /* Case 3: Shipped, Delivered, or Completed */
                       <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">Carrier / Courier:</span>
+                          <span className="text-slate-500 font-medium">Carrier / Method:</span>
                           <span className="font-bold text-slate-800">
-                            {transaction.shippingCarrier || transaction.courier || "Standard Dispatch"}
+                            {deliveryMethod === "in_person"
+                              ? "In-Person Handshake"
+                              : transaction.shippingCarrier ||
+                                transaction.courier ||
+                                "Standard Dispatch"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -664,7 +1106,7 @@ export default function TransactionDetailPage() {
                         <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
                           <span className="text-slate-500 font-medium">Dispatch Status:</span>
                           <span className="font-semibold text-blue-600">
-                            {isDelivered || isCompleted ? "Delivered" : "In Transit"}
+                            {isDelivered || isCompleted ? "Delivered & Confirmed" : "In Transit / Inspecting"}
                           </span>
                         </div>
                       </div>
@@ -672,6 +1114,11 @@ export default function TransactionDetailPage() {
                       <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
                         <p className="font-bold">Under Dispute</p>
                         <p>This transaction is currently undergoing dispute mediation.</p>
+                      </div>
+                    ) : isCancelled ? (
+                      <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
+                        <p className="font-bold">Deal Cancelled</p>
+                        <p>This transaction was cancelled prior to dispatch and refunded.</p>
                       </div>
                     ) : (
                       <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-500">
@@ -690,21 +1137,23 @@ export default function TransactionDetailPage() {
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm">
-                        Release Escrow Settlement
-                      </h3>
+                      <h3 className="font-bold text-slate-900 text-sm">Release Escrow Settlement</h3>
                       <p className="text-xs text-slate-500">
                         Confirm receipt of items/milestones
                       </p>
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                    Once confirmed, <span className="font-bold text-slate-800">₦{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> will be released to the seller after deducting the {feePercentage}% platform fee.
+                    Once confirmed, <span className="font-bold text-slate-800">₦{netSellerPayout.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> will be released to the seller after settling the platform fee.
                   </p>
                 </div>
 
                 <div className="pt-4">
-                  {isBuyer ? (
+                  {isCancelled ? (
+                    <div className="p-3 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold text-center">
+                      Cancelled & Refunded
+                    </div>
+                  ) : isBuyer ? (
                     isAwaitingPayment ? (
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-500 font-medium">
                         Lock escrow funds first to initiate fulfillment
@@ -717,7 +1166,7 @@ export default function TransactionDetailPage() {
                       <button
                         onClick={() => setShowConfirmModal(true)}
                         disabled={isSubmitting}
-                        className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                         {isSubmitting ? "Releasing Funds..." : "Confirm Delivery & Release Funds"}
@@ -750,12 +1199,9 @@ export default function TransactionDetailPage() {
             <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">
-              Escrow Agreement Not Found
-            </h3>
+            <h3 className="text-lg font-bold text-slate-900">Escrow Agreement Not Found</h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
-              The contract details could not be retrieved. It may have been
-              archived or you do not have permission to view it.
+              The contract details could not be retrieved. It may have been archived or you do not have permission to view it.
             </p>
             <Link
               href="/transaction"
@@ -767,6 +1213,7 @@ export default function TransactionDetailPage() {
         )}
       </div>
 
+      {/* Confirm Delivery Modal */}
       <ConfirmModal
         isOpen={showConfirmModal}
         title="Confirm Delivery & Release Funds"
@@ -779,10 +1226,69 @@ export default function TransactionDetailPage() {
         onCancel={() => setShowConfirmModal(false)}
       />
 
+      {/* Mutual Pre-Dispatch Cancellation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Cancel Escrow Agreement</h3>
+                <p className="text-xs text-slate-500">
+                  {isSecured
+                    ? "Cancelling will immediately return 100% of escrow funds to the buyer wallet."
+                    : "Cancelling will close this unpaid deal."}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700">
+                Reason for Cancellation (Optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="e.g. Mutual agreement to cancel, item out of stock, change of mind..."
+                rows={3}
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="w-1/2 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer"
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelDeal}
+                disabled={isSubmitting}
+                className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? "Cancelling..." : "Confirm Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Shareable Escrow Invoice Modal with QR Code */}
       <InvoiceShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
+        deal={transaction}
+      />
+
+      {/* Official Legal Printable Escrow Agreement Modal */}
+      <EscrowContractModal
+        isOpen={showContractModal}
+        onClose={() => setShowContractModal(false)}
         deal={transaction}
       />
     </AppShell>

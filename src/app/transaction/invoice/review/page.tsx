@@ -3,14 +3,40 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Copy, ArrowRight, QrCode } from "lucide-react";
+import { ArrowLeft, Copy, ArrowRight, QrCode, FileText } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
+import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 
 export default function InvoiceReviewPage() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+
+  const sampleDeal = {
+    id: "INV-2026-9824",
+    title: "Project Architecture & Wireframes",
+    description: "Milestone-based web development contract with architecture and wireframes",
+    dealType: "b2b_milestone",
+    deliveryMethod: "digital",
+    feePayer: "seller",
+    totalAmount: 500000,
+    amount: 500000,
+    feePercentage: 0.5,
+    platformFee: 2500,
+    netAmount: 497500,
+    inspectionPeriod: 3,
+    seller: {
+      name: "Lanre Balogun",
+      email: "lanre@paytrust.io",
+      accountType: "business",
+    },
+    buyer: {
+      name: "Acme Corporation",
+      email: "buyer@acmecorp.com",
+    },
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText("https://paytrust.io/invoice/INV-2026-9824");
@@ -115,6 +141,13 @@ export default function InvoiceReviewPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => setShowContractModal(true)}
+                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#32A05F]" /> Preview Agreement (PDF)
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowShareModal(true)}
                 className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
               >
@@ -134,7 +167,7 @@ export default function InvoiceReviewPage() {
           <div className="flex gap-4">
             <button
               onClick={() => router.push("/transaction")}
-              className="w-full py-3.5 rounded-xl font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 text-sm"
+              className="w-full py-3.5 rounded-xl font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               Confirm & Publish Invoice <ArrowRight className="w-4 h-4" />
             </button>
@@ -145,12 +178,14 @@ export default function InvoiceReviewPage() {
         <InvoiceShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          deal={{
-            id: "INV-2026-9824",
-            title: "Escrow Milestone Invoice",
-            totalAmount: 500000,
-            inspectionPeriod: 3,
-          }}
+          deal={sampleDeal}
+        />
+
+        {/* Escrow Agreement Preview Modal */}
+        <EscrowContractModal
+          isOpen={showContractModal}
+          onClose={() => setShowContractModal(false)}
+          deal={sampleDeal}
         />
       </div>
     </AppShell>

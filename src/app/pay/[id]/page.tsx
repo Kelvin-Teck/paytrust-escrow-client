@@ -22,11 +22,14 @@ import {
   Mail,
   Phone,
   QrCode,
+  FileText,
+  Users,
 } from "lucide-react";
 import { transactionService, authService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
+import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 
 export default function PublicInvoicePayPage() {
   const params = useParams();
@@ -38,6 +41,7 @@ export default function PublicInvoicePayPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
 
   // 2-Step Secure Account Activation Modal state
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -109,50 +113,40 @@ export default function PublicInvoicePayPage() {
     const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
 
     try {
-      // 1. Claim account & set password (backend dispatches 6-digit OTP)
-      await authService.register({
+      await authService.initiateClaim({
         email: buyerEmail,
         phone: buyerPhone,
         password,
-        firstName: transaction?.buyer?.name || "Buyer",
+        transactionId: id,
       });
 
-      // Switch to Step 2: OTP Verification
+      // Proceed to Step 2
       setAuthStep("otp");
       setCountdown(60);
       setCanResend(false);
-      toast.success("6-digit verification code sent to your email / phone!");
-    } catch (err: any) {
-      console.warn("Register step notice:", err.message);
-      // If user already exists and registered with their password, attempt to send OTP or direct to login
-      if (err.response?.status === 409 || err.message?.includes("already exists")) {
-        try {
-          await authService.resendVerification({ email: buyerEmail, phone: buyerPhone });
-          setAuthStep("otp");
-          setCountdown(60);
-          setCanResend(false);
-          toast.info("Account exists. A fresh verification code has been sent!");
-        } catch {
-          toast.info("Account already active. Please log in to proceed.");
-          router.push(`/login?redirect=/transaction/${id}`);
+      toast.success("Verification code sent to your contact!");
+      setTimeout(() => {
+        if (otpInputsRef.current[0]) {
+          otpInputsRef.current[0].focus();
         }
-      } else {
-        setModalError(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to initiate account security. Please try again."
-        );
-      }
+      }, 100);
+    } catch (err: any) {
+      console.error("Claim initiation failed:", err);
+      setModalError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to initiate account claim. Please try again."
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Step 2: Verify 6-Digit OTP and Log In
+  // Step 2: Verify OTP and log in buyer
   const handleVerifyOtpAndLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fullOtp = otpCode.join("").trim();
-    if (fullOtp.length !== 6) {
+    const enteredOtp = otpCode.join("");
+    if (enteredOtp.length !== 6) {
       setModalError("Please enter the complete 6-digit verification code.");
       return;
     }
@@ -164,38 +158,23 @@ export default function PublicInvoicePayPage() {
     const buyerPhone = transaction?.buyer?.phone ? transaction.buyer.phone.trim() : undefined;
 
     try {
-      // 1. Verify code on backend
-      await authService.verifyEmail({
+      const authResult = await authService.completeClaim({
         email: buyerEmail,
         phone: buyerPhone,
-        code: fullOtp,
+        otp: enteredOtp,
+        transactionId: id,
       });
 
-      // 2. Log in with the verified credentials
-      const loginRes = await authService.login({
-        email: buyerEmail,
-        phone: buyerPhone,
-        emailOrPhone: buyerEmail || buyerPhone,
-        password,
-      });
-
-      if (loginRes.token && loginRes.user) {
-        setAuth(loginRes.user, loginRes.token);
-        toast.success(
-          "Identity verified successfully!",
-          "Redirecting to secure escrow checkout..."
-        );
-        setShowClaimModal(false);
-        router.push(`/transaction/${id}`);
-      } else {
-        router.push(`/login?redirect=/transaction/${id}`);
-      }
+      setAuth(authResult.user, authResult.token);
+      toast.success("Account activated successfully! Redirecting to secure payment...");
+      setShowClaimModal(false);
+      router.push(`/transaction/${id}`);
     } catch (err: any) {
-      console.error("OTP verification error:", err);
+      console.error("OTP verification failed:", err);
       setModalError(
         err.response?.data?.message ||
           err.message ||
-          "Invalid or expired verification code. Please request a new one."
+          "Invalid or expired verification code. Please check and try again."
       );
     } finally {
       setIsProcessing(false);
@@ -297,6 +276,19 @@ export default function PublicInvoicePayPage() {
 
   const isB2B = transaction.dealType === "b2b_milestone" || transaction.dealType === "b2b_contract";
   const totalAmount = Number(transaction.totalAmount || transaction.amount || 0);
+  const feePercentage = Number(transaction.feePercentage || 0.5);
+  const totalPlatformFee = (totalAmount * feePercentage) / 100;
+  const feePayer = transaction.feePayer || "seller";
+  const deliveryMethod = transaction.deliveryMethod || "courier";
+
+  let buyerFeeShare = 0;
+  if (feePayer === "buyer") {
+    buyerFeeShare = totalPlatformFee;
+  } else if (feePayer === "split_50_50") {
+    buyerFeeShare = totalPlatformFee / 2;
+  }
+  const grossPayable = totalAmount + buyerFeeShare;
+
   const sellerName = transaction.seller?.name || transaction.seller?.companyName || "Verified Seller";
   const sellerType = transaction.seller?.accountType === "business" ? "Corporate Business" : "Verified Individual";
   const buyerContact = transaction.buyer?.email || transaction.buyer?.phone || "your contact address";
@@ -315,8 +307,17 @@ export default function PublicInvoicePayPage() {
             </span>
           </Link>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-            <ShieldCheck className="w-4 h-4 text-[#32A05F]" /> Bank-Grade Escrow Vault
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowContractModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#32A05F]" /> View Agreement (PDF)
+            </button>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              <ShieldCheck className="w-4 h-4 text-[#32A05F]" /> Bank-Grade Escrow Vault
+            </div>
           </div>
         </div>
 
@@ -356,11 +357,20 @@ export default function PublicInvoicePayPage() {
           <div className="p-6 sm:p-8 border-b border-slate-100 bg-[#F0FDF4]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Total Escrow Payable
+                Total Escrow Payable by Buyer
               </span>
               <div className="text-3xl sm:text-4xl font-black text-slate-900 mt-0.5">
-                ₦{totalAmount.toLocaleString()}
+                ₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              {buyerFeeShare > 0 ? (
+                <p className="text-xs text-slate-500 mt-1">
+                  Agreed Value: ₦{totalAmount.toLocaleString()} + ₦{buyerFeeShare.toLocaleString(undefined, { minimumFractionDigits: 2 })} platform fee share ({feePayer === "split_50_50" ? "50/50 Split" : "Buyer Pays Fee"})
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500 mt-1">
+                  Agreed Value: ₦{totalAmount.toLocaleString()} (Seller covers 100% of escrow fee)
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-xs">
@@ -372,11 +382,28 @@ export default function PublicInvoicePayPage() {
                   {transaction.inspectionPeriod || 3}-Day Inspection Window
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  Funds held safely until you confirm receipt
+                  Funds held safely until you inspect & confirm receipt
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Delivery Method Banner */}
+          {deliveryMethod === "in_person" && (
+            <div className="mx-6 sm:mx-8 mt-6 p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-amber-900">
+                  🤝 In-Person Physical Handover Mode
+                </h4>
+                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                  Upon securing payment, you will receive a <strong>Secret 6-Digit Release OTP</strong>. When you meet the seller face-to-face, physically inspect your items and share the code only when completely satisfied.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Deal Details & Items */}
           <div className="p-6 sm:p-8 space-y-6">
@@ -472,7 +499,7 @@ export default function PublicInvoicePayPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F] shrink-0 mt-0.5" />
                   <span>
-                    Your payment of <strong>₦{totalAmount.toLocaleString()}</strong> is held safely in PayTrust’s escrow vault.
+                    Your payment of <strong>₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> is held safely in PayTrust’s neutral escrow vault.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -484,7 +511,7 @@ export default function PublicInvoicePayPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F] shrink-0 mt-0.5" />
                   <span>
-                    Money is released to the seller <strong>ONLY after you inspect & confirm delivery</strong>.
+                    Money is released to the seller <strong>ONLY after you inspect & confirm receipt</strong> or when the {transaction.inspectionPeriod || 3}-day inspection window completes.
                   </span>
                 </li>
               </ul>
@@ -496,11 +523,19 @@ export default function PublicInvoicePayPage() {
                 onClick={handleProceedToPayment}
                 className="w-full py-4 rounded-2xl bg-[#32A05F] hover:bg-[#28874E] text-white text-base font-bold shadow-lg shadow-[#32A05F]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
               >
-                <Lock className="w-5 h-5" /> Accept & Pay with Escrow (₦{totalAmount.toLocaleString()})
+                <Lock className="w-5 h-5" /> Accept & Pay with Escrow (₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })})
               </button>
-              <p className="text-[11px] text-center text-slate-400 mt-2">
-                Protected by PayTrust Escrow Services Nigeria. Licensed & compliant.
-              </p>
+              <div className="flex items-center justify-center gap-3 mt-3 text-[11px] text-slate-400">
+                <span>Protected by PayTrust Escrow Services Nigeria.</span>
+                <span>•</span>
+                <button
+                  type="button"
+                  onClick={() => setShowContractModal(true)}
+                  className="text-[#32A05F] hover:underline font-semibold cursor-pointer"
+                >
+                  View Legal Escrow Agreement
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -672,6 +707,13 @@ export default function PublicInvoicePayPage() {
       <InvoiceShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
+        deal={transaction}
+      />
+
+      {/* Official Legal Printable Escrow Agreement Modal */}
+      <EscrowContractModal
+        isOpen={showContractModal}
+        onClose={() => setShowContractModal(false)}
         deal={transaction}
       />
     </div>
