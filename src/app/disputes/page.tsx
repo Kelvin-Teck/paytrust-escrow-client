@@ -319,10 +319,22 @@ export default function DisputesHubPage() {
 
                         {/* 8. Status */}
                         <td className="py-3 px-3 whitespace-nowrap">
-                          {status === "OPEN" && (
+                          {(status === "OPEN" || status === "UNDER_MEDIATION") && (
                             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                               Under Mediation
+                            </span>
+                          )}
+                          {status === "SETTLEMENT_PROPOSED" && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                              Settlement Offered
+                            </span>
+                          )}
+                          {status === "RESOLVED_MUTUAL" && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d] bg-[#EBF7F0] px-2.5 py-0.5 rounded-full border border-[#32A05F]/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#32A05F]"></span>
+                              Mutual Settlement
                             </span>
                           )}
                           {status === "resolved_refund" && (
@@ -337,11 +349,23 @@ export default function DisputesHubPage() {
                               Resolved & Released
                             </span>
                           )}
-                          {status !== "OPEN" && status !== "resolved_refund" && status !== "resolved_release" && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full capitalize">
-                              {status.replace("_", " ").toLowerCase()}
+                          {status === "APPEAL_PENDING" && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                              Under Appeal
                             </span>
                           )}
+                          {status !== "OPEN" &&
+                            status !== "UNDER_MEDIATION" &&
+                            status !== "SETTLEMENT_PROPOSED" &&
+                            status !== "RESOLVED_MUTUAL" &&
+                            status !== "resolved_refund" &&
+                            status !== "resolved_release" &&
+                            status !== "APPEAL_PENDING" && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full capitalize">
+                                {status.replace("_", " ").toLowerCase()}
+                              </span>
+                            )}
                         </td>
 
                         {/* 9. Actions */}

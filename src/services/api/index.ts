@@ -313,6 +313,60 @@ export const disputeService = {
     const res = await apiClient.post(`/disputes/${disputeId}/resolve`, payload);
     return extract(res);
   },
+
+  proposeSettlement: async (
+    disputeId: string,
+    payload: {
+      buyerAmount: number;
+      sellerAmount: number;
+      note?: string;
+    },
+  ) => {
+    const res = await apiClient.post(
+      `/disputes/${disputeId}/settlement/propose`,
+      payload,
+    );
+    return extract(res);
+  },
+
+  respondToSettlement: async (
+    disputeId: string,
+    action: "accept" | "reject",
+    note?: string,
+  ) => {
+    const res = await apiClient.post(
+      `/disputes/${disputeId}/settlement/respond`,
+      {
+        action,
+        note,
+      },
+    );
+    return extract(res);
+  },
+
+  uploadEvidence: async (
+    disputeId: string,
+    evidence: {
+      title: string;
+      description?: string;
+      fileUrl?: string;
+      fileType?: string;
+    },
+  ) => {
+    const res = await apiClient.post(
+      `/disputes/${disputeId}/evidence`,
+      evidence,
+    );
+    return extract(res);
+  },
+
+  appealResolution: async (
+    disputeId: string,
+    payload: { reason: string; appealEvidenceUrls?: string[] },
+  ) => {
+    const res = await apiClient.post(`/disputes/${disputeId}/appeal`, payload);
+    return extract(res);
+  },
 };
 
 // ─── PROFILE & KYC SERVICE ───
