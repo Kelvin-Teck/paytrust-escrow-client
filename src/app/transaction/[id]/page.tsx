@@ -30,6 +30,7 @@ import {
   Calendar,
   Send,
   Plus,
+  Code2,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { transactionService, walletService } from "@/services/api";
@@ -40,6 +41,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 import CorporateTaxInvoiceModal from "@/components/transaction/CorporateTaxInvoiceModal";
+import PayTrustWidgetModal from "@/components/transaction/PayTrustWidgetModal";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -61,6 +63,7 @@ export default function TransactionDetailPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false);
+  const [showWidgetModal, setShowWidgetModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [copied, setCopied] = useState(false);
@@ -675,6 +678,16 @@ export default function TransactionDetailPage() {
             >
               <QrCode className="w-3.5 h-3.5 text-[#32A05F]" /> Share Invoice & QR
             </button>
+
+            {isSeller && (
+              <button
+                type="button"
+                onClick={() => setShowWidgetModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              >
+                <Code2 className="w-3.5 h-3.5 text-[#32A05F]" /> Embed Widget
+              </button>
+            )}
 
             {/* Pre-dispatch mutual cancellation button */}
             {(isAwaitingPayment || isSecured) && !isCancelled && (
@@ -1819,6 +1832,13 @@ export default function TransactionDetailPage() {
       <CorporateTaxInvoiceModal
         isOpen={showTaxInvoiceModal}
         onClose={() => setShowTaxInvoiceModal(false)}
+        deal={transaction}
+      />
+
+      {/* PayTrust Embeddable Widget Modal */}
+      <PayTrustWidgetModal
+        isOpen={showWidgetModal}
+        onClose={() => setShowWidgetModal(false)}
         deal={transaction}
       />
     </AppShell>
