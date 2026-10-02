@@ -1,3 +1,4 @@
+import { crossPortalSync, SyncedDispute, SyncedKyc } from "@/lib/crossPortalSync";
 import { apiClient } from "@/lib/axios";
 
 const extract = (res: any) => {
