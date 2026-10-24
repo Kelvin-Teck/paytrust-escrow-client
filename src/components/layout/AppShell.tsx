@@ -26,6 +26,7 @@ import { Logo } from "@/components/ui/Logo";
 import { useAuthStore } from "@/stores/authStore";
 import { profileService, notificationService } from "@/services/api";
 import { getTierInfo, getKybInfo } from "@/lib/utils";
+import { getSocket, disconnectSocket } from "@/lib/socket";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -60,6 +61,16 @@ export function AppShell({
       return;
     }
 
+    // Initialize authenticated Socket.IO engine for live alerts
+    getSocket(token);
+
+    const handleUnreadCountEvent = (e: any) => {
+      if (typeof e.detail === "number") {
+        setUnreadCount(e.detail);
+      }
+    };
+    window.addEventListener("paytrust:unread-count", handleUnreadCountEvent);
+
     // Fetch live profile
     profileService
       .getProfile()
@@ -90,6 +101,10 @@ export function AppShell({
           })
           .catch(() => {});
       });
+
+    return () => {
+      window.removeEventListener("paytrust:unread-count", handleUnreadCountEvent);
+    };
   }, [initialize, setUser, router]);
 
   const navigation = [
@@ -102,6 +117,7 @@ export function AppShell({
   ];
 
   const handleLogout = () => {
+    disconnectSocket();
     logout();
     router.push("/login");
   };

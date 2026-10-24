@@ -110,6 +110,14 @@ export default function EscrowTransactionPage() {
       }
     }
     loadTransactions();
+
+    const onLiveRefresh = () => {
+      loadTransactions();
+    };
+    window.addEventListener("paytrust:live-refresh", onLiveRefresh);
+    return () => {
+      window.removeEventListener("paytrust:live-refresh", onLiveRefresh);
+    };
   }, []);
 
   const filteredTransactions = transactions.filter((t) => {

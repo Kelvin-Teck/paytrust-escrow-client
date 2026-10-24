@@ -186,6 +186,14 @@ function WalletContent() {
     } else {
       fetchWallet();
     }
+
+    const onLiveRefresh = () => {
+      fetchWallet();
+    };
+    window.addEventListener("paytrust:live-refresh", onLiveRefresh);
+    return () => {
+      window.removeEventListener("paytrust:live-refresh", onLiveRefresh);
+    };
   }, [searchParams]);
 
   const handleCopy = (text: string) => {

@@ -43,6 +43,17 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifs(filterTab === "unread");
+
+    const handleLiveNotif = (e: any) => {
+      if (e.detail) {
+        setNotifications((prev) => [e.detail, ...prev.filter((n) => n.id !== e.detail.id)]);
+      }
+    };
+
+    window.addEventListener("paytrust:notification", handleLiveNotif);
+    return () => {
+      window.removeEventListener("paytrust:notification", handleLiveNotif);
+    };
   }, [filterTab]);
 
   const handleMarkRead = async (id: string, e?: React.MouseEvent) => {
