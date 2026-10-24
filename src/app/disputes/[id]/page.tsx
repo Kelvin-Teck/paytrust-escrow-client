@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -26,6 +27,8 @@ import {
   HelpCircle,
   ChevronRight,
   ExternalLink,
+  Gavel,
+  Paperclip,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { disputeService, transactionService } from "@/services/api";
@@ -44,6 +47,8 @@ export default function DisputeMediationRoomPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState<any[]>([]);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Modals state
   const [showContractModal, setShowContractModal] = useState(false);
@@ -115,32 +120,85 @@ export default function DisputeMediationRoomPage() {
     }
   };
 
+  const loadMessages = async () => {
+    if (!id) return;
+    try {
+      const serverMsgs = await disputeService.getMessages(id);
+      if (Array.isArray(serverMsgs) && serverMsgs.length > 0) {
+        setChatLog(serverMsgs);
+      }
+    } catch (err) {
+      console.warn("Could not load dispute server messages:", err);
+    }
+  };
+
   useEffect(() => {
     loadDispute();
+    loadMessages();
+
+    if (typeof window === "undefined" || !id) return;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const socketBaseUrl = apiBase.replace(/\/api\/v1\/?$/, "");
+    const token =
+      (typeof window !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("paytrust_token"))) ||
+      "";
+
+    const socket: Socket = io(socketBaseUrl, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+    });
+
+    socket.on("connect", () => {
+      socket.emit("dispute:join", id);
+    });
+
+    socket.on("dispute:message", (newMsg: any) => {
+      setChatLog((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
+      if (newMsg.isDirective) {
+        toast.info("⚖️ Official Arbitration Directive Issued", newMsg.message);
+      }
+    });
+
+    return () => {
+      socket.emit("dispute:leave", id);
+      socket.disconnect();
+    };
   }, [id]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatLog]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || isSendingMessage) return;
 
-    const senderName = user?.firstName
-      ? `${user.firstName} ${user.lastName || ""}`.trim()
-      : user?.name || user?.email?.split("@")[0] || "Me";
-
-    setChatLog((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        sender: senderName,
-        role: "user",
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        text: message.trim(),
-      },
-    ]);
+    const textToSend = message.trim();
     setMessage("");
+    setIsSendingMessage(true);
+
+    try {
+      const created = await disputeService.sendMessage(id, {
+        message: textToSend,
+      });
+
+      if (created) {
+        setChatLog((prev) => {
+          if (prev.some((m) => m.id === created.id)) return prev;
+          return [...prev, created];
+        });
+      }
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to send message to tribunal"
+      );
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   // Submit Mutual Settlement Offer
@@ -630,30 +688,123 @@ export default function DisputeMediationRoomPage() {
                   </div>
 
                   <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3 max-h-[380px] overflow-y-auto">
-                    {chatLog.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`p-3.5 rounded-2xl max-w-lg ${
-                          msg.role === "arbiter"
-                            ? "bg-slate-900 text-white ml-auto border border-slate-800"
-                            : msg.role === "user"
-                            ? "bg-white text-slate-900 border border-slate-200 shadow-2xs ml-auto"
-                            : "bg-white text-slate-900 border border-slate-200 mr-auto"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-4 mb-1">
-                          <span
-                            className={`text-xs font-bold ${
-                              msg.role === "arbiter" ? "text-emerald-400" : "text-slate-800"
+                    {chatLog.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 text-xs">
+                        No messages yet in this mediation room.
+                      </div>
+                    ) : (
+                      chatLog.map((msg: any) => {
+                        const isDirective = Boolean(msg.isDirective);
+                        const isArbiter = msg.role === "arbiter" || msg.senderRole === "admin";
+                        const isMe = msg.senderId === user?.id || msg.role === "user";
+                        const senderDisplayName =
+                          msg.senderName ||
+                          msg.sender ||
+                          (isArbiter ? "PayTrust Compliance Arbiter" : "Participant");
+                        const messageText = msg.message || msg.text || "";
+                        const timeStr = msg.createdAt
+                          ? new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : msg.time || "Just now";
+
+                        if (isDirective) {
+                          return (
+                            <div
+                              key={msg.id}
+                              className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 shadow-xs text-amber-950 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold uppercase tracking-wider">
+                                  <Gavel className="w-3.5 h-3.5" />
+                                  Official Arbitration Directive
+                                </span>
+                                <span className="text-[10px] text-amber-800/70 font-mono">
+                                  {timeStr}
+                                </span>
+                              </div>
+                              <p className="text-xs sm:text-sm font-medium leading-relaxed">
+                                {messageText}
+                              </p>
+                              {msg.attachmentUrls && msg.attachmentUrls.length > 0 && (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {msg.attachmentUrls.map((url: string, uIdx: number) => (
+                                    <a
+                                      key={uIdx}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white text-[11px] font-bold text-amber-900 border border-amber-300 hover:bg-amber-100 transition-colors"
+                                    >
+                                      <Paperclip className="w-3 h-3" />
+                                      <span>Evidence Exhibit #{uIdx + 1}</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`p-3.5 rounded-2xl max-w-lg ${
+                              isArbiter
+                                ? "bg-emerald-950 text-white border border-emerald-800 ml-auto"
+                                : isMe
+                                ? "bg-[#EBF7F0] text-slate-900 border border-[#32A05F]/30 ml-auto shadow-2xs"
+                                : "bg-white text-slate-900 border border-slate-200 mr-auto shadow-2xs"
                             }`}
                           >
-                            {msg.sender}
-                          </span>
-                          <span className="text-[10px] text-slate-400">{msg.time}</span>
-                        </div>
-                        <p className="text-xs sm:text-sm leading-relaxed">{msg.text}</p>
-                      </div>
-                    ))}
+                            <div className="flex items-center justify-between gap-4 mb-1">
+                              <span
+                                className={`text-xs font-bold ${
+                                  isArbiter
+                                    ? "text-emerald-400 flex items-center gap-1"
+                                    : isMe
+                                    ? "text-[#32A05F]"
+                                    : "text-slate-800"
+                                }`}
+                              >
+                                {isArbiter && <Gavel className="w-3 h-3 text-emerald-400" />}
+                                {senderDisplayName} {isMe && "(You)"}
+                              </span>
+                              <span
+                                className={`text-[10px] ${
+                                  isArbiter ? "text-emerald-200/70" : "text-slate-400"
+                                }`}
+                              >
+                                {timeStr}
+                              </span>
+                            </div>
+                            <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                              {messageText}
+                            </p>
+                            {msg.attachmentUrls && msg.attachmentUrls.length > 0 && (
+                              <div className="flex flex-wrap gap-2 pt-2 mt-1 border-t border-slate-200/40">
+                                {msg.attachmentUrls.map((url: string, uIdx: number) => (
+                                  <a
+                                    key={uIdx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/80 text-[10px] font-bold text-slate-800 border border-slate-300 hover:bg-white"
+                                  >
+                                    <Paperclip className="w-3 h-3" />
+                                    <span>Exhibit #{uIdx + 1}</span>
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
                   </div>
                 </div>
 

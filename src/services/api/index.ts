@@ -412,6 +412,23 @@ export const disputeService = {
     return extract(res);
   },
 
+    getMessages: async (disputeId: string) => {
+    const res = await apiClient.get(`/disputes/${disputeId}/messages`);
+    return extract(res);
+  },
+
+  sendMessage: async (
+    disputeId: string,
+    payload: {
+      message: string;
+      attachmentUrls?: string[];
+      isDirective?: boolean;
+    }
+  ) => {
+    const res = await apiClient.post(`/disputes/${disputeId}/messages`, payload);
+    return extract(res);
+  },
+
   appealResolution: async (
     disputeId: string,
     payload: { reason: string; appealEvidenceUrls?: string[] },
