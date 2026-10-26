@@ -315,6 +315,22 @@ export const walletService = {
     const res = await apiClient.post("/wallets/withdraw", payload);
     return extract(res);
   },
+
+  lookupRecipient: async (identifier: string) => {
+    const res = await apiClient.get("/wallets/lookup-recipient", {
+      params: { identifier },
+    });
+    return extract(res);
+  },
+
+  transfer: async (payload: {
+    recipient: string;
+    amount: number;
+    note?: string;
+  }) => {
+    const res = await apiClient.post("/wallets/transfer", payload);
+    return extract(res);
+  },
 };
 
 // ─── PAYMENT GATEWAY SERVICE ───
@@ -498,6 +514,32 @@ export const profileService = {
   resolveBankAccount: async (accountNumber: string, bankCode: string) => {
     const res = await apiClient.get("/profiles/banks/resolve", {
       params: { accountNumber, bankCode },
+    });
+    return extract(res);
+  },
+
+  changePassword: async (payload: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    const res = await apiClient.put("/profiles/password", payload);
+    return extract(res);
+  },
+
+  generate2FaSecret: async () => {
+    const res = await apiClient.post("/profiles/2fa/generate");
+    return extract(res);
+  },
+
+  enable2Fa: async (code: string) => {
+    const res = await apiClient.post("/profiles/2fa/enable", { code });
+    return extract(res);
+  },
+
+  disable2Fa: async (codeOrPassword: string) => {
+    const res = await apiClient.post("/profiles/2fa/disable", {
+      code: codeOrPassword,
+      password: codeOrPassword,
     });
     return extract(res);
   },

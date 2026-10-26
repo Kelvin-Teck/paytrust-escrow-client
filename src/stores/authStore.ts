@@ -28,6 +28,7 @@ export interface User {
   scumlCertificateUrl?: string;
   financialsUrl?: string;
   uboDetails?: string;
+  twoFactorEnabled?: boolean;
 }
 
 interface AuthState {

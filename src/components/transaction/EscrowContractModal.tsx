@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 import {
   X,
   Printer,
+  Download,
   ShieldCheck,
   Building2,
   Calendar,
@@ -15,6 +16,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { formatTableDate, formatTableTime } from "@/lib/exportUtils";
+import { generateEscrowAgreementPdf } from "@/lib/pdfGenerator";
 
 interface EscrowContractModalProps {
   isOpen: boolean;
@@ -94,11 +96,18 @@ export default function EscrowContractModal({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handlePrint}
+              onClick={() => generateEscrowAgreementPdf(deal)}
               type="button"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#32A05F] hover:bg-[#28874E] text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
             >
-              <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+              <Download className="w-3.5 h-3.5" /> Download Agreement (PDF)
+            </button>
+            <button
+              onClick={handlePrint}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Printer className="w-3.5 h-3.5" /> Print
             </button>
             <button
               onClick={onClose}
