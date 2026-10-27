@@ -198,7 +198,7 @@ export default function RegisterDetailsPage() {
         </Suspense>
       </main>
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Escrow Platform
+        PeltaPay Escrow Platform
       </footer>
     </div>
   );

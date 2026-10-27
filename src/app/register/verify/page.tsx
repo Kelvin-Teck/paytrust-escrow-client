@@ -259,7 +259,7 @@ export default function RegisterVerifyPage() {
         </Suspense>
       </main>
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Secure Multi-Factor Authentication
+        PeltaPay Secure Multi-Factor Authentication
       </footer>
     </div>
   );

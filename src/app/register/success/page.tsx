@@ -29,7 +29,7 @@ function SuccessContent() {
         Account Verified!
       </h1>
       <p className="text-sm text-slate-500 mb-8 leading-relaxed">
-        Your email has been verified. Your PayTrust wallet and escrow vault are active and ready.
+        Your email has been verified. Your PeltaPay wallet and escrow vault are active and ready.
       </p>
 
       <Link
@@ -57,7 +57,7 @@ export default function RegisterSuccessPage() {
       </main>
 
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Escrow Platform
+        PeltaPay Escrow Platform
       </footer>
     </div>
   );

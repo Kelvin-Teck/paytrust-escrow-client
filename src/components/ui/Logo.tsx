@@ -24,8 +24,8 @@ export function Logo({
     <div className={`flex items-center gap-2.5 group ${className}`}>
       <div className="relative shrink-0 transition-transform group-hover:scale-105">
         <Image
-          src="/paytrust-logo.png"
-          alt="PayTrust"
+          src="/peltapay-logo.png"
+          alt="PeltaPay"
           width={dimension}
           height={dimension}
           className="object-contain"
@@ -34,7 +34,7 @@ export function Logo({
       </div>
       {showText && (
         <span className={`font-extrabold tracking-tight text-slate-900 ${textSize}`}>
-          Pay<span className="text-[#32A05F]">Trust</span>
+          Pelta<span className="text-[#32A05F]">Pay</span>
         </span>
       )}
     </div>

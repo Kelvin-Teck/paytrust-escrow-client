@@ -45,7 +45,7 @@ const testimonials: Testimonial[] = [
     dealAmount: "₦850,000 / deal",
     rating: 5,
     quote:
-      "Before PayTrust, interstate buyers always demanded payment on delivery, which caused frequent delivery cancellations. Now, buyers fund the escrow upfront. I ship knowing my funds are 100% locked and guaranteed. My completed sales tripled in two months!",
+      "Before PeltaPay, interstate buyers always demanded payment on delivery, which caused frequent delivery cancellations. Now, buyers fund the escrow upfront. I ship knowing my funds are 100% locked and guaranteed. My completed sales tripled in two months!",
     badge: "Verified Vendor",
   },
   {
@@ -75,7 +75,7 @@ const testimonials: Testimonial[] = [
     dealAmount: "₦3.5M Escrow",
     rating: 5,
     quote:
-      "Buying millions worth of hardware from a vendor in another state was always stressful. With PayTrust, our logistics team inspects the consignment on delivery before authorizing payout. It provides the institutional safety we need.",
+      "Buying millions worth of hardware from a vendor in another state was always stressful. With PeltaPay, our logistics team inspects the consignment on delivery before authorizing payout. It provides the institutional safety we need.",
     badge: "Corporate Buyer",
   },
   {
@@ -105,7 +105,7 @@ const testimonials: Testimonial[] = [
     dealAmount: "₦1.4M MacBook Pro",
     rating: 5,
     quote:
-      "I purchased an expensive MacBook from an online vendor. When a minor spec discrepancy arose, PayTrust's mediation team stepped in calmly and resolved it in 24 hours according to our agreed terms. I will never do direct transfers again.",
+      "I purchased an expensive MacBook from an online vendor. When a minor spec discrepancy arose, PeltaPay's mediation team stepped in calmly and resolved it in 24 hours according to our agreed terms. I will never do direct transfers again.",
     badge: "Verified Buyer",
   },
   {
@@ -182,7 +182,7 @@ export function TestimonialsSection() {
             className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto"
           >
             See how everyday merchants, agencies, and buyers eliminate payment
-            anxiety and fraud with PayTrust milestone escrow.
+            anxiety and fraud with PeltaPay milestone escrow.
           </motion.p>
         </div>
 

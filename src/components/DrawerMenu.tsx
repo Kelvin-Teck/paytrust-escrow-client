@@ -42,7 +42,7 @@ export function DrawerMenu({ isOpen, onClose }: DrawerMenuProps) {
           >
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-slate-800">
-                <span className="font-bold text-lg text-white">PayTrust</span>
+                <span className="font-bold text-lg text-white">PeltaPay</span>
                 <button onClick={onClose} className="p-2 text-slate-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>

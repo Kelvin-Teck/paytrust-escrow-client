@@ -90,7 +90,7 @@ export default function DisputeMediationRoomPage() {
           },
           {
             id: "system-2",
-            sender: "PayTrust Compliance Arbiter",
+            sender: "PeltaPay Compliance Arbiter",
             role: "arbiter",
             time: "Active Mediation",
             text: "Welcome to the neutral escrow arbitration room. Funds remain frozen in custodian escrow. Both parties may negotiate a mutual compromise split below or upload verifiable delivery/condition evidence.",
@@ -140,7 +140,7 @@ export default function DisputeMediationRoomPage() {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
     const socketBaseUrl = apiBase.replace(/\/api\/v1\/?$/, "");
     const token =
-      (typeof window !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("paytrust_token"))) ||
+      (typeof window !== "undefined" && (localStorage.getItem("token") || localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token"))) ||
       "";
 
     const socket: Socket = io(socketBaseUrl, {
@@ -236,7 +236,7 @@ export default function DisputeMediationRoomPage() {
         ...prev,
         {
           id: Date.now().toString(),
-          sender: "PayTrust Settlement Desk",
+          sender: "PeltaPay Settlement Desk",
           role: "arbiter",
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           text: `🤝 Compromise Settlement Proposed: Buyer receives ₦${buyerAmt.toLocaleString()} (${settlementBuyerPct}%), Seller receives ₦${sellerAmt.toLocaleString()} (${100 - settlementBuyerPct}%). Note: "${settlementNote || "No note provided"}"`,
@@ -274,7 +274,7 @@ export default function DisputeMediationRoomPage() {
           ...prev,
           {
             id: Date.now().toString(),
-            sender: "PayTrust Settlement Desk",
+            sender: "PeltaPay Settlement Desk",
             role: "arbiter",
             time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             text: "✅ Settlement Accepted! Escrow funds disbursed immediately according to agreed split. Dispute case marked as RESOLVED.",
@@ -523,7 +523,7 @@ export default function DisputeMediationRoomPage() {
                     Assigned Arbitration Panel
                   </span>
                   <p className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-[#32A05F]" /> PayTrust Dispute Tribunal
+                    <Shield className="w-4 h-4 text-[#32A05F]" /> PeltaPay Dispute Tribunal
                   </p>
                   <p className="text-slate-500 text-[11px]">
                     Governed by Nigerian Arbitration & Conciliation Act
@@ -700,7 +700,7 @@ export default function DisputeMediationRoomPage() {
                         const senderDisplayName =
                           msg.senderName ||
                           msg.sender ||
-                          (isArbiter ? "PayTrust Compliance Arbiter" : "Participant");
+                          (isArbiter ? "PeltaPay Compliance Arbiter" : "Participant");
                         const messageText = msg.message || msg.text || "";
                         const timeStr = msg.createdAt
                           ? new Date(msg.createdAt).toLocaleTimeString([], {

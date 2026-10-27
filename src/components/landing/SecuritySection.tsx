@@ -41,7 +41,7 @@ const securityPillars: SecurityPillar[] = [
     tagline:
       "Your money stays protected until the agreed transaction conditions are met.",
     description:
-      "Funds are not immediately transferred to the seller. PayTrust holds the transaction safely under predefined release conditions.",
+      "Funds are not immediately transferred to the seller. PeltaPay holds the transaction safely under predefined release conditions.",
     badge: "Protected Holding Vault",
     accent: {
       bg: "bg-emerald-50/50",
@@ -58,7 +58,7 @@ const securityPillars: SecurityPillar[] = [
     title: "Identity Verification",
     tagline: "Know who you're dealing with.",
     description:
-      "Verified users provide identity information required by PayTrust's verification process, helping reduce impersonation and fraudulent accounts.",
+      "Verified users provide identity information required by PeltaPay's verification process, helping reduce impersonation and fraudulent accounts.",
     badge: "Tiered Identity Validation",
     accent: {
       bg: "bg-blue-50/50",
@@ -261,7 +261,7 @@ export function SecuritySection() {
               </h3>
               <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
                 Join thousands of businesses, freelancers, and buyers using
-                PayTrust to protect high-value payments and delivery agreements.
+                PeltaPay to protect high-value payments and delivery agreements.
               </p>
 
               {/* 4 Metric Badges */}

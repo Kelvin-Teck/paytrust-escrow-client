@@ -211,7 +211,7 @@ export default function LoginPage() {
       </main>
 
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Secure Access Portal
+        PeltaPay Secure Access Portal
       </footer>
     </div>
   );

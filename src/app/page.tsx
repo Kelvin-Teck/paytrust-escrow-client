@@ -142,7 +142,7 @@ export default function HomePage() {
               </h3>
               <p className="text-sm text-slate-600 leading-relaxed">
                 "I want to make more sales, but I only do payment before
-                delivery." With PayTrust, buyers fund escrow upfront so you can
+                delivery." With PeltaPay, buyers fund escrow upfront so you can
                 deliver with 100% confidence.
               </p>
             </div>
@@ -162,7 +162,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* PayTrust Shield Pillar */}
+            {/* PeltaPay Shield Pillar */}
             <div className="p-8 rounded-3xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xl space-y-4 relative overflow-hidden">
               <div className="w-12 h-12 rounded-2xl bg-[#32A05F] text-white flex items-center justify-center shadow-md shadow-[#32A05F]/30">
                 <Shield className="w-6 h-6" />
@@ -251,7 +251,7 @@ export default function HomePage() {
           <div className="flex items-center gap-2.5">
             <Logo size="sm" href="/" />
             <span>
-              © {new Date().getFullYear()} PayTrust Inc. All rights reserved.
+              © {new Date().getFullYear()} PeltaPay Inc. All rights reserved.
             </span>
           </div>
           <p className="text-slate-400">Next-Gen Escrow Protection Platform</p>

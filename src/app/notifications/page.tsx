@@ -50,9 +50,9 @@ export default function NotificationsPage() {
       }
     };
 
-    window.addEventListener("paytrust:notification", handleLiveNotif);
+    window.addEventListener("peltapay:notification", handleLiveNotif);
     return () => {
-      window.removeEventListener("paytrust:notification", handleLiveNotif);
+      window.removeEventListener("peltapay:notification", handleLiveNotif);
     };
   }, [filterTab]);
 

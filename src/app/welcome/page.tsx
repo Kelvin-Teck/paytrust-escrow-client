@@ -23,7 +23,7 @@ export default function WelcomePage() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome to PayTrust</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome to PeltaPay</h1>
           <p className="text-sm text-slate-500 mb-8 leading-relaxed">
             Your gateway to milestone-protected transactions, multi-currency escrow, and verified payments.
           </p>
@@ -38,7 +38,7 @@ export default function WelcomePage() {
       </main>
 
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Escrow Platform
+        PeltaPay Escrow Platform
       </footer>
     </div>
   );

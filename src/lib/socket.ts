@@ -5,7 +5,7 @@ let socketInstance: Socket | null = null;
 let currentToken: string | null = null;
 
 /**
- * Initializes and returns the global Socket.IO client instance for PayTrust.
+ * Initializes and returns the global Socket.IO client instance for PeltaPay.
  * Connects with JWT authentication, auto-reconnects, and handles real-time
  * notifications, badge updates, and transactional events.
  */
@@ -13,7 +13,7 @@ export const getSocket = (token?: string): Socket | null => {
   if (typeof window === "undefined") return null;
 
   const authToken =
-    token || localStorage.getItem("paytrust_token") || null;
+    token || (localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token")) || null;
 
   if (!authToken) {
     if (socketInstance) {
@@ -58,7 +58,7 @@ export const getSocket = (token?: string): Socket | null => {
   socketInstance.on("connected", (data: { unreadCount?: number }) => {
     if (typeof data?.unreadCount === "number") {
       window.dispatchEvent(
-        new CustomEvent("paytrust:unread-count", {
+        new CustomEvent("peltapay:unread-count", {
           detail: data.unreadCount,
         })
       );
@@ -97,12 +97,12 @@ export const getSocket = (token?: string): Socket | null => {
 
     // Broadcast across windows/tabs so open views update their state
     window.dispatchEvent(
-      new CustomEvent("paytrust:notification", {
+      new CustomEvent("peltapay:notification", {
         detail: newNotif,
       })
     );
     window.dispatchEvent(
-      new CustomEvent("paytrust:live-refresh", {
+      new CustomEvent("peltapay:live-refresh", {
         detail: newNotif,
       })
     );
@@ -111,7 +111,7 @@ export const getSocket = (token?: string): Socket | null => {
   socketInstance.on("notification:unread_count", (data: { unreadCount: number }) => {
     if (typeof data?.unreadCount === "number") {
       window.dispatchEvent(
-        new CustomEvent("paytrust:unread-count", {
+        new CustomEvent("peltapay:unread-count", {
           detail: data.unreadCount,
         })
       );
@@ -120,7 +120,7 @@ export const getSocket = (token?: string): Socket | null => {
 
   socketInstance.on("notification:all_read", () => {
     window.dispatchEvent(
-      new CustomEvent("paytrust:unread-count", {
+      new CustomEvent("peltapay:unread-count", {
         detail: 0,
       })
     );

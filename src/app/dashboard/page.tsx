@@ -336,7 +336,7 @@ export default function DashboardPage() {
               <ExportTableButton
                 data={transactions}
                 columns={dashboardExportColumns}
-                filenamePrefix="paytrust-recent-transactions"
+                filenamePrefix="peltapay-recent-transactions"
               />
               <button
                 onClick={() => setActiveTab("all")}

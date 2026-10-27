@@ -129,7 +129,7 @@ export default function EscrowContractModal({
                   P
                 </div>
                 <span className="text-2xl font-black tracking-tight text-slate-900">
-                  Pay<span className="text-[#32A05F]">Trust</span>
+                  Pelta<span className="text-[#32A05F]">Pay</span>
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium mt-1">
@@ -185,7 +185,7 @@ export default function EscrowContractModal({
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Escrow Custodian & Agent
               </span>
-              <p className="font-bold text-slate-900 text-sm leading-tight">PayTrust Technologies Ltd</p>
+              <p className="font-bold text-slate-900 text-sm leading-tight">PeltaPay Technologies Ltd</p>
               <p className="text-slate-500 text-[11px]">Neutral Fiduciary Agent</p>
               <span className="inline-block text-[10px] font-semibold text-[#15803d] bg-[#EBF7F0] px-2 py-0.5 rounded-md border border-[#32A05F]/30 mt-1">
                 Fiduciary Protected
@@ -243,7 +243,7 @@ export default function EscrowContractModal({
                 <span className="font-bold text-slate-900">₦{totalAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>PayTrust Escrow Custody Fee ({feePercentage}%):</span>
+                <span>PeltaPay Escrow Custody Fee ({feePercentage}%):</span>
                 <span className="font-semibold text-slate-800">
                   ₦{totalPlatformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
@@ -299,9 +299,9 @@ export default function EscrowContractModal({
             </h3>
             <ol className="list-decimal pl-4 space-y-1.5">
               <li>
-                <strong>Fiduciary Neutrality:</strong> PayTrust acts solely as an independent, neutral
+                <strong>Fiduciary Neutrality:</strong> PeltaPay acts solely as an independent, neutral
                 escrow stakeholder. Funds deposited by the Buyer do not constitute corporate assets of
-                PayTrust and are safeguarded exclusively for the settlement of this transaction.
+                PeltaPay and are safeguarded exclusively for the settlement of this transaction.
               </li>
               <li>
                 <strong>Condition Precedent to Release:</strong> Escrow disbursement to the Seller is
@@ -318,7 +318,7 @@ export default function EscrowContractModal({
               <li>
                 <strong>Arbitration Clause:</strong> Any unresolved controversy arising out of or
                 relating to this agreement shall be submitted to binding arbitration governed by the
-                rules of PayTrust Dispute Resolution Services and Nigerian Arbitration law.
+                rules of PeltaPay Dispute Resolution Services and Nigerian Arbitration law.
               </li>
             </ol>
           </div>
@@ -340,14 +340,14 @@ export default function EscrowContractModal({
                   Hash: SHA256:{dealId}-{createdAt.slice(0, 10)}
                 </p>
                 <p className="text-[10px] text-slate-500">
-                  PayTrust Automated Escrow Clearing Authority
+                  PeltaPay Automated Escrow Clearing Authority
                 </p>
               </div>
             </div>
 
             <div className="text-center sm:text-right">
               <div className="h-10 border-b border-slate-400 w-48 mb-1 flex items-end justify-center sm:justify-end text-xs italic font-serif text-slate-700">
-                PayTrust Fiduciary Services
+                PeltaPay Fiduciary Services
               </div>
               <span className="text-[10px] text-slate-400 uppercase font-semibold">
                 Authorized Platform Custodian Signature

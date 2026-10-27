@@ -109,7 +109,7 @@ export default function CorporateTaxInvoiceModal({
                   P
                 </div>
                 <span className="text-2xl font-black tracking-tight text-slate-900">
-                  Pay<span className="text-[#32A05F]">Trust</span>
+                  Pelta<span className="text-[#32A05F]">Pay</span>
                   <span className="text-xs ml-1.5 font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
                     B2B Enterprise
                   </span>
@@ -169,7 +169,7 @@ export default function CorporateTaxInvoiceModal({
                 Corporate PO: {poNumber}
               </p>
               <p className="text-[11px] text-slate-500">
-                Payment Channel: PayTrust Neutral Escrow Vault (Settled)
+                Payment Channel: PeltaPay Neutral Escrow Vault (Settled)
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function CorporateTaxInvoiceModal({
                   Escrow Vault Deposit ID: {dealId}
                 </p>
                 <p className="text-[10px] text-slate-500">
-                  PayTrust Escrow Fiduciary Services (Nigeria)
+                  PeltaPay Escrow Fiduciary Services (Nigeria)
                 </p>
               </div>
             </div>

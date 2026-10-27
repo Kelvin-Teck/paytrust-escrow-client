@@ -176,7 +176,7 @@ export default function DisputesHubPage() {
             <ExportTableButton
               data={filteredDisputes}
               columns={disputeExportColumns}
-              filenamePrefix="paytrust-disputes"
+              filenamePrefix="peltapay-disputes"
             />
             <button
               onClick={fetchDisputes}
@@ -201,13 +201,13 @@ export default function DisputesHubPage() {
         <div className="p-6 rounded-3xl bg-[#0F172A] text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2 text-[#32A05F] text-xs font-bold uppercase tracking-wider">
-              <Shield className="w-4 h-4" /> PayTrust Arbiter Protection
+              <Shield className="w-4 h-4" /> PeltaPay Arbiter Protection
             </div>
             <h3 className="text-xl font-bold">How Dispute Mediation Works</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
               When a dispute is raised, escrow funds remain frozen in custody.
               Both parties submit delivery evidence, chat with an assigned
-              PayTrust Arbiter, and receive a fair verdict within 48 hours.
+              PeltaPay Arbiter, and receive a fair verdict within 48 hours.
             </p>
           </div>
         </div>

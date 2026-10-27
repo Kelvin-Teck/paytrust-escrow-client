@@ -14,7 +14,7 @@ interface ExportTableButtonProps<T = any> {
 export default function ExportTableButton<T = any>({
   data,
   columns,
-  filenamePrefix = "paytrust-export",
+  filenamePrefix = "peltapay-export",
   label = "Export",
 }: ExportTableButtonProps<T>) {
   const [isOpen, setIsOpen] = useState(false);

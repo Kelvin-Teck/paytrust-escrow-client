@@ -225,7 +225,7 @@ export default function CreateInvoicePage() {
 
   const getEscrowPayUrl = () => {
     if (!createdDeal) return "";
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://paytrust.ng";
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://peltapay.com";
     return `${origin}/pay/${createdDeal.id}`;
   };
 
@@ -244,7 +244,7 @@ export default function CreateInvoicePage() {
     const inspectionDays = createdDeal.inspectionPeriod || inspectionPeriod || 3;
     const payUrl = getEscrowPayUrl();
 
-    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
+    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PeltaPay.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PeltaPay Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PeltaPay Escrow Nigeria_`;
 
     const cleanPhone = buyerPhone ? String(buyerPhone).replace(/[^0-9]/g, "") : "";
     const waUrl = cleanPhone
@@ -276,7 +276,7 @@ export default function CreateInvoicePage() {
             Create Protected Escrow Deal
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Lock buyer funds in PayTrust neutral custody until inspection and delivery requirements are met.
+            Lock buyer funds in PeltaPay neutral custody until inspection and delivery requirements are met.
           </p>
         </div>
 

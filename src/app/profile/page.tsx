@@ -113,11 +113,11 @@ export default function ProfileHubPage() {
   const referralCode =
     profileData?.referralCode ||
     user?.referralCode ||
-    (user?.id ? `PAY${user.id.slice(0, 6).toUpperCase()}` : "PAYTRUST");
+    (user?.id ? `PAY${user.id.slice(0, 6).toUpperCase()}` : "PELTAPAY");
 
   const referralLink = originUrl
     ? `${originUrl}/register?ref=${referralCode}`
-    : `https://paytrust.io/register?ref=${referralCode}`;
+    : `https://peltapay.io/register?ref=${referralCode}`;
 
   useEffect(() => {
     const rawQr = profileData?.referralQrCode || (user as any)?.referralQrCode;
@@ -141,7 +141,7 @@ export default function ProfileHubPage() {
     if (!qrDataUrl) return;
     const link = document.createElement("a");
     link.href = qrDataUrl;
-    link.download = `paytrust-referral-${referralCode}.png`;
+    link.download = `peltapay-referral-${referralCode}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -176,8 +176,8 @@ export default function ProfileHubPage() {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "Join PayTrust Escrow Platform",
-          text: `Join PayTrust using my referral code ${referralCode} for milestone-protected escrow trading & multi-currency settlements!`,
+          title: "Join PeltaPay Escrow Platform",
+          text: `Join PeltaPay using my referral code ${referralCode} for milestone-protected escrow trading & multi-currency settlements!`,
           url: referralLink,
         });
       } catch (err) {
@@ -270,7 +270,7 @@ export default function ProfileHubPage() {
                   <span className="flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">
-                      {profileData?.email || user?.email || "user@paytrust.io"}
+                      {profileData?.email || user?.email || "user@peltapay.com"}
                     </span>
                   </span>
 
@@ -356,7 +356,7 @@ export default function ProfileHubPage() {
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Invite partners and clients to trade with PayTrust escrow protection.
+                    Invite partners and clients to trade with PeltaPay escrow protection.
                   </p>
                 </div>
               </div>

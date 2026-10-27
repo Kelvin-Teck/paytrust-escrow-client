@@ -1,4 +1,4 @@
-const BASE_URL = 'https://paytrust-escrow-wallet.onrender.com/api/v1';
+const BASE_URL = 'https://peltapay-escrow-wallet.onrender.com/api/v1';
 
 export const authApi = {
   login: async (payload: any) => {

@@ -267,7 +267,7 @@ export default function PublicInvoicePayPage() {
             href="/"
             className="inline-flex items-center justify-center w-full py-3 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-sm font-semibold transition-all"
           >
-            Return to PayTrust Homepage
+            Return to PeltaPay Homepage
           </Link>
         </div>
       </div>
@@ -303,7 +303,7 @@ export default function PublicInvoicePayPage() {
               P
             </div>
             <span className="text-xl font-extrabold tracking-tight text-slate-900">
-              Pay<span className="text-[#32A05F]">Trust</span>
+              Pelta<span className="text-[#32A05F]">Pay</span>
             </span>
           </Link>
 
@@ -445,7 +445,7 @@ export default function PublicInvoicePayPage() {
                   {transaction.buyer?.email || transaction.buyer?.phone || "Invited Buyer"}
                 </p>
                 <p className="text-[10px] text-slate-400 pt-3">
-                  Protected under PayTrust Buyer Protection Protocol
+                  Protected under PeltaPay Buyer Protection Protocol
                 </p>
               </div>
             </div>
@@ -512,7 +512,7 @@ export default function PublicInvoicePayPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#32A05F] shrink-0 mt-0.5" />
                   <span>
-                    Your payment of <strong>₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> is held safely in PayTrust’s neutral escrow vault.
+                    Your payment of <strong>₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> is held safely in PeltaPay’s neutral escrow vault.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -539,7 +539,7 @@ export default function PublicInvoicePayPage() {
                 <Lock className="w-5 h-5" /> Accept & Pay with Escrow (₦{grossPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })})
               </button>
               <div className="flex items-center justify-center gap-3 mt-3 text-[11px] text-slate-400">
-                <span>Protected by PayTrust Escrow Services Nigeria.</span>
+                <span>Protected by PeltaPay Escrow Services Nigeria.</span>
                 <span>•</span>
                 <button
                   type="button"

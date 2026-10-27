@@ -125,24 +125,24 @@
   }
 }
 
-/* PayTrust Custom Utilities */
-.bg-paytrust {
+/* PeltaPay Custom Utilities */
+.bg-peltapay {
   background-color: #32a05f;
 }
-.bg-paytrust-hover {
+.bg-peltapay-hover {
   background-color: #28874e;
 }
-.text-paytrust {
+.text-peltapay {
   color: #32a05f;
 }
-.border-paytrust {
+.border-peltapay {
   border-color: #32a05f;
 }
-.bg-paytrust-light {
+.bg-peltapay-light {
   background-color: #ebf7f0;
 }
 
-.paytrust-glow {
+.peltapay-glow {
   box-shadow:
     0 10px 25px -5px rgba(50, 160, 95, 0.25),
     0 8px 10px -6px rgba(50, 160, 95, 0.15);

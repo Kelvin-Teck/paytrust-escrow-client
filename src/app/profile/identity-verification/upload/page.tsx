@@ -233,7 +233,7 @@ function UploadVerificationForm() {
               <input
                 type="text"
                 required
-                placeholder="e.g. PayTrust Global Technologies Ltd"
+                placeholder="e.g. PeltaPay Global Technologies Ltd"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20"

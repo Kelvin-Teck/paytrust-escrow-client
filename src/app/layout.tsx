@@ -3,9 +3,9 @@ import "./globals.css";
 import { ToastContainer } from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
-  title: "PayTrust | Secure Multi-Currency Digital Escrow",
+  title: "PeltaPay | Secure Multi-Currency Digital Escrow",
   description:
-    "PayTrust is a secure escrow and wallet service for businesses and individuals. Pay, save, send, and receive money with ease.",
+    "PeltaPay is a secure escrow and wallet service for businesses and individuals. Pay, save, send, and receive money with ease.",
 };
 
 export default function RootLayout({

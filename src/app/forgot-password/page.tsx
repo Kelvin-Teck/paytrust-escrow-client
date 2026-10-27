@@ -521,7 +521,7 @@ export default function ForgotPasswordPage() {
       </main>
 
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        PayTrust Secure Password Recovery Portal
+        PeltaPay Secure Password Recovery Portal
       </footer>
     </div>
   );

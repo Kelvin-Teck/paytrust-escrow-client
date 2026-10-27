@@ -152,13 +152,13 @@ export default function FundNairaWalletPage() {
       let userEmail = user?.email;
       if (!userEmail && typeof window !== "undefined") {
         try {
-          const stored = localStorage.getItem("paytrust_user");
+          const stored = localStorage.getItem("peltapay_user") || localStorage.getItem("paytrust_user");
           if (stored) {
             userEmail = JSON.parse(stored)?.email;
           }
         } catch {}
       }
-      if (!userEmail) userEmail = "customer@paytrust.ng";
+      if (!userEmail) userEmail = "customer@peltapay.com";
 
       // 3. Open Paystack Popup Modal
       if (
@@ -336,7 +336,7 @@ export default function FundNairaWalletPage() {
                 Fund Nigerian Naira Wallet
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                Deposit funds directly into your PayTrust escrow balance using
+                Deposit funds directly into your PeltaPay escrow balance using
                 Paystack's secure modal.
               </p>
             </div>

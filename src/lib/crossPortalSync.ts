@@ -1,5 +1,5 @@
 /**
- * PayTrust Cross-Portal Synchronization Engine
+ * PeltaPay Cross-Portal Synchronization Engine
  * Bridges real-time state between the Customer App (:3000) and Admin Portal (:3001)
  * Supports BroadcastChannel for open tabs, localStorage for persistence, and REST API fallback.
  */
@@ -74,9 +74,9 @@ export interface SyncedKyc {
   rejectionReason?: string;
 }
 
-const DISPUTES_STORAGE_KEY = "paytrust_shared_disputes_v1";
-const KYC_STORAGE_KEY = "paytrust_shared_kyc_v1";
-const CHANNEL_NAME = "paytrust_cross_portal_sync_bus";
+const DISPUTES_STORAGE_KEY = "peltapay_shared_disputes_v1";
+const KYC_STORAGE_KEY = "peltapay_shared_kyc_v1";
+const CHANNEL_NAME = "peltapay_cross_portal_sync_bus";
 
 class CrossPortalSync {
   private channel: BroadcastChannel | null = null;

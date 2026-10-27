@@ -15,7 +15,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("paytrust_token");
+      const token = (localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token"));
       if (token) {
         if (config.headers?.set) {
           config.headers.set("Authorization", `Bearer ${token}`);
@@ -40,8 +40,10 @@ apiClient.interceptors.response.use(
       error.message ||
       "An unexpected error occurred";
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      const hadToken = localStorage.getItem("paytrust_token");
+      const hadToken = (localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token"));
+      localStorage.removeItem("peltapay_token");
       localStorage.removeItem("paytrust_token");
+      localStorage.removeItem("peltapay_user");
       localStorage.removeItem("paytrust_user");
       // If we had a token and it's rejected, redirect to login
       if (

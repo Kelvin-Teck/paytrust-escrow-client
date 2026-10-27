@@ -74,7 +74,7 @@ export function ToastContainer() {
 
   return (
     <div
-      id="paytrust-toast-container"
+      id="peltapay-toast-container"
       className="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"
     >
       <AnimatePresence>

@@ -114,9 +114,9 @@ export default function EscrowTransactionPage() {
     const onLiveRefresh = () => {
       loadTransactions();
     };
-    window.addEventListener("paytrust:live-refresh", onLiveRefresh);
+    window.addEventListener("peltapay:live-refresh", onLiveRefresh);
     return () => {
-      window.removeEventListener("paytrust:live-refresh", onLiveRefresh);
+      window.removeEventListener("peltapay:live-refresh", onLiveRefresh);
     };
   }, []);
 
@@ -153,7 +153,7 @@ export default function EscrowTransactionPage() {
     const origin =
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://paytrust.ng";
+        : "https://peltapay.com";
     return `${origin}/pay/${dealId}`;
   };
 
@@ -171,7 +171,7 @@ export default function EscrowTransactionPage() {
     const inspectionDays = deal.inspectionPeriod || 3;
     const payUrl = getEscrowPayUrl(deal.id);
 
-    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
+    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PeltaPay.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PeltaPay Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PeltaPay Escrow Nigeria_`;
 
     const buyerPhone = deal.buyerPhone || deal.buyer?.phone;
     const cleanPhone = buyerPhone
@@ -252,7 +252,7 @@ export default function EscrowTransactionPage() {
             <ExportTableButton
               data={filteredTransactions}
               columns={transactionExportColumns}
-              filenamePrefix="paytrust-deals"
+              filenamePrefix="peltapay-deals"
             />
             <Link
               href="/transaction/invoice"

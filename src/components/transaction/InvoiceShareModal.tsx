@@ -59,7 +59,7 @@ export default function InvoiceShareModal({
     const origin =
       typeof window !== "undefined"
         ? window.location.origin
-        : "https://paytrust.ng";
+        : "https://peltapay.com";
     return `${origin}/pay/${deal.id}`;
   };
 
@@ -123,7 +123,7 @@ export default function InvoiceShareModal({
     if (!qrDataUrl) return;
     const link = document.createElement("a");
     link.href = qrDataUrl;
-    link.download = `paytrust-invoice-${deal.id.slice(0, 8)}.png`;
+    link.download = `peltapay-invoice-${deal.id.slice(0, 8)}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -131,7 +131,7 @@ export default function InvoiceShareModal({
   };
 
   const handleWhatsAppShare = () => {
-    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
+    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PeltaPay.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PeltaPay Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PeltaPay Escrow Nigeria_`;
 
     const rawPhone =
       deal.buyerPhone ||
@@ -255,7 +255,7 @@ export default function InvoiceShareModal({
                   </div>
                 )}
                 <div className="mt-2 text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
-                  paytrust.ng/pay/{deal.id.slice(0, 8)}...
+                  peltapay.com/pay/{deal.id.slice(0, 8)}...
                 </div>
               </div>
 

@@ -190,9 +190,9 @@ function WalletContent() {
     const onLiveRefresh = () => {
       fetchWallet();
     };
-    window.addEventListener("paytrust:live-refresh", onLiveRefresh);
+    window.addEventListener("peltapay:live-refresh", onLiveRefresh);
     return () => {
-      window.removeEventListener("paytrust:live-refresh", onLiveRefresh);
+      window.removeEventListener("peltapay:live-refresh", onLiveRefresh);
     };
   }, [searchParams]);
 
@@ -501,7 +501,7 @@ function WalletContent() {
             <ExportTableButton
               data={filteredTransactions}
               columns={walletExportColumns}
-              filenamePrefix="paytrust-wallet-ledger"
+              filenamePrefix="peltapay-wallet-ledger"
             />
             {hasActiveFilters && (
               <button
@@ -922,7 +922,7 @@ function WalletContent() {
                   <div>
                     <h3 className="font-bold text-base">Transaction Details</h3>
                     <p className="text-xs text-slate-400">
-                      Official PayTrust Ledger Receipt
+                      Official PeltaPay Ledger Receipt
                     </p>
                   </div>
                 </div>
@@ -1055,7 +1055,7 @@ function WalletContent() {
                     onClick={() => {
                       toast.success("Receipt exported to clipboard.");
                       handleCopy(
-                        `PayTrust Receipt:\nReference: ${
+                        `PeltaPay Receipt:\nReference: ${
                           selectedTx.reference || selectedTx.id
                         }\nAmount: ₦${Number(selectedTx.amount || 0).toLocaleString()}\nStatus: ${
                           selectedTx.status

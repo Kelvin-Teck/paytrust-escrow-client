@@ -41,7 +41,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 import CorporateTaxInvoiceModal from "@/components/transaction/CorporateTaxInvoiceModal";
-import PayTrustWidgetModal from "@/components/transaction/PayTrustWidgetModal";
+import PeltaPayWidgetModal from "@/components/transaction/PeltaPayWidgetModal";
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -95,7 +95,7 @@ export default function TransactionDetailPage() {
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0, expired: false });
 
   const getEscrowPayUrl = () => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://paytrust.ng";
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://peltapay.com";
     return `${origin}/pay/${id}`;
   };
 
@@ -113,7 +113,7 @@ export default function TransactionDetailPage() {
     const inspectionDays = transaction?.inspectionPeriod || 3;
     const payUrl = getEscrowPayUrl();
 
-    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PayTrust.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PayTrust Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PayTrust Escrow Nigeria_`;
+    const message = `👋 Hello!\n\nI have created a secure Escrow Agreement for *${dealTitle}* on PeltaPay.\n\n💰 Total Amount: *₦${dealAmount.toLocaleString()}*\n🛡️ Protection: *PeltaPay Escrow* (Your money is safely locked until you inspect and approve delivery)\n⏱️ Inspection Period: *${inspectionDays} Days*\n\n👉 Review details and fund the escrow safely here:\n${payUrl}\n\n_Powered by PeltaPay Escrow Nigeria_`;
 
     const buyerPhone = transaction?.buyerPhone || transaction?.buyer?.phone;
     const cleanPhone = buyerPhone ? String(buyerPhone).replace(/[^0-9]/g, "") : "";
@@ -582,7 +582,7 @@ export default function TransactionDetailPage() {
     transaction?.releaseOtp ||
     String(
       Math.abs(
-        (id || "paytrust")
+        (id || "peltapay")
           .split("")
           .reduce((acc: number, char: string) => acc * 31 + char.charCodeAt(0), 7) % 900000 +
           100000
@@ -1046,7 +1046,7 @@ export default function TransactionDetailPage() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Funds are safely locked in PayTrust escrow. For in-person fulfillment, release
+                        Funds are safely locked in PeltaPay escrow. For in-person fulfillment, release
                         is authorized via a secret 6-digit release code exchanged face-to-face upon
                         inspection.
                       </p>
@@ -1110,7 +1110,7 @@ export default function TransactionDetailPage() {
                         Verify Buyer Meetup Handshake
                       </span>
                       <p className="text-xs text-slate-300 mt-0.5">
-                        Ask the buyer for their 6-digit PayTrust Release Code once they have physically
+                        Ask the buyer for their 6-digit PeltaPay Release Code once they have physically
                         received and inspected the goods.
                       </p>
                     </div>
@@ -1835,8 +1835,8 @@ export default function TransactionDetailPage() {
         deal={transaction}
       />
 
-      {/* PayTrust Embeddable Widget Modal */}
-      <PayTrustWidgetModal
+      {/* PeltaPay Embeddable Widget Modal */}
+      <PeltaPayWidgetModal
         isOpen={showWidgetModal}
         onClose={() => setShowWidgetModal(false)}
         deal={transaction}

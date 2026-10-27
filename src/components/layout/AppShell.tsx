@@ -54,7 +54,7 @@ export function AppShell({
 
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("paytrust_token")
+        ? (localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token"))
         : null;
     if (!token) {
       router.push("/login");
@@ -69,7 +69,7 @@ export function AppShell({
         setUnreadCount(e.detail);
       }
     };
-    window.addEventListener("paytrust:unread-count", handleUnreadCountEvent);
+    window.addEventListener("peltapay:unread-count", handleUnreadCountEvent);
 
     // Fetch live profile
     profileService
@@ -103,7 +103,7 @@ export function AppShell({
       });
 
     return () => {
-      window.removeEventListener("paytrust:unread-count", handleUnreadCountEvent);
+      window.removeEventListener("peltapay:unread-count", handleUnreadCountEvent);
     };
   }, [initialize, setUser, router]);
 
@@ -315,7 +315,7 @@ export function AppShell({
                   <p className="text-[11px] text-slate-500 truncate">
                     {user?.accountType === "business" && user?.companyName
                       ? user.companyName
-                      : user?.email || "user@paytrust.io"}
+                      : user?.email || "user@peltapay.com"}
                   </p>
                 </div>
               </div>

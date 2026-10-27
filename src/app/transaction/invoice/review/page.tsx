@@ -29,7 +29,7 @@ export default function InvoiceReviewPage() {
     inspectionPeriod: 3,
     seller: {
       name: "Lanre Balogun",
-      email: "lanre@paytrust.io",
+      email: "lanre@peltapay.io",
       accountType: "business",
     },
     buyer: {
@@ -39,7 +39,7 @@ export default function InvoiceReviewPage() {
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText("https://paytrust.io/invoice/INV-2026-9824");
+    navigator.clipboard.writeText("https://peltapay.io/invoice/INV-2026-9824");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -83,7 +83,7 @@ export default function InvoiceReviewPage() {
                 Issued By (Seller)
               </span>
               <p className="font-bold text-slate-900 mt-1">Lanre Balogun</p>
-              <p className="text-xs text-slate-500">lanre@paytrust.io</p>
+              <p className="text-xs text-slate-500">lanre@peltapay.io</p>
             </div>
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold">
@@ -121,7 +121,7 @@ export default function InvoiceReviewPage() {
                 <span className="font-semibold text-slate-900">₦500,000</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>PayTrust Platform Fee (0.5%):</span>
+                <span>PeltaPay Platform Fee (0.5%):</span>
                 <span className="font-semibold text-rose-600">-₦2,500</span>
               </div>
               <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold">
@@ -135,7 +135,7 @@ export default function InvoiceReviewPage() {
             <div className="text-xs text-slate-800 font-medium">
               Shareable Escrow Link:{" "}
               <span className="font-mono font-bold text-[#32A05F]">
-                https://paytrust.io/invoice/INV-2026-9824
+                https://peltapay.io/invoice/INV-2026-9824
               </span>
             </div>
             <div className="flex items-center gap-2">
