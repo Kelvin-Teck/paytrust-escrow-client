@@ -51,12 +51,6 @@ export default function HomePage() {
             >
               Reviews
             </a>
-            <Link
-              href="/track"
-              className="hover:text-[#32A05F] transition-colors inline-flex items-center gap-1 font-bold text-slate-700"
-            >
-              Track Deal
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
