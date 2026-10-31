@@ -16,6 +16,7 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { SecuritySection } from "@/components/landing/SecuritySection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { TrustAndTrackBanner } from "@/components/landing/TrustAndTrackBanner";
 
 export default function HomePage() {
   return (
@@ -50,6 +51,12 @@ export default function HomePage() {
             >
               Reviews
             </a>
+            <Link
+              href="/track"
+              className="hover:text-[#32A05F] transition-colors inline-flex items-center gap-1 font-bold text-slate-700"
+            >
+              Track Deal
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -179,6 +186,9 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* ─── Institutional Trust & Credibility Track Banner (Image Template) ─── */}
+      <TrustAndTrackBanner />
 
       {/* ─── Features Grid ─── */}
       <section
