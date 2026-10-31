@@ -184,40 +184,40 @@ export function TrustAndTrackBanner({ className = "" }: TrustAndTrackBannerProps
     <section
       className={`w-full bg-white border-y border-slate-200/90 shadow-2xs relative z-20 ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-        <div className="flex items-center justify-between gap-6 sm:gap-8 lg:gap-12 overflow-x-auto no-scrollbar py-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-5 lg:py-6">
+        <div className="flex items-center justify-between gap-4 sm:gap-8 lg:gap-12 overflow-x-auto no-scrollbar py-1">
           
           {/* Stat 1: ₦25,000,000,000+ Escrow Volume Processed */}
           <div className="shrink-0">
-            <div className="text-2xl sm:text-3xl font-black text-[#0A2540] tracking-tight leading-none">
+            <div className="text-[17px] sm:text-2xl lg:text-3xl font-black text-[#0A2540] tracking-tight leading-none">
               ₦25,000,000,000+
             </div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1 uppercase tracking-wide">
+            <div className="text-[10px] sm:text-xs lg:text-sm font-semibold text-slate-500 mt-1 uppercase tracking-wide">
               NGN Processed in Escrow
             </div>
           </div>
 
           {/* Stat 2: 350,000+ Customers Trust PeltaPay */}
           <div className="shrink-0">
-            <div className="text-2xl sm:text-3xl font-black text-[#0A2540] tracking-tight leading-none">
+            <div className="text-[17px] sm:text-2xl lg:text-3xl font-black text-[#0A2540] tracking-tight leading-none">
               350,000+
             </div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1 uppercase tracking-wide">
+            <div className="text-[10px] sm:text-xs lg:text-sm font-semibold text-slate-500 mt-1 uppercase tracking-wide">
               Nigerians Trust PeltaPay
             </div>
           </div>
 
           {/* Vertical Divider */}
-          <div className="h-10 w-[1.5px] bg-slate-200/90 shrink-0 hidden sm:block" />
+          <div className="h-8 sm:h-10 w-[1px] bg-slate-200/90 shrink-0 hidden sm:block" />
 
           {/* Award: Nigeria Fintech Awards | Winner, Most Trusted Escrow Platform */}
-          <div className="flex items-center gap-3 shrink-0">
-            <NigeriaFintechAwardIcon className="w-7 h-9 shrink-0 drop-shadow-2xs" />
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <NigeriaFintechAwardIcon className="w-5 h-7 sm:w-7 sm:h-9 shrink-0 drop-shadow-2xs" />
             <div className="flex flex-col justify-center">
-              <div className="text-sm sm:text-base font-extrabold text-[#0A2540] tracking-tight leading-tight">
+              <div className="text-xs sm:text-sm lg:text-base font-extrabold text-[#0A2540] tracking-tight leading-tight">
                 Nigeria Fintech Awards
               </div>
-              <div className="text-xs text-slate-500 font-medium leading-tight mt-0.5">
+              <div className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight mt-0.5">
                 Winner, Most Trusted Escrow Platform
               </div>
             </div>
