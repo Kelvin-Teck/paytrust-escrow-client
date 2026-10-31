@@ -30,6 +30,7 @@ import AppShell from "@/components/layout/AppShell";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import { transactionService } from "@/services/api";
 import { toast } from "@/components/ui/Toast";
+import { formatHumanError } from "@/lib/formatError";
 import { useAuthStore } from "@/stores/authStore";
 import { getKybInfo, getTierInfo } from "@/lib/utils";
 
@@ -215,7 +216,7 @@ export default function CreateInvoicePage() {
       );
     } catch (err: any) {
       console.error("Create invoice error:", err);
-      const msg = err.response?.data?.message || err.message || "Failed to create invoice";
+      const msg = formatHumanError(err);
       setError(msg);
       toast.error(msg);
     } finally {

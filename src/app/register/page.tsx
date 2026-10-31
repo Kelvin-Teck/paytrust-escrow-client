@@ -31,6 +31,7 @@ import {
   detectUserCountryAsync,
 } from "@/data/countries";
 import { authService } from "@/services/api";
+import { formatHumanError } from "@/lib/formatError";
 
 function RegisterForm() {
   const router = useRouter();
@@ -114,11 +115,7 @@ function RegisterForm() {
       router.push(`/register/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
     } catch (err: any) {
       console.error("Registration error:", err);
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Registration failed. An account with this email or phone may already exist.";
-      setErrorMessage(msg);
+      setErrorMessage(formatHumanError(err));
     } finally {
       setIsLoading(false);
     }

@@ -28,6 +28,7 @@ import {
 import { transactionService, authService } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "@/components/ui/Toast";
+import { formatHumanError } from "@/lib/formatError";
 import InvoiceShareModal from "@/components/transaction/InvoiceShareModal";
 import EscrowContractModal from "@/components/transaction/EscrowContractModal";
 
@@ -133,9 +134,7 @@ export default function PublicInvoicePayPage() {
     } catch (err: any) {
       console.error("Claim initiation failed:", err);
       setModalError(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to initiate account claim. Please try again."
+        formatHumanError(err)
       );
     } finally {
       setIsProcessing(false);
@@ -172,9 +171,7 @@ export default function PublicInvoicePayPage() {
     } catch (err: any) {
       console.error("OTP verification failed:", err);
       setModalError(
-        err.response?.data?.message ||
-          err.message ||
-          "Invalid or expired verification code. Please check and try again."
+        formatHumanError(err)
       );
     } finally {
       setIsProcessing(false);
@@ -199,7 +196,7 @@ export default function PublicInvoicePayPage() {
         otpInputsRef.current[0].focus();
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to resend code");
+      toast.error(formatHumanError(err));
     } finally {
       setIsProcessing(false);
     }

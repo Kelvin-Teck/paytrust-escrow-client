@@ -1,4 +1,5 @@
 import axios from "axios";
+import { formatHumanError } from "./formatError";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -35,10 +36,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.message ||
-      error.message ||
-      "An unexpected error occurred";
+    const humanReadable = formatHumanError(error);
+
+    // Overwrite raw technical messages on the response object so all callers get human-readable errors
+    if (error.response?.data && typeof error.response.data === "object") {
+      error.response.data.message = humanReadable;
+    }
+    error.message = humanReadable;
+
     if (error.response?.status === 401 && typeof window !== "undefined") {
       const hadToken = (localStorage.getItem("peltapay_token") || localStorage.getItem("paytrust_token"));
       localStorage.removeItem("peltapay_token");
@@ -54,7 +59,7 @@ apiClient.interceptors.response.use(
         window.location.href = "/login";
       }
     }
-    return Promise.reject(new Error(message));
+    return Promise.reject(new Error(humanReadable));
   },
 );
 
