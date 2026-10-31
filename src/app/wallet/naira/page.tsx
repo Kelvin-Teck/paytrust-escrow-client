@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { paymentService } from "@/services/api";
+import { getTierInfo, getKybInfo } from "@/lib/utils";
+import { formatHumanError } from "@/lib/formatError";
 import { useAuthStore } from "@/stores/authStore";
 
 const QUICK_AMOUNTS = [5000, 10000, 25000, 50000, 100000, 250000];
@@ -86,6 +88,11 @@ export default function FundNairaWalletPage() {
   }, []);
 
   const numAmount = parseFloat(amount) || 0;
+  const isBusiness = user?.accountType === "business";
+  const kyc = getTierInfo(user?.kycStatus);
+  const kyb = getKybInfo(user?.kybStatus, (user as any)?.kybTier);
+  const activeLimit = isBusiness ? kyb.singleLimit : kyc.singleLimit;
+  const isExceedingLimit = numAmount > activeLimit;
 
   const handleCopyRef = () => {
     if (successDetails?.reference) {
@@ -125,6 +132,15 @@ export default function FundNairaWalletPage() {
     e.preventDefault();
     if (numAmount < 100) {
       setError("Minimum deposit amount is ₦100");
+      return;
+    }
+
+    if (isExceedingLimit) {
+      setError(
+        `The deposit amount of ₦${numAmount.toLocaleString()} exceeds your ${
+          isBusiness ? kyb.title : kyc.tierName
+        } limit of ₦${activeLimit.toLocaleString()}. Please complete identity verification in Profile to upgrade.`
+      );
       return;
     }
 
@@ -216,10 +232,7 @@ export default function FundNairaWalletPage() {
       );
     } catch (err: any) {
       console.error("[Paystack Funding Error]:", err);
-      const errMsg =
-        err.response?.data?.message ||
-        err.message ||
-        "Payment initialization failed. Please try again.";
+      const errMsg = formatHumanError(err);
       setError(errMsg);
       setIsProcessing(false);
     }
@@ -369,6 +382,18 @@ export default function FundNairaWalletPage() {
                     onChange={(e) => setAmount(e.target.value)}
                     className="w-full pl-10 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold text-2xl focus:bg-white focus:outline-none focus:border-[#32A05F] focus:ring-2 focus:ring-[#32A05F]/20 transition-all tabular-nums"
                   />
+                </div>
+
+                {/* Tier Deposit Limit Helper */}
+                <div className="flex items-center justify-between text-xs text-slate-500 mt-2.5 px-0.5">
+                  <span>
+                    Deposit limit: <strong className="text-slate-700">₦{activeLimit.toLocaleString()}</strong> ({isBusiness ? kyb.title : kyc.tierName})
+                  </span>
+                  {!kyc.isVerified && !isBusiness && (
+                    <Link href="/profile" className="text-[#32A05F] font-semibold hover:underline">
+                      Upgrade Tier →
+                    </Link>
+                  )}
                 </div>
 
                 {/* Quick Amount Chips */}
