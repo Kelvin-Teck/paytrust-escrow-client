@@ -181,9 +181,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Institutional Trust & Credibility Track Banner (Image Template) ─── */}
-      <TrustAndTrackBanner />
-
       {/* ─── Features Grid ─── */}
       <section
         id="features"
@@ -248,6 +245,9 @@ export default function HomePage() {
 
       {/* ─── Testimonials & Reviews Segment ─── */}
       <TestimonialsSection />
+
+      {/* ─── Institutional Trust & Credibility Track Banner (Nigerian Context) ─── */}
+      <TrustAndTrackBanner />
 
       {/* ─── Footer Signature ─── */}
       <footer className="border-t border-slate-200 py-8 bg-white">
