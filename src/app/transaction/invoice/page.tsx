@@ -114,25 +114,45 @@ export default function CreateInvoicePage() {
     );
   };
 
+  // Financial rounding helper: rounds accurately to 2 decimal places (kobo)
+  const roundKobo = (val: number): number =>
+    Math.round((val + Number.EPSILON) * 100) / 100;
+
+  const formatNaira = (val: number): string =>
+    val.toLocaleString("en-NG", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   // Compute calculated amounts
   const milestoneTotal = milestones.reduce(
     (acc, cur) => acc + (Number(cur.amount) || 0),
     0
   );
-  const baseValue =
+
+  const rawInput = parseFloat(amount);
+  const rawBaseValue =
     dealType === "b2b_milestone"
       ? milestoneTotal > 0
         ? milestoneTotal
-        : parseFloat(amount) || 0
-      : parseFloat(amount) || 0;
+        : Number.isFinite(rawInput)
+          ? rawInput
+          : 0
+      : Number.isFinite(rawInput)
+        ? rawInput
+        : 0;
+
+  // Inhibit negative calculations (QA-11)
+  const isNegative = rawBaseValue < 0 || amount.trim().startsWith("-");
+  const baseValue = isNegative ? 0 : roundKobo(rawBaseValue);
 
   const effectiveTaxRate = applyTax && dealType === "b2b_milestone" ? taxRate : 0;
-  const taxAmount = (baseValue * effectiveTaxRate) / 100;
-  const grossInvoiceTotal = baseValue + taxAmount;
+  const taxAmount = roundKobo((baseValue * effectiveTaxRate) / 100);
+  const grossInvoiceTotal = roundKobo(baseValue + taxAmount);
 
   const platformFeePercentage =
     Number(process.env.NEXT_PUBLIC_ESCROW_FEE_PERCENTAGE) || 0.5;
-  const platformFee = (grossInvoiceTotal * platformFeePercentage) / 100;
+  const platformFee = roundKobo((grossInvoiceTotal * platformFeePercentage) / 100);
 
   let buyerFeeShare = 0;
   let sellerFeeShare = platformFee;
@@ -140,12 +160,12 @@ export default function CreateInvoicePage() {
     buyerFeeShare = platformFee;
     sellerFeeShare = 0;
   } else if (feePayer === "split_50_50") {
-    buyerFeeShare = platformFee / 2;
-    sellerFeeShare = platformFee / 2;
+    buyerFeeShare = roundKobo(platformFee / 2);
+    sellerFeeShare = roundKobo(platformFee - buyerFeeShare);
   }
 
-  const totalBuyerDeposit = grossInvoiceTotal + buyerFeeShare;
-  const netSellerPayout = grossInvoiceTotal - sellerFeeShare;
+  const totalBuyerDeposit = roundKobo(grossInvoiceTotal + buyerFeeShare);
+  const netSellerPayout = roundKobo(grossInvoiceTotal - sellerFeeShare);
 
   // Active limit check
   const activeLimit = isBusiness ? kyb.singleLimit : kyc.singleLimit;
@@ -426,6 +446,32 @@ export default function CreateInvoicePage() {
                     className="w-full pl-9 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] transition-all"
                   />
                 </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                  <span>
+                    Limit: <strong className="text-slate-800">₦{activeLimit.toLocaleString()}</strong> per deal ({isBusiness ? kyb.title : kyc.tierName})
+                  </span>
+                  {isExceedingLimit && (
+                    <span className="text-rose-600 font-semibold flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Exceeds limit
+                    </span>
+                  )}
+                </div>
+                {isNegative && (
+                  <p className="mt-1 text-xs font-semibold text-rose-600">
+                    Transaction amount cannot be negative.
+                  </p>
+                )}
+                {isExceedingLimit && (
+                  <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Amount exceeds your {isBusiness ? kyb.title : kyc.tierName} limit (₦{activeLimit.toLocaleString()})</p>
+                      <p className="mt-0.5 text-amber-700">
+                        Upgrade your identity tier in <Link href="/profile" className="underline font-bold text-amber-900">Profile</Link> to unlock higher escrow capacity.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -529,7 +575,7 @@ export default function CreateInvoicePage() {
                 Escrow Fee Responsibility ({platformFeePercentage}%) *
               </label>
               <span className="text-[11px] font-semibold text-[#32A05F]">
-                Total Fee: ₦{platformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                Total Fee: ₦{formatNaira(platformFee)}
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -731,29 +777,29 @@ export default function CreateInvoicePage() {
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-300">
                 <span>Agreed Base Value:</span>
-                <span className="font-semibold text-white">₦{baseValue.toLocaleString()}</span>
+                <span className="font-semibold text-white">₦{formatNaira(baseValue)}</span>
               </div>
 
               {applyTax && dealType === "b2b_milestone" && (
                 <div className="flex justify-between text-slate-300">
                   <span>VAT ({taxRate}%):</span>
-                  <span className="font-semibold text-emerald-400">+₦{taxAmount.toLocaleString()}</span>
+                  <span className="font-semibold text-emerald-400">+₦{formatNaira(taxAmount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between text-slate-300">
                 <span>Total Escrow Protection Fee ({platformFeePercentage}%):</span>
-                <span className="font-semibold text-slate-300">₦{platformFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-semibold text-slate-300">₦{formatNaira(platformFee)}</span>
               </div>
 
               <div className="flex justify-between text-slate-400 text-[11px] pl-2 border-l border-slate-700">
                 <span>Buyer Fee Share:</span>
-                <span className="text-blue-400 font-semibold">+₦{buyerFeeShare.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="text-blue-400 font-semibold">+₦{formatNaira(buyerFeeShare)}</span>
               </div>
 
               <div className="flex justify-between text-slate-400 text-[11px] pl-2 border-l border-slate-700">
                 <span>Seller Fee Share:</span>
-                <span className="text-rose-400 font-semibold">-₦{sellerFeeShare.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="text-rose-400 font-semibold">-₦{formatNaira(sellerFeeShare)}</span>
               </div>
 
               <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 gap-3 text-xs">
@@ -762,7 +808,7 @@ export default function CreateInvoicePage() {
                     Buyer Deposit Total
                   </span>
                   <span className="text-sm font-bold text-white">
-                    ₦{totalBuyerDeposit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    ₦{formatNaira(totalBuyerDeposit)}
                   </span>
                 </div>
 
@@ -771,7 +817,7 @@ export default function CreateInvoicePage() {
                     Net Seller Disbursement
                   </span>
                   <span className="text-sm font-bold text-[#32A05F]">
-                    ₦{netSellerPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    ₦{formatNaira(netSellerPayout)}
                   </span>
                 </div>
               </div>

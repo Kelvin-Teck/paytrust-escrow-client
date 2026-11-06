@@ -32,6 +32,7 @@ import {
 } from "@/data/countries";
 import { authService } from "@/services/api";
 import { formatHumanError } from "@/lib/formatError";
+import { useAuthStore } from "@/stores/authStore";
 
 function RegisterForm() {
   const router = useRouter();
@@ -53,6 +54,14 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (refParam) {
@@ -185,12 +194,14 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="reg-company-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Registered Company / Entity Name *
               </label>
               <input
+                id="reg-company-name"
                 type="text"
                 required
+                autoComplete="organization"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g. Zenith Tech Solutions Ltd"
@@ -200,10 +211,11 @@ function RegisterForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label htmlFor="reg-rc-number" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   CAC / RC Registration No.
                 </label>
                 <input
+                  id="reg-rc-number"
                   type="text"
                   value={rcNumber}
                   onChange={(e) => setRcNumber(e.target.value)}
@@ -213,11 +225,12 @@ function RegisterForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <label htmlFor="reg-tin" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Tax ID (TIN)</span>
                   <span className="text-[10px] text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <input
+                  id="reg-tin"
                   type="text"
                   value={tin}
                   onChange={(e) => setTin(e.target.value)}
@@ -228,10 +241,11 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="reg-business-type" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Business Category / Industry
               </label>
               <select
+                id="reg-business-type"
                 value={businessType}
                 onChange={(e) => setBusinessType(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all cursor-pointer"
@@ -250,14 +264,16 @@ function RegisterForm() {
 
         {/* Authorized Representative / Full Legal Name */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor="reg-full-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             {accountType === "business" ? "Authorized Representative Name *" : "Full Legal Name *"}
           </label>
           <div className="relative">
             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="reg-full-name"
               type="text"
               required
+              autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder={accountType === "business" ? "e.g. Tolulope Balogun (MD/CEO)" : "e.g. Tolulope Lanre Balogun"}
@@ -268,14 +284,16 @@ function RegisterForm() {
 
         {/* Email Address */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             {accountType === "business" ? "Official Corporate Email *" : "Email Address *"}
           </label>
           <div className="relative">
             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="reg-email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={accountType === "business" ? "finance@company.com" : "you@example.com"}
@@ -287,7 +305,7 @@ function RegisterForm() {
         {/* International Phone Number */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <label htmlFor="reg-phone" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
               {accountType === "business" ? "Company / Rep Phone Number *" : "Phone Number *"}
             </label>
             <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
@@ -296,6 +314,7 @@ function RegisterForm() {
             </div>
           </div>
           <PhoneInput
+            id="reg-phone"
             required
             value={phone}
             onChange={(fullE164, selectedCountry) => {
@@ -308,15 +327,17 @@ function RegisterForm() {
 
         {/* Password with Real-time Strength & Criteria */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+          <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             Password *
           </label>
           <div className="relative">
             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="reg-password"
               type={showPassword ? "text" : "password"}
               required
               minLength={8}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a secure password"
@@ -324,6 +345,7 @@ function RegisterForm() {
             />
             <button
               type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
             >
@@ -336,7 +358,7 @@ function RegisterForm() {
 
         {/* Referral Code */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <label htmlFor="reg-referral-code" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
             <span>Referral Code</span>
             <span className="text-slate-400 font-normal lowercase">
               {refParam ? "(applied from invite)" : "(optional)"}
@@ -345,6 +367,7 @@ function RegisterForm() {
           <div className="relative">
             <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="reg-referral-code"
               type="text"
               value={referralCode}
               onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
@@ -395,7 +418,20 @@ export default function RegisterPage() {
       </main>
 
       <footer className="p-6 text-center text-xs text-slate-400 relative z-10">
-        By registering, you agree to our Terms of Service and Privacy Policy.
+        By registering, you agree to our{" "}
+        <Link
+          href="/terms"
+          className="text-[#32A05F] underline hover:text-[#28874E] transition-colors"
+        >
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link
+          href="/privacy"
+          className="text-[#32A05F] underline hover:text-[#28874E] transition-colors"
+        >
+          Privacy Policy
+        </Link>.
       </footer>
     </div>
   );

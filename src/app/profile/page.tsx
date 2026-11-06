@@ -332,7 +332,7 @@ export default function ProfileHubPage() {
               <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80">
                 <span className="text-[11px] text-slate-400 font-medium block">Monthly Capacity</span>
                 <span className="text-base font-bold text-white mt-1 block">
-                  {isBusiness ? kyb.monthlyLimitLabel : "Unlimited"}
+                  {isBusiness ? kyb.monthlyLimitLabel : kyc.monthlyLimitLabel}
                 </span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">
                   Rolling 30-day volume

@@ -420,19 +420,24 @@ export default function DisputesHubPage() {
                 className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50"
               />
               <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="raise-dispute-modal-title"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl z-50 max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
+                  <div id="raise-dispute-modal-title" className="flex items-center gap-2 text-slate-900 font-bold text-lg">
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
                     <span>Raise Escrow Dispute</span>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                    aria-label="Close dispute modal"
+                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>

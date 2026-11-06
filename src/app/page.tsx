@@ -12,13 +12,19 @@ import {
   User,
   ShoppingBag,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
 import { Logo } from "@/components/ui/Logo";
 import { SecuritySection } from "@/components/landing/SecuritySection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { TrustAndTrackBanner } from "@/components/landing/TrustAndTrackBanner";
 
 export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-[#EBF7F0] selection:text-[#32A05F]">
       {/* ─── Top Navigation ─── */}
@@ -53,21 +59,108 @@ export default function HomePage() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-[#32A05F] transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white transition-all shadow-sm shadow-[#32A05F]/25 hover:shadow-md active:scale-95"
-            >
-              Get Started
-            </Link>
+          <div className="hidden sm:flex items-center gap-3">
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white transition-all shadow-sm shadow-[#32A05F]/25 hover:shadow-md flex items-center gap-2"
+              >
+                <span>Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-[#32A05F] transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#32A05F] hover:bg-[#28874E] text-white transition-all shadow-sm shadow-[#32A05F]/25 hover:shadow-md active:scale-95"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
+
+          {/* Mobile Menu Toggle Button (QA-04) */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Navigation Drawer (QA-04) */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-100 bg-white px-5 pt-3 pb-6 space-y-4 shadow-lg">
+            <nav className="flex flex-col space-y-3 text-sm font-semibold text-slate-700">
+              <a
+                href="#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-[#32A05F] py-1 transition-colors"
+              >
+                How it Works
+              </a>
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-[#32A05F] py-1 transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#security"
+                onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-[#32A05F] py-1 transition-colors"
+              >
+                Security
+              </a>
+              <a
+                href="#testimonials"
+                onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-[#32A05F] py-1 transition-colors"
+              >
+                Reviews
+              </a>
+            </nav>
+            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+              {isAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-3 px-4 rounded-xl text-center text-sm font-semibold bg-[#32A05F] text-white flex items-center justify-center gap-2"
+                >
+                  <span>Go to Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-semibold border border-slate-200 text-slate-800 hover:bg-slate-50"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-semibold bg-[#32A05F] text-white"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ─── Hero Section ─── */}
@@ -144,7 +237,7 @@ export default function HomePage() {
               <p className="text-sm text-slate-600 leading-relaxed">
                 "I want to make more sales, but I only do payment before
                 delivery." With PeltaPay, buyers fund escrow upfront so you can
-                deliver with 100% confidence.
+                deliver with verified peace of mind.
               </p>
             </div>
 
@@ -172,7 +265,7 @@ export default function HomePage() {
                 The Escrow System
               </h3>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Risk is completely eliminated. Real-time milestones, dispute
+                Counterparty risk is securely mitigated. Real-time milestones, dispute
                 mediation, and multi-currency wallets ensure mutual trust for
                 every deal.
               </p>
@@ -215,12 +308,15 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-[#EBF7F0] text-[#32A05F] flex items-center justify-center mb-6">
                 <Wallet className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
-                Multi-Currency (NGN & BTC)
+              <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center flex-wrap gap-2">
+                <span>Multi-Currency (NGN & BTC)</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  Regulatory Sandbox Beta
+                </span>
               </h3>
               <p className="text-slate-600 text-sm leading-relaxed">
                 Fund wallets with Nigerian Naira via instant Paystack transfer
-                or Bitcoin SegWit on-chain deposits with automated conversion.
+                or Bitcoin SegWit on-chain deposits (under SEC ARIP regulatory sandbox beta framework).
               </p>
             </div>
 
@@ -257,6 +353,15 @@ export default function HomePage() {
             <span>
               © {new Date().getFullYear()} PeltaPay Inc. All rights reserved.
             </span>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-slate-500">
+            <Link href="/terms" className="hover:text-[#32A05F] transition-colors">
+              Terms of Service
+            </Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-[#32A05F] transition-colors">
+              Privacy Policy
+            </Link>
           </div>
           <p className="text-slate-400">Next-Gen Escrow Protection Platform</p>
         </div>

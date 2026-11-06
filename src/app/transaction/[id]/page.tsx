@@ -652,54 +652,56 @@ export default function TransactionDetailPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Deals
           </Link>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {isB2B && (
+          {transaction && !isLoading && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {isB2B && (
+                <button
+                  type="button"
+                  onClick={() => setShowTaxInvoiceModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                >
+                  <Building2 className="w-3.5 h-3.5 text-emerald-400" /> B2B Tax Invoice & PO
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setShowTaxInvoiceModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                onClick={() => setShowContractModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
-                <Building2 className="w-3.5 h-3.5 text-emerald-400" /> B2B Tax Invoice & PO
+                <FileText className="w-3.5 h-3.5 text-[#32A05F]" /> View Agreement (PDF)
               </button>
-            )}
 
-            <button
-              type="button"
-              onClick={() => setShowContractModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-            >
-              <FileText className="w-3.5 h-3.5 text-[#32A05F]" /> View Agreement (PDF)
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowShareModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-            >
-              <QrCode className="w-3.5 h-3.5 text-[#32A05F]" /> Share Invoice & QR
-            </button>
-
-            {isSeller && (
               <button
                 type="button"
-                onClick={() => setShowWidgetModal(true)}
+                onClick={() => setShowShareModal(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
-                <Code2 className="w-3.5 h-3.5 text-[#32A05F]" /> Embed Widget
+                <QrCode className="w-3.5 h-3.5 text-[#32A05F]" /> Share Invoice & QR
               </button>
-            )}
 
-            {/* Pre-dispatch mutual cancellation button */}
-            {(isAwaitingPayment || isSecured) && !isCancelled && (
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 text-xs font-semibold transition-all cursor-pointer"
-              >
-                <XCircle className="w-3.5 h-3.5" /> Cancel Deal
-              </button>
-            )}
-          </div>
+              {isSeller && (
+                <button
+                  type="button"
+                  onClick={() => setShowWidgetModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-[#32A05F]/40 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                >
+                  <Code2 className="w-3.5 h-3.5 text-[#32A05F]" /> Embed Widget
+                </button>
+              )}
+
+              {/* Pre-dispatch mutual cancellation button */}
+              {(isAwaitingPayment || isSecured) && !isCancelled && (
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <XCircle className="w-3.5 h-3.5" /> Cancel Deal
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {isLoading ? (

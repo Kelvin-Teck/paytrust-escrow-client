@@ -14,7 +14,9 @@ export interface TierInfo {
   badgeTextClass: string;
   badgeBorder: string;
   singleLimit: number;
+  monthlyLimit: number;
   singleLimitLabel: string;
+  monthlyLimitLabel: string;
   description: string;
   isVerified: boolean;
 }
@@ -32,7 +34,9 @@ export function getTierInfo(kycStatus?: string): TierInfo {
       badgeTextClass: "text-[#1E6B3E]",
       badgeBorder: "border-[#32A05F]/30",
       singleLimit: 50000000,
+      monthlyLimit: 500000000,
       singleLimitLabel: "Unlimited / ₦50M",
+      monthlyLimitLabel: "Unlimited Volume",
       description:
         "Tier 2 verified • Unlimited personal escrow limits & fast withdrawals active.",
       isVerified: true,
@@ -53,7 +57,9 @@ export function getTierInfo(kycStatus?: string): TierInfo {
       badgeTextClass: "text-amber-800",
       badgeBorder: "border-amber-300",
       singleLimit: 500000,
+      monthlyLimit: 2500000,
       singleLimitLabel: "₦500,000 / deal",
+      monthlyLimitLabel: "₦2,500,000 / month",
       description:
         "Your KYC documents are currently being reviewed by compliance.",
       isVerified: false,
@@ -70,7 +76,9 @@ export function getTierInfo(kycStatus?: string): TierInfo {
       badgeTextClass: "text-slate-700",
       badgeBorder: "border-slate-300",
       singleLimit: 500000,
+      monthlyLimit: 2500000,
       singleLimitLabel: "₦500,000 / deal",
+      monthlyLimitLabel: "₦2,500,000 / month",
       description:
         "Complete your identity document upload to upgrade to Tier 2.",
       isVerified: false,
@@ -87,7 +95,9 @@ export function getTierInfo(kycStatus?: string): TierInfo {
       badgeTextClass: "text-rose-700",
       badgeBorder: "border-rose-300",
       singleLimit: 500000,
+      monthlyLimit: 2500000,
       singleLimitLabel: "₦500,000 / deal",
+      monthlyLimitLabel: "₦2,500,000 / month",
       description:
         "Identity verification was declined. Please re-upload valid government ID.",
       isVerified: false,
@@ -103,7 +113,9 @@ export function getTierInfo(kycStatus?: string): TierInfo {
     badgeTextClass: "text-slate-600",
     badgeBorder: "border-slate-200",
     singleLimit: 500000,
+    monthlyLimit: 2500000,
     singleLimitLabel: "₦500,000 / deal",
+    monthlyLimitLabel: "₦2,500,000 / month",
     description:
       "Upgrade to Tier 2 by completing identity verification in Profile.",
     isVerified: false,

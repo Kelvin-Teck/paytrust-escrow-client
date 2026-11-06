@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Script from "next/script";
 import {
   ArrowLeft,
   ShieldCheck,
@@ -240,12 +239,6 @@ export default function FundNairaWalletPage() {
 
   return (
     <AppShell>
-      {/* Paystack Inline Script Tag */}
-      <Script
-        id="paystack-inline-script"
-        src="https://js.paystack.co/v1/inline.js"
-        strategy="afterInteractive"
-      />
 
       <div className="max-w-2xl mx-auto space-y-8">
         <Link

@@ -45,7 +45,7 @@ const testimonials: Testimonial[] = [
     dealAmount: "₦850,000 / deal",
     rating: 5,
     quote:
-      "Before PeltaPay, interstate buyers always demanded payment on delivery, which caused frequent delivery cancellations. Now, buyers fund the escrow upfront. I ship knowing my funds are 100% locked and guaranteed. My completed sales tripled in two months!",
+      "Before PeltaPay, interstate buyers always demanded payment on delivery, which caused frequent delivery cancellations. Now, buyers fund the escrow upfront. I ship knowing funds are safely held in regulated escrow. My completed sales tripled in two months!",
     badge: "Verified Vendor",
   },
   {

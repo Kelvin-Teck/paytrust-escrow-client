@@ -254,7 +254,7 @@ export function SecuritySection() {
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="max-w-2xl text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#32A05F]/20 text-[#32A05F] text-xs font-bold uppercase tracking-wider mb-4 border border-[#32A05F]/30">
-                <ShieldCheck className="w-3.5 h-3.5" /> 100% Risk Elimination
+                <ShieldCheck className="w-3.5 h-3.5" /> End-to-End Escrow Protection
               </div>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 Ready to trade with total confidence?
@@ -267,7 +267,7 @@ export function SecuritySection() {
               {/* 4 Metric Badges */}
               <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
-                  <p className="text-lg font-extrabold text-[#32A05F]">100%</p>
+                  <p className="text-lg font-extrabold text-[#32A05F]">Guarded</p>
                   <p className="text-xs text-slate-400">Pre-Funded Escrow</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
@@ -277,8 +277,8 @@ export function SecuritySection() {
                   <p className="text-xs text-slate-400">TLS Encryption</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
-                  <p className="text-lg font-extrabold text-[#32A05F]">0%</p>
-                  <p className="text-xs text-slate-400">Unapproved Payouts</p>
+                  <p className="text-lg font-extrabold text-[#32A05F]">Dual-Auth</p>
+                  <p className="text-xs text-slate-400">Conditional Release</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-xs p-3 rounded-xl border border-white/10">
                   <p className="text-lg font-extrabold text-[#32A05F]">24/7</p>
