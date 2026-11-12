@@ -114,11 +114,11 @@ function RegisterForm() {
         phone: phone.trim(),
         country: country.name,
         referralCode: referralCode.trim() || undefined,
-        companyName: accountType === "business" ? companyName.trim() : undefined,
-        rcNumber: accountType === "business" ? rcNumber.trim() : undefined,
-        tin: accountType === "business" ? tin.trim() : undefined,
-        businessType: accountType === "business" ? businessType : undefined,
-        businessAddress: accountType === "business" ? businessAddress.trim() : undefined,
+        companyName: accountType === "business" ? companyName.trim() || undefined : undefined,
+        rcNumber: accountType === "business" ? rcNumber.trim() || undefined : undefined,
+        tin: accountType === "business" ? tin.trim() || undefined : undefined,
+        businessType: accountType === "business" ? businessType.trim() || undefined : undefined,
+        businessAddress: accountType === "business" ? businessAddress.trim() || undefined : undefined,
       });
 
       router.push(`/register/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
@@ -258,6 +258,22 @@ function RegisterForm() {
                 <option value="Professional Consulting & Legal">Professional Consulting & Legal</option>
                 <option value="Other Commercial Enterprise">Other Commercial Enterprise</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="reg-business-address" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Business / Registered Office Address</span>
+                <span className="text-[10px] text-slate-400 font-normal lowercase">(optional)</span>
+              </label>
+              <input
+                id="reg-business-address"
+                type="text"
+                autoComplete="street-address"
+                value={businessAddress}
+                onChange={(e) => setBusinessAddress(e.target.value)}
+                placeholder="e.g. 14 Commercial Ave, Victoria Island, Lagos"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#32A05F]/20 focus:border-[#32A05F] text-sm font-medium transition-all"
+              />
             </div>
           </div>
         )}

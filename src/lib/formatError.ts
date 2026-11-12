@@ -87,6 +87,14 @@ export function formatHumanError(error: any): string {
     if (clean.includes("must be a valid email")) {
       return "Please enter a valid email address (e.g. name@example.com).";
     }
+    if (clean.includes("is not allowed to be empty")) {
+      const field = clean.replace(/is not allowed to be empty.*/i, "").trim();
+      const friendly = field
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+      return `${friendly} cannot be empty. Please provide this detail or leave it blank.`;
+    }
     if (clean.includes("fails to match the required pattern")) {
       return "One of the provided fields does not match the required format. Please check your details.";
     }
